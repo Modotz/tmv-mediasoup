@@ -1,7 +1,7 @@
 const mediasoupClient = require("mediasoup-client")
 const { createVideo, createAudio, insertVideo, updatingLayout, changeLayout, createAudioVisualizer } = require("../ui/video")
 const { turnOffOnCamera, changeLayoutScreenSharingClient, addMuteAllButton } = require("../ui/button")
-const { createUserList, muteAllParticipants, goToLobby } = require(".")
+const { createUserList, muteAllParticipants, goToLobby, firstDocumentControl, getPdf } = require(".")
 const { encodingVP8, encodingsVP9 } = require("../config/mediasoup")
 
 const getEncoding = ({ parameter }) => {
@@ -59,24 +59,16 @@ const createSendTransport = async ({ socket, parameter }) => {
 							appData: parameters.appData,
 							roomName: parameter.roomName,
 						},
-						({ id, producersExist, kind }) => {
-							callback({ id })
-							if (producersExist && kind == "audio") getProducers({ parameter, socket })
+						async ({ id, producersExist, kind }) => {
+							await callback({ id })
+							if (producersExist && kind == "audio") await getProducers({ parameter, socket })
 							if (!producersExist) {
-								let pdfContainer = document.getElementById("pdf-container")
-								let sideBarContainer = document.getElementById("side-bar-container")
 								parameter.isHost = true
-								pdfContainer.className = "unlock-scroll"
-								pdfContainer.addEventListener("scroll", () => {
-									let pdfContainer = document.getElementById("pdf-container")
-									clearTimeout(parameter.scrollTimer)
-									
-									parameter.scrollTimer = setTimeout(function () {
-										let totalScroll = pdfContainer.scrollHeight - pdfContainer.clientHeight
-										let scrolled = Math.floor((pdfContainer.scrollTop/Math.floor(totalScroll))*100) 
-									}, 500)
-								})
-								addMuteAllButton({ parameter, socket })
+								let pdfController = document.getElementById("pdf-controller")
+								if (pdfController.childElementCount == 1) {
+									firstDocumentControl({ parameter, socket })
+									addMuteAllButton({ parameter, socket })
+								}
 							}
 						}
 					)
@@ -221,6 +213,9 @@ const connectRecvTransport = async ({ parameter, consumerTransport, socket, remo
 						muteAllParticipants({ parameter, socket })
 					}
 					let streamId
+					if (params?.appData?.label == "audio" && parameter.isHost) {
+						socket.emit("change-page", { socketId: params.producerSocketOwner, currentPage: parameter.pdfDocuments.firstDocument.currentPage })
+					}
 					if (params?.appData?.label == "audio" || params?.appData?.label == "video") streamId = `${params.producerSocketOwner}-mic-webcam`
 					else streamId = `${params.producerSocketOwner}-screen-sharing`
 

@@ -102,12 +102,14 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            flex-wrap: wrap;
+            background-color: #fff;
+            overflow-y: hidden;
         }
 
         #pdf-container {
             width: 95%;
             height: 95%;
-            background-color: white;
             display: flex;
             justify-content: center;
             overflow-y: hidden;
@@ -959,12 +961,10 @@
         <section id="upper-container">
             <div id="audio-collection"></div>
             <div id="side-bar-container">
+                <section id="pdf-controller">
+                    <p>Page : <span id="current-page"></span> / <span id="total-page"></span></p>
+                </section>
                 <div id="pdf-container">
-                    <section id="pdf-controller">
-                        <button id="prev-pdf">Previous</button>
-                        <p>Page : <span id="current-page"></span> / <span id="total-page"></span></p>
-                        <button id="next-pdf">Next</button>
-                    </section>
                     <canvas id="pdf-canvas"></canvas>
                 </div>
             </div>

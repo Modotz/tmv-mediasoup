@@ -56,7 +56,8 @@ class Parameters {
 			scale: 1,
 			canvas: null,
 			ctx: null,
-			position: 0
+			position: 0,
+			isDisplayed: true
 		},
 	}
 }

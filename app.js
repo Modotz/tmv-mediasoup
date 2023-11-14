@@ -165,7 +165,7 @@ io.on("connection", async (socket) => {
 				kind,
 				rtpParameters,
 				appData,
-				keyFrameRequestDelay: 1000
+				keyFrameRequestDelay: 1000,
 			})
 			let username
 			const editParticipants = serverParameter.allRooms[roomName].participants.map((data) => {
@@ -343,8 +343,12 @@ io.on("connection", async (socket) => {
 		producerData.producer.appData = { ...producerData.producer.appData, ...data }
 	})
 
-	socket.on("change-scroll", ({socketId, value}) => {
-		socket.to(socketId).emit("change-scroll", {value})
+	socket.on("change-scroll", ({ socketId, value }) => {
+		socket.to(socketId).emit("change-scroll", { value })
+	})
+
+	socket.on("change-page", ({ socketId, currentPage }) => {
+		socket.to(socketId).emit("change-page", { currentPage })
 	})
 })
 

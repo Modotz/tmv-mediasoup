@@ -8,6 +8,7 @@ const {
 	checkLocalStorage,
 	changeAppData,
 	getPdf,
+	renderPage,
 } = require("../room/function")
 const { getMyStream, getRoomId, joinRoom } = require("../room/function/initialization")
 const { signalNewConsumerTransport } = require("../room/function/mediasoup")
@@ -146,6 +147,21 @@ socket.on("unmute-all", (data) => {
 	} catch (error) {
 		console.log("- Error Unlocking Mic Participants Socket On : ", error)
 	}
+})
+
+socket.on("change-scroll", ({ socketId, value }) => {
+	try {
+		let pdfContainer = document.getElementById("pdf-container")
+		let totalScroll = pdfContainer.scrollHeight - pdfContainer.clientHeight
+		let scrolled = (value / 100) * totalScroll
+		pdfContainer.scrollTop = scrolled
+	} catch (error) {
+		console.log("- Error Change Scroll : ", error)
+	}
+})
+
+socket.on("change-page", ({ currentPage }) => {
+	renderPage({ parameter, num: currentPage })
 })
 
 /**  EVENT LISTENER  **/

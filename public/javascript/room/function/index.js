@@ -279,48 +279,103 @@ const changeAppData = ({ socket, data, remoteProducerId }) => {
 	socket.emit("change-app-data", { data, remoteProducerId })
 }
 
+const renderPage = ({ parameter, num }) => {
+	try {
+		parameter.pdfDocuments.firstDocument.pageRendering = true
+		parameter.pdfDocuments.firstDocument.doc.getPage(num).then((page) => {
+			let viewport = page.getViewport({ scale: parameter.pdfDocuments.firstDocument.scale })
+			parameter.pdfDocuments.firstDocument.canvas.height = viewport.height
+			parameter.pdfDocuments.firstDocument.canvas.width = viewport.width
+			let renderContext = {
+				canvasContext: parameter.pdfDocuments.firstDocument.ctx,
+				viewport,
+			}
+			let renderTask = page.render(renderContext)
+			renderTask.promise.then(() => {
+				parameter.pdfDocuments.firstDocument.pageRendering = false
+				if (parameter.pdfDocuments.firstDocument.pageNumPending !== null) {
+					renderPage({ parameter, num: parameter.pdfDocuments.firstDocument.pageNumPending })
+				}
+			})
+			document.getElementById("current-page").textContent = num
+		})
+	} catch (error) {
+		console.log("- Error Rendering Page : ", error)
+	}
+}
+
 const getPdf = ({ parameter }) => {
 	try {
 		parameter.pdfDocuments.firstDocument.canvas = document.getElementById("pdf-canvas")
 		parameter.pdfDocuments.firstDocument.ctx = parameter.pdfDocuments.firstDocument.canvas.getContext("2d")
-
-		const renderPage = (num) => {
-			try {
-				parameter.pdfDocuments.firstDocument.pageRendering = true
-				parameter.pdfDocuments.firstDocument.doc.getPage(num).then((page) => {
-					let viewport = page.getViewport({ scale: parameter.pdfDocuments.firstDocument.scale })
-					parameter.pdfDocuments.firstDocument.canvas.height = viewport.height
-					parameter.pdfDocuments.firstDocument.canvas.width = viewport.width
-					let renderContext = {
-						canvasContext: parameter.pdfDocuments.firstDocument.ctx,
-						viewport,
-					}
-					let renderTask = page.render(renderContext)
-					renderTask.promise.then(() => {
-						parameter.pdfDocuments.firstDocument.pageRendering = false
-						if (parameter.pdfDocuments.firstDocument.pageNumPending !== null) {
-							renderPage(parameter.pdfDocuments.firstDocument.pageNumPending)
-						}
-					})
-					document.getElementById("current-page").textContent = num
-				})
-			} catch (error) {
-				console.log("- Error Rendering Page : ", error)
-			}
-		}
-
 		window.pdfjsLib.getDocument("../../assets/pdf/mediasoupsfu.pdf").promise.then((pdf) => {
-			console.log(pdf)
 			parameter.pdfDocuments.firstDocument.doc = pdf
 			document.getElementById("total-page").textContent = pdf.numPages
-			renderPage(parameter.pdfDocuments.firstDocument.currentPage)
+			renderPage({ parameter, num: parameter.pdfDocuments.firstDocument.currentPage })
 		})
 	} catch (error) {
 		console.log("- Error Getting PDF : ", error)
 	}
 }
 
+const firstDocumentControl = async ({ parameter, socket }) => {
+	try {
+		let pdfController = document.getElementById("pdf-controller")
+		let pdfContainer = document.getElementById("pdf-container")
+		let nextButton = document.createElement("button")
+		nextButton.innerHTML = "Next"
+		let prevButton = document.createElement("button")
+		prevButton.innerHTML = "Prev"
+
+		nextButton.addEventListener("click", () => {
+			if (parameter.pdfDocuments.firstDocument.currentPage >= parameter.pdfDocuments.firstDocument.doc.numPage) {
+				return
+			}
+			parameter.pdfDocuments.firstDocument.currentPage++
+			parameter.allUsers.forEach((data) => {
+				if (data.socketId != socket.id) {
+					socket.emit("change-page", { socketId: data.socketId, currentPage: parameter.pdfDocuments.firstDocument.currentPage })
+				}
+			})
+			renderPage({ parameter, num: parameter.pdfDocuments.firstDocument.currentPage })
+		})
+		prevButton.addEventListener("click", () => {
+			if (parameter.pdfDocuments.firstDocument.currentPage <= 1) {
+				return
+			}
+			parameter.pdfDocuments.firstDocument.currentPage--
+			parameter.allUsers.forEach((data) => {
+				if (data.socketId != socket.id) {
+					socket.emit("change-page", { socketId: data.socketId, currentPage: parameter.pdfDocuments.firstDocument.currentPage })
+				}
+			})
+			renderPage({ parameter, num: parameter.pdfDocuments.firstDocument.currentPage })
+		})
+
+		pdfController.insertBefore(prevButton, pdfController.firstChild)
+		pdfController.append(nextButton)
+
+		pdfContainer.className = "unlock-scroll"
+		pdfContainer.addEventListener("scroll", () => {
+			let pdfContainer = document.getElementById("pdf-container")
+			clearTimeout(parameter.scrollTimer)
+			parameter.scrollTimer = setTimeout(function () {
+				let totalScroll = pdfContainer.scrollHeight - pdfContainer.clientHeight
+				let scrolled = Math.floor((pdfContainer.scrollTop / Math.floor(totalScroll)) * 100)
+				parameter.allUsers.forEach((data) => {
+					if (data.socketId != socket.id) {
+						socket.emit("change-scroll", { socketId: data.socketId, value: scrolled })
+					}
+				})
+			}, 500)
+		})
+	} catch (error) {
+		console.log("- Error Document First Control : ")
+	}
+}
+
 module.exports = {
+	firstDocumentControl,
 	startTimer,
 	timerLayout,
 	createUserList,
@@ -336,4 +391,5 @@ module.exports = {
 	changeAppData,
 	goToLobby,
 	getPdf,
+	renderPage,
 }

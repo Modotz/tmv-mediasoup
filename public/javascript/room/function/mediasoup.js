@@ -62,7 +62,22 @@ const createSendTransport = async ({ socket, parameter }) => {
 						({ id, producersExist, kind }) => {
 							callback({ id })
 							if (producersExist && kind == "audio") getProducers({ parameter, socket })
-							if (!producersExist) addMuteAllButton({ parameter, socket })
+							if (!producersExist) {
+								let pdfContainer = document.getElementById("pdf-container")
+								let sideBarContainer = document.getElementById("side-bar-container")
+								parameter.isHost = true
+								pdfContainer.className = "unlock-scroll"
+								pdfContainer.addEventListener("scroll", () => {
+									let pdfContainer = document.getElementById("pdf-container")
+									clearTimeout(parameter.scrollTimer)
+									
+									parameter.scrollTimer = setTimeout(function () {
+										let totalScroll = pdfContainer.scrollHeight - pdfContainer.clientHeight
+										let scrolled = Math.floor((pdfContainer.scrollTop/Math.floor(totalScroll))*100) 
+									}, 500)
+								})
+								addMuteAllButton({ parameter, socket })
+							}
 						}
 					)
 				} catch (error) {
@@ -227,7 +242,7 @@ const connectRecvTransport = async ({ parameter, consumerTransport, socket, remo
 					// 				console.log("- With Codec : ", value.bytesReceived - withCodec)
 					// 				withCodec = value.bytesReceived
 					// 				// break
-					// 			} 
+					// 			}
 					// 		}
 					// 	}, 1000)
 					// }
@@ -263,7 +278,7 @@ const connectRecvTransport = async ({ parameter, consumerTransport, socket, remo
 						}
 						parameter.allUsers = [...parameter.allUsers, data]
 						updatingLayout({ parameter })
-						changeLayout({ parameter })
+						// changeLayout({ parameter })
 						createVideo({
 							id: params.producerSocketOwner,
 							videoClassName: parameter.videoLayout,
@@ -272,13 +287,13 @@ const connectRecvTransport = async ({ parameter, consumerTransport, socket, remo
 							micTrigger: params.appData.isMicActive,
 						})
 						turnOffOnCamera({ id: params.producerSocketOwner, status: false })
-						createUserList({
-							username: params.username,
-							socketId: params.producerSocketOwner,
-							cameraTrigger: params.appData.isVideoActive,
-							picture: params.appData.picture,
-							micTrigger: params.appData.isMicActive,
-						})
+						// createUserList({
+						// 	username: params.username,
+						// 	socketId: params.producerSocketOwner,
+						// 	cameraTrigger: params.appData.isVideoActive,
+						// 	picture: params.appData.picture,
+						// 	micTrigger: params.appData.isMicActive,
+						// })
 					}
 					if (params.kind == "audio" && params.appData.label == "audio") {
 						createAudio({ id: params.producerSocketOwner, track })

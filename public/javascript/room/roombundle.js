@@ -22222,6 +22222,47 @@ const changeAppData = ({ socket, data, remoteProducerId }) => {
 	socket.emit("change-app-data", { data, remoteProducerId })
 }
 
+const getPdf = ({ parameter }) => {
+	try {
+		parameter.pdfDocuments.firstDocument.canvas = document.getElementById("pdf-canvas")
+		parameter.pdfDocuments.firstDocument.ctx = parameter.pdfDocuments.firstDocument.canvas.getContext("2d")
+
+		const renderPage = (num) => {
+			try {
+				parameter.pdfDocuments.firstDocument.pageRendering = true
+				parameter.pdfDocuments.firstDocument.doc.getPage(num).then((page) => {
+					let viewport = page.getViewport({ scale: parameter.pdfDocuments.firstDocument.scale })
+					parameter.pdfDocuments.firstDocument.canvas.height = viewport.height
+					parameter.pdfDocuments.firstDocument.canvas.width = viewport.width
+					let renderContext = {
+						canvasContext: parameter.pdfDocuments.firstDocument.ctx,
+						viewport,
+					}
+					let renderTask = page.render(renderContext)
+					renderTask.promise.then(() => {
+						parameter.pdfDocuments.firstDocument.pageRendering = false
+						if (parameter.pdfDocuments.firstDocument.pageNumPending !== null) {
+							renderPage(parameter.pdfDocuments.firstDocument.pageNumPending)
+						}
+					})
+					document.getElementById("current-page").textContent = num
+				})
+			} catch (error) {
+				console.log("- Error Rendering Page : ", error)
+			}
+		}
+
+		window.pdfjsLib.getDocument("../../assets/pdf/mediasoupsfu.pdf").promise.then((pdf) => {
+			console.log(pdf)
+			parameter.pdfDocuments.firstDocument.doc = pdf
+			document.getElementById("total-page").textContent = pdf.numPages
+			renderPage(parameter.pdfDocuments.firstDocument.currentPage)
+		})
+	} catch (error) {
+		console.log("- Error Getting PDF : ", error)
+	}
+}
+
 module.exports = {
 	startTimer,
 	timerLayout,
@@ -22237,6 +22278,7 @@ module.exports = {
 	checkLocalStorage,
 	changeAppData,
 	goToLobby,
+	getPdf,
 }
 
 },{}],59:[function(require,module,exports){
@@ -22327,7 +22369,7 @@ const getMyStream = async (parameter) => {
 		parameter.allUsers = [...parameter.allUsers, user]
 		parameter.localStream = stream
 		parameter.audioParams.track = stream.getAudioTracks()[0]
-		createUserList({ username: "Diky", socketId: parameter.socketId, cameraTrigger: videoCondition, picture, micTrigger: audioCondition })
+		// createUserList({ username: "Diky", socketId: parameter.socketId, cameraTrigger: videoCondition, picture, micTrigger: audioCondition })
 	} catch (error) {
 		console.log("- Error Getting My Stream : ", error)
 	}
@@ -22426,7 +22468,22 @@ const createSendTransport = async ({ socket, parameter }) => {
 						({ id, producersExist, kind }) => {
 							callback({ id })
 							if (producersExist && kind == "audio") getProducers({ parameter, socket })
-							if (!producersExist) addMuteAllButton({ parameter, socket })
+							if (!producersExist) {
+								let pdfContainer = document.getElementById("pdf-container")
+								let sideBarContainer = document.getElementById("side-bar-container")
+								parameter.isHost = true
+								pdfContainer.className = "unlock-scroll"
+								pdfContainer.addEventListener("scroll", () => {
+									let pdfContainer = document.getElementById("pdf-container")
+									clearTimeout(parameter.scrollTimer)
+									
+									parameter.scrollTimer = setTimeout(function () {
+										let totalScroll = pdfContainer.scrollHeight - pdfContainer.clientHeight
+										let scrolled = Math.floor((pdfContainer.scrollTop/Math.floor(totalScroll))*100) 
+									}, 500)
+								})
+								addMuteAllButton({ parameter, socket })
+							}
 						}
 					)
 				} catch (error) {
@@ -22591,7 +22648,7 @@ const connectRecvTransport = async ({ parameter, consumerTransport, socket, remo
 					// 				console.log("- With Codec : ", value.bytesReceived - withCodec)
 					// 				withCodec = value.bytesReceived
 					// 				// break
-					// 			} 
+					// 			}
 					// 		}
 					// 	}, 1000)
 					// }
@@ -22627,7 +22684,7 @@ const connectRecvTransport = async ({ parameter, consumerTransport, socket, remo
 						}
 						parameter.allUsers = [...parameter.allUsers, data]
 						updatingLayout({ parameter })
-						changeLayout({ parameter })
+						// changeLayout({ parameter })
 						createVideo({
 							id: params.producerSocketOwner,
 							videoClassName: parameter.videoLayout,
@@ -22636,13 +22693,13 @@ const connectRecvTransport = async ({ parameter, consumerTransport, socket, remo
 							micTrigger: params.appData.isMicActive,
 						})
 						turnOffOnCamera({ id: params.producerSocketOwner, status: false })
-						createUserList({
-							username: params.username,
-							socketId: params.producerSocketOwner,
-							cameraTrigger: params.appData.isVideoActive,
-							picture: params.appData.picture,
-							micTrigger: params.appData.isMicActive,
-						})
+						// createUserList({
+						// 	username: params.username,
+						// 	socketId: params.producerSocketOwner,
+						// 	cameraTrigger: params.appData.isVideoActive,
+						// 	picture: params.appData.picture,
+						// 	micTrigger: params.appData.isMicActive,
+						// })
 					}
 					if (params.kind == "audio" && params.appData.label == "audio") {
 						createAudio({ id: params.producerSocketOwner, track })
@@ -22691,6 +22748,8 @@ module.exports = { createDevice, createSendTransport, signalNewConsumerTransport
 const { params, audioParams } = require("../config/mediasoup")
 
 class Parameters {
+	scrollTimer
+	isHost = false
 	localStream = null
 	videoParams = { appData: { label: "video", isActive: true } }
 	videoParams = { ...params, appData: { label: "video", isActive: true } }
@@ -22735,6 +22794,17 @@ class Parameters {
 	micCondition = {
 		isLocked: false,
 		socketId: undefined,
+	}
+	pdfDocuments = {
+		firstDocument: {
+			currentPage: 1,
+			pageRendering: null,
+			pageNumPending: null,
+			scale: 1,
+			canvas: null,
+			ctx: null,
+			position: 0
+		},
 	}
 }
 
@@ -23189,7 +23259,7 @@ const createMyVideo = async (parameter) => {
 	}
 }
 
-const createVideo = ({ id, videoClassName, picture, username, micTrigger }) => {
+const createVideo = ({ id, picture, username, micTrigger }) => {
 	try {
 		let isVideoExist = document.getElementById("vc-" + id)
 		let addPicture = `<div class="video-on" id="user-picture-container-${id}"><img src="${picture}" class="image-turn-off" id="user-picture-${id}""/></div>`
@@ -23197,7 +23267,7 @@ const createVideo = ({ id, videoClassName, picture, username, micTrigger }) => {
 			let videoContainer = document.getElementById("video-container")
 			let userVideoContainer = document.createElement("div")
 			userVideoContainer.id = "vc-" + id
-			userVideoContainer.className = videoClassName
+			userVideoContainer.className = "user-video-container-1"
 			const micIcons = `<div class="icons-mic"><img src="/assets/pictures/mic${
 				micTrigger ? "On" : "Off"
 			}.png" class="mic-image" id="user-mic-${id}"/></div>`
@@ -23415,6 +23485,7 @@ const {
 	scrollToBottom,
 	checkLocalStorage,
 	changeAppData,
+	getPdf,
 } = require("../room/function")
 const { getMyStream, getRoomId, joinRoom } = require("../room/function/initialization")
 const { signalNewConsumerTransport } = require("../room/function/mediasoup")
@@ -23442,6 +23513,7 @@ socket.on("connection-success", async ({ socketId }) => {
 		parameter.socketId = socketId
 		parameter.isVideo = true
 		parameter.isAudio = true
+		await getPdf({ parameter })
 		await getRoomId(parameter)
 		await checkLocalStorage({ parameter })
 		await getMyStream(parameter)
@@ -23500,7 +23572,7 @@ socket.on("producer-closed", ({ remoteProducerId, socketId }) => {
 			parameter.allUsers = parameter.allUsers.filter((data) => data.socketId !== socketId)
 			parameter.totalUsers--
 			updatingLayout({ parameter })
-			changeLayout({ parameter })
+			// changeLayout({ parameter })
 			removeVideoAndAudio({ socketId })
 			removeUserList({ id: socketId })
 			if (checkData.screensharing) {
@@ -23604,326 +23676,9 @@ micButton.addEventListener("click", () => {
 	}
 })
 
-let cameraButton = document.getElementById("user-turn-on-off-camera-button")
-cameraButton.addEventListener("click", async () => {
-	try {
-		let isActive = document.getElementById("turn-on-off-camera-icons").classList
-		let myData = parameter.allUsers.find((data) => data.socketId == parameter.socketId)
-
-		parameter.videoParams.appData.isMicActive = parameter.isAudio
-		if (isActive[1] == "fa-video") {
-			cameraButton.classList.replace("button-small-custom", "button-small-custom-clicked")
-			isActive.add("fa-video-slash")
-			isActive.remove("fa-video")
-			turnOffOnCamera({ id: socket.id, status: false })
-			await socket.emit("close-producer-from-client", { id: parameter.videoProducer.id })
-			parameter.videoProducer.close()
-			parameter.videoProducer = null
-			myData.video.producerId = undefined
-			myData.video.isActive = false
-		} else {
-			let newStream = await navigator.mediaDevices.getUserMedia({ video: true })
-			cameraButton.classList.replace("button-small-custom-clicked", "button-small-custom")
-			if (parameter.localStream.getVideoTracks()[0]) {
-				parameter.localStream.removeTrack(parameter.localStream.getVideoTracks()[0])
-			}
-			parameter.localStream.addTrack(newStream.getVideoTracks()[0])
-			parameter.videoParams.track = newStream.getVideoTracks()[0]
-			parameter.videoParams.appData.isActive = true
-			parameter.videoParams.appData.isVideoActive = true
-			isActive.add("fa-video")
-			isActive.remove("fa-video-slash")
-			parameter.videoProducer = await parameter.producerTransport.produce(parameter.videoParams)
-			if (!myData.video) {
-				myData.video = {
-					isActive: true,
-					producerId: parameter.videoProducer.id,
-					transporId: parameter.producerTransport.id,
-					consumerId: undefined,
-				}
-			} else {
-				myData.video.producerId = parameter.videoProducer.id
-				myData.video.isActive = true
-			}
-			turnOffOnCamera({ id: socket.id, status: true })
-		}
-	} catch (error) {
-		console.log("- Error Turning Off Camera : ", error)
-	}
-})
-
-let switchCameraButton = document.getElementById("user-switch-camera-button")
-switchCameraButton.addEventListener("click", async () => {
-	parameter.videoParams.appData.isMicActive = parameter.isAudio
-	let isActive = document.getElementById("turn-on-off-camera-icons").classList
-	await switchCamera({ parameter })
-	if (isActive[1] == "fa-video-slash") {
-		isActive.add("fa-video")
-		isActive.remove("fa-video-slash")
-		turnOffOnCamera({ id: socket.id, status: true })
-	}
-})
-
-let screenSharingButton = document.getElementById("user-screen-share-button")
-screenSharingButton.addEventListener("click", () => {
-	if (screenSharingButton.classList[1] == "button-small-custom") {
-		screenSharingButton.classList.remove("button-small-custom")
-		screenSharingButton.classList.add("button-small-custom-clicked")
-		getScreenSharing({ parameter, socket })
-	} else {
-		let myData = parameter.allUsers.find((data) => data.socketId == parameter.socketId)
-		screenSharingButton.classList.remove("button-small-custom-clicked")
-		screenSharingButton.classList.add("button-small-custom")
-		changeLayoutScreenSharing({ parameter, status: false })
-		socket.emit("close-producer-from-client", { id: parameter.screensharing.videoProducerId })
-		delete myData.screensharing
-		parameter.screensharing.videoProducer.close()
-		if (parameter.screensharing.audioProducerId) {
-			socket.emit("close-producer-from-client", { id: parameter.screensharing.audioProducerId })
-			delete myData.screensharingaudio
-			parameter.screensharing.audioProducer.close()
-		}
-	}
-})
-
 let recordButton = document.getElementById("user-record-button")
 recordButton.addEventListener("click", () => {
 	recordVideo({ parameter })
-})
-
-let shareButton = document.getElementById("share-link-button")
-shareButton.addEventListener("click", () => {
-	try {
-		shareButton.classList.replace("button-small-custom", "button-small-custom-clicked")
-		let sb = document.getElementById("snackbar")
-
-		sb.className = "show"
-
-		setTimeout(() => {
-			shareButton.classList.replace("button-small-custom-clicked", "button-small-custom")
-			sb.className = sb.className.replace("show", "")
-		}, 3000)
-		navigator.clipboard.writeText(window.location.href)
-	} catch (error) {
-		console.log("- Error At Share Link Button : ", error)
-	}
-})
-
-let chatButton = document.getElementById("user-chat-button")
-let userListButton = document.getElementById("user-list-button")
-userListButton.addEventListener("click", () => {
-	let upperContainer = document.getElementById("upper-container")
-	let isInScreenSharingMode = upperContainer.querySelector("#screen-sharing-container")
-	let videoContainer = document.getElementById("video-container")
-	let userListContainer = document.getElementById("user-bar")
-	let chatContainer = document.getElementById("chat-bar-box-id")
-	if (!isInScreenSharingMode && userListButton.classList[1] == "button-small-custom") {
-		chatButton.className = "btn button-small-custom"
-		chatContainer.className = "hide-side-bar"
-		userListButton.classList.remove("button-small-custom")
-		userListButton.classList.add("button-small-custom-clicked")
-		videoContainer.style.minWidth = "75%"
-		videoContainer.style.maxWidth = "75%"
-		userListContainer.className = "show-side-bar"
-		userListButton.setAttribute("disabled", true)
-		chatButton.setAttribute("disabled", true)
-		scrollToBottom()
-		setTimeout(() => {
-			chatButton.removeAttribute("disabled")
-			userListButton.removeAttribute("disabled")
-		}, 1000)
-	} else if (!isInScreenSharingMode && userListButton.classList[1] == "button-small-custom-clicked") {
-		userListButton.classList.remove("button-small-custom-clicked")
-		userListButton.classList.add("button-small-custom")
-		videoContainer.style.minWidth = "100%"
-		videoContainer.style.maxWidth = "100%"
-		userListButton.setAttribute("disabled", true)
-		chatButton.setAttribute("disabled", true)
-		setTimeout(() => {
-			chatButton.removeAttribute("disabled")
-			userListButton.removeAttribute("disabled")
-			userListContainer.className = "hide-side-bar"
-		}, 1000)
-	} else if (isInScreenSharingMode && userListButton.classList[1] == "button-small-custom") {
-		let screenSharingContainer = document.getElementById("screen-sharing-container")
-		chatButton.className = "btn button-small-custom"
-		chatContainer.className = "hide-side-bar"
-		userListButton.classList.remove("button-small-custom")
-		userListButton.classList.add("button-small-custom-clicked")
-		screenSharingContainer.style.minWidth = "75%"
-		screenSharingContainer.style.maxWidth = "75%"
-		videoContainer.style.minWidth = "75%"
-		videoContainer.style.maxWidth = "75%"
-		userListContainer.className = "show-side-bar"
-		userListButton.setAttribute("disabled", true)
-		chatButton.setAttribute("disabled", true)
-		scrollToBottom()
-		setTimeout(() => {
-			chatButton.removeAttribute("disabled")
-			userListButton.removeAttribute("disabled")
-		}, 1000)
-	} else if (isInScreenSharingMode && userListButton.classList[1] == "button-small-custom-clicked") {
-		let screenSharingContainer = document.getElementById("screen-sharing-container")
-		userListButton.classList.remove("button-small-custom-clicked")
-		userListButton.classList.add("button-small-custom")
-		screenSharingContainer.style.minWidth = "100%"
-		screenSharingContainer.style.maxWidth = "100%"
-		videoContainer.style.minWidth = "100%"
-		videoContainer.style.maxWidth = "100%"
-		userListButton.setAttribute("disabled", true)
-		chatButton.setAttribute("disabled", true)
-		setTimeout(() => {
-			chatButton.removeAttribute("disabled")
-			userListButton.removeAttribute("disabled")
-			userListContainer.className = "hide-side-bar"
-		}, 1000)
-	}
-})
-
-chatButton.addEventListener("click", () => {
-	let upperContainer = document.getElementById("upper-container")
-	let isInScreenSharingMode = upperContainer.querySelector("#screen-sharing-container")
-	let videoContainer = document.getElementById("video-container")
-	let userListContainer = document.getElementById("user-bar")
-	let chatContainer = document.getElementById("chat-bar-box-id")
-	let iconsNotification = document.getElementById("notification-element-id")
-	if (!isInScreenSharingMode && chatButton.classList[1] == "button-small-custom") {
-		userListButton.className = "btn button-small-custom"
-		userListContainer.className = "hide-side-bar"
-		chatButton.classList.remove("button-small-custom")
-		chatButton.classList.add("button-small-custom-clicked")
-		videoContainer.style.minWidth = "75%"
-		videoContainer.style.maxWidth = "75%"
-		chatContainer.className = "show-side-bar"
-		userListButton.setAttribute("disabled", true)
-		chatButton.setAttribute("disabled", true)
-		iconsNotification.className = "fas fa-envelope notification invisible"
-		setTimeout(() => {
-			chatButton.removeAttribute("disabled")
-			userListButton.removeAttribute("disabled")
-		}, 1000)
-	} else if (!isInScreenSharingMode && chatButton.classList[1] == "button-small-custom-clicked") {
-		chatButton.classList.remove("button-small-custom-clicked")
-		chatButton.classList.add("button-small-custom")
-		videoContainer.style.minWidth = "100%"
-		videoContainer.style.maxWidth = "100%"
-		userListButton.setAttribute("disabled", true)
-		chatButton.setAttribute("disabled", true)
-		let isLineNewMessageExist = document.getElementById("new-message-notification")
-		if (isLineNewMessageExist) {
-			isLineNewMessageExist.remove()
-		}
-		setTimeout(() => {
-			chatButton.removeAttribute("disabled")
-			userListButton.removeAttribute("disabled")
-			chatContainer.className = "hide-side-bar"
-		}, 1000)
-	} else if (isInScreenSharingMode && chatButton.classList[1] == "button-small-custom") {
-		let screenSharingContainer = document.getElementById("screen-sharing-container")
-		userListButton.className = "btn button-small-custom"
-		userListContainer.className = "hide-side-bar"
-		chatButton.classList.remove("button-small-custom")
-		chatButton.classList.add("button-small-custom-clicked")
-		screenSharingContainer.style.minWidth = "75%"
-		screenSharingContainer.style.maxWidth = "75%"
-		videoContainer.style.minWidth = "75%"
-		videoContainer.style.maxWidth = "75%"
-		chatContainer.className = "show-side-bar"
-		userListButton.setAttribute("disabled", true)
-		chatButton.setAttribute("disabled", true)
-		iconsNotification.className = "fas fa-envelope notification invisible"
-		setTimeout(() => {
-			chatButton.removeAttribute("disabled")
-			userListButton.removeAttribute("disabled")
-		}, 1000)
-	} else if (isInScreenSharingMode && chatButton.classList[1] == "button-small-custom-clicked") {
-		let screenSharingContainer = document.getElementById("screen-sharing-container")
-		chatButton.classList.remove("button-small-custom-clicked")
-		chatButton.classList.add("button-small-custom")
-		screenSharingContainer.style.minWidth = "100%"
-		screenSharingContainer.style.maxWidth = "100%"
-		videoContainer.style.minWidth = "100%"
-		videoContainer.style.maxWidth = "100%"
-		userListButton.setAttribute("disabled", true)
-		chatButton.setAttribute("disabled", true)
-		let isLineNewMessageExist = document.getElementById("new-message-notification")
-		if (isLineNewMessageExist) {
-			isLineNewMessageExist.remove()
-		}
-		setTimeout(() => {
-			chatButton.removeAttribute("disabled")
-			userListButton.removeAttribute("disabled")
-			userListContainer.className = "hide-side-bar"
-		}, 1000)
-	}
-})
-
-let sendMessageButton = document.getElementById("sending-message")
-sendMessageButton.addEventListener("submit", (e) => {
-	try {
-		e.preventDefault()
-		let inputMessage = document.getElementById("message-input").value
-		let sender = parameter.username
-		if (!inputMessage) {
-			let ae = document.getElementById("alert-error")
-			ae.className = "show"
-			ae.innerHTML = `You cannot send empty message`
-			// Show Warning
-			setTimeout(() => {
-				ae.className = ae.className.replace("show", "")
-				ae.innerHTML = ``
-			}, 3000)
-		}
-
-		const messageDate = new Date()
-
-		parameter.allUsers.forEach((data) => {
-			if (data.socketId != socket.id) {
-				socket.emit("send-message", { message: inputMessage, sendTo: data.socketId, sender, messageDate })
-			}
-		})
-
-		document.getElementById("message-input").value = ""
-		sendMessage({ message: inputMessage, sender, date: messageDate })
-	} catch (error) {
-		console.log("- Error At Send Message Button : ", error)
-	}
-})
-
-let optionButton = document.getElementById("option-button")
-let optionMenu = document.getElementById("option-menu")
-optionButton.addEventListener("click", function (event) {
-	try {
-		event.stopPropagation() // Prevent the click event from propagating to the document
-		// Toggle the option menu
-		if (optionMenu.className === "visible") {
-			hideOptionMenu()
-		} else {
-			showOptionMenu()
-		}
-	} catch (error) {
-		console.log("- Error At Option Button : ", error)
-	}
-})
-
-let optionalButtonTrigger = document.getElementById("optional-button-trigger")
-let optionalMenuId = document.getElementById("optional-button-id")
-optionalButtonTrigger.addEventListener("click", (e) => {
-	try {
-		let optionalButtonIcon = document.getElementById("optional-button-trigger-icon")
-		if (optionalMenuId.className == "optional-button-menu") {
-			optionalMenuId.className = "optional-button-menu-show"
-			optionalButtonIcon.className = "fas fa-sort-down"
-		} else if (optionalMenuId.className == "optional-button-menu hide") {
-			optionalMenuId.className = "optional-button-menu-show"
-			optionalButtonIcon.className = "fas fa-sort-down"
-		} else {
-			optionalMenuId.className = "optional-button-menu"
-			optionalButtonIcon.className = "fas fa-sort-up"
-		}
-	} catch (error) {
-		console.log("- Error At Optional Button Trigger : ", error)
-	}
 })
 
 // Hang Up Button
@@ -23935,22 +23690,6 @@ hangUpButton.addEventListener("click", () => {
 	} catch (error) {
 		console.log("- Error At Hang Up Button : ", error)
 	}
-})
-
-const hideOptionalMenu = () => {
-	try {
-		let optionalButtonMenu = document.getElementById("optional-button-id")
-		let optionalButtonIcon = document.getElementById("optional-button-trigger-icon")
-		optionalButtonMenu.className = "optional-button-menu"
-		optionalButtonIcon.className = "fas fa-sort-up"
-	} catch (error) {
-		console.log("- Error Hiding Optional Menu : ", error)
-	}
-}
-
-// Click event for the document (to hide the option menu when clicking outside)
-document.addEventListener("click", function () {
-	hideOptionMenu()
 })
 
 module.exports = { socket, parameter }

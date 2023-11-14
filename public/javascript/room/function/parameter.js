@@ -1,6 +1,8 @@
 const { params, audioParams } = require("../config/mediasoup")
 
 class Parameters {
+	scrollTimer
+	isHost = false
 	localStream = null
 	videoParams = { appData: { label: "video", isActive: true } }
 	videoParams = { ...params, appData: { label: "video", isActive: true } }
@@ -45,6 +47,17 @@ class Parameters {
 	micCondition = {
 		isLocked: false,
 		socketId: undefined,
+	}
+	pdfDocuments = {
+		firstDocument: {
+			currentPage: 1,
+			pageRendering: null,
+			pageNumPending: null,
+			scale: 1,
+			canvas: null,
+			ctx: null,
+			position: 0
+		},
 	}
 }
 

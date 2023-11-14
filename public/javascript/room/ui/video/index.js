@@ -19,7 +19,7 @@ const createMyVideo = async (parameter) => {
 	}
 }
 
-const createVideo = ({ id, videoClassName, picture, username, micTrigger }) => {
+const createVideo = ({ id, picture, username, micTrigger }) => {
 	try {
 		let isVideoExist = document.getElementById("vc-" + id)
 		let addPicture = `<div class="video-on" id="user-picture-container-${id}"><img src="${picture}" class="image-turn-off" id="user-picture-${id}""/></div>`
@@ -27,7 +27,7 @@ const createVideo = ({ id, videoClassName, picture, username, micTrigger }) => {
 			let videoContainer = document.getElementById("video-container")
 			let userVideoContainer = document.createElement("div")
 			userVideoContainer.id = "vc-" + id
-			userVideoContainer.className = videoClassName
+			userVideoContainer.className = "user-video-container-1"
 			const micIcons = `<div class="icons-mic"><img src="/assets/pictures/mic${
 				micTrigger ? "On" : "Off"
 			}.png" class="mic-image" id="user-mic-${id}"/></div>`

@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css"
         integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <link rel="icon" type="image/png" href="/favicon.png">
+    <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@2.7.570/build/pdf.min.js"></script>
     <title>Telepati</title>
     <style>
         * {
@@ -61,16 +62,22 @@
         }
 
         #video-container {
-            min-width: 100%;
-            max-width: 100%;
+            min-width: 30%;
+            max-width: 30%;
             height: 100%;
             display: flex;
-            justify-content: center;
+            justify-content: space-evenly;
             align-items: center;
+            align-content: center;
             flex-wrap: wrap;
             overflow-y: auto;
             z-index: 1;
             transition: 1s;
+            /* background-color: red; */
+        }
+
+        .unlock-scroll {
+            overflow-y: auto !important;
         }
 
         .hide-side-bar {
@@ -89,9 +96,32 @@
         }
 
         #side-bar-container {
-            width: 25%;
+            width: 70%;
             height: 100%;
             top: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #pdf-container {
+            width: 95%;
+            height: 95%;
+            background-color: white;
+            display: flex;
+            justify-content: center;
+            overflow-y: hidden;
+            flex-wrap: wrap;
+        }
+
+        #pdf-controller {
+            margin: 10px;
+            width: 100%;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: baseline;
+            flex-wrap: wrap;
         }
 
         #user-bar {
@@ -124,133 +154,11 @@
         }
 
         .user-video-container-1 {
-            margin: 10px;
             display: flex;
             justify-content: center;
             background-color: black;
-            height: 80%;
-            width: 80%;
-            position: relative;
-            transition: 1s;
-        }
-
-        .user-video-container-2 {
-            margin: 10px;
-            display: flex;
-            justify-content: center;
-            background-color: black;
-            height: 80%;
-            width: 40%;
-            position: relative;
-            transition: 1s;
-        }
-
-        .user-video-container-3 {
-            margin: 10px;
-            display: flex;
-            justify-content: center;
-            background-color: black;
-            height: 40%;
-            width: 40%;
-            position: relative;
-            transition: 1s;
-        }
-
-        .user-video-container-4 {
-            margin: 10px;
-            display: flex;
-            justify-content: center;
-            background-color: black;
-            height: 40%;
-            width: 40%;
-            position: relative;
-            transition: 1s;
-        }
-
-        .user-video-container-5 {
-            margin: 10px;
-            display: flex;
-            justify-content: center;
-            background-color: black;
-            height: 40%;
-            width: 30%;
-            position: relative;
-            transition: 1s;
-        }
-
-        .user-video-container-6 {
-            margin: 10px;
-            display: flex;
-            justify-content: center;
-            background-color: black;
-            height: 40%;
-            width: 30%;
-            position: relative;
-            transition: 1s;
-        }
-
-        .user-video-container-7 {
-            margin: 10px;
-            display: flex;
-            justify-content: center;
-            background-color: black;
-            height: 30%;
-            width: 30%;
-            position: relative;
-            transition: 1s;
-        }
-
-        .user-video-container-8 {
-            margin: 10px;
-            display: flex;
-            justify-content: center;
-            background-color: black;
-            height: 30%;
-            width: 30%;
-            position: relative;
-            transition: 1s;
-        }
-
-        .user-video-container-9 {
-            margin: 10px;
-            display: flex;
-            justify-content: center;
-            background-color: black;
-            height: 30%;
-            width: 30%;
-            position: relative;
-            transition: 1s;
-        }
-
-        .user-video-container-10 {
-            margin: 10px;
-            display: flex;
-            justify-content: center;
-            background-color: black;
-            height: 30%;
-            width: 22%;
-            position: relative;
-            transition: 1s;
-        }
-
-        .user-video-container-11 {
-            margin: 10px;
-            display: flex;
-            justify-content: center;
-            background-color: black;
-            height: 30%;
-            width: 22%;
-            position: relative;
-            transition: 1s;
-        }
-
-        .user-video-container-12 {
-            margin: 10px;
-            display: flex;
-            justify-content: center;
-            background-color: black;
-            height: 30%;
-            width: 22%;
+            height: 20%;
+            width: 25%;
             position: relative;
             transition: 1s;
         }
@@ -296,10 +204,10 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            top: 10px;
-            right: 10px;
-            width: 20px;
-            height: 20px;
+            top: 2px;
+            right: 2px;
+            width: 15px;
+            height: 15px;
             border-radius: 30px;
             transition: 0.3s;
             background: #1e1f20;
@@ -307,17 +215,17 @@
         }
 
         .mic-image {
-            width: 12px;
-            height: 12px;
+            width: 8px;
+            height: 8px;
         }
 
         .audio-visualizer {
             position: absolute;
             background-color: #33333300;
-            width: 20px;
-            height: 20px;
-            right: 10px;
-            top: 10px;
+            width: 15px;
+            height: 15px;
+            right: 2px;
+            top: 2px;
             border-radius: 50%;
             z-index: 4;
         }
@@ -1034,8 +942,8 @@
         .username {
             border-radius: 4px;
             position: absolute;
-            bottom: 10px;
-            left: 10px;
+            bottom: 0px;
+            left: 0px;
             color: white;
             font-size: 11px;
             background: rgba(0, 0, 0, 0.4);
@@ -1050,33 +958,17 @@
         <span id="alert-error"></span>
         <section id="upper-container">
             <div id="audio-collection"></div>
-            <div id="video-container">
-            </div>
             <div id="side-bar-container">
-                <div id="user-bar" class="hide-side-bar">
-                    <div id="user-bar-header"><i class="fas fa-users"></i>User</div>
-                    <div id="user-list">
-                    </div>
+                <div id="pdf-container">
+                    <section id="pdf-controller">
+                        <button id="prev-pdf">Previous</button>
+                        <p>Page : <span id="current-page"></span> / <span id="total-page"></span></p>
+                        <button id="next-pdf">Next</button>
+                    </section>
+                    <canvas id="pdf-canvas"></canvas>
                 </div>
-                <div id="chat-bar-box-id" class="hide-side-bar">
-                    <div id="chat-bar-header">
-                        <span>In Call Message</span>
-                    </div>
-                    <div class="chat-container" id="chat-container-id">
-                        <div class="chat-messages" id="chat-messages-id">
-                        </div>
-                    </div>
-                    <div class="chat-footer">
-                        <div class="chat-send">
-                            <form id="sending-message" autocomplete="off">
-                                <input class="form-control type-box" id="message-input" placeholder="Type Message..." />
-                                <button class="btn send-button" id="send-message-button" type="submit">
-                                    <span class="send-text">Send</span>
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
+            </div>
+            <div id="video-container">
             </div>
         </section>
         <section id="bottom-container">
@@ -1084,46 +976,14 @@
                 <span id="user-mic-button-tooltip">Microphone</span>
                 <img src="/assets/pictures/micOn.png" id="mic-image" />
             </button>
-            <button class="btn button-small-custom" id="user-turn-on-off-camera-button">
-                <span id="user-turn-on-off-camera-button-tooltip">Camera</span>
-                <i class="fas fa-video" style="color: #ffffff;" id="turn-on-off-camera-icons"></i>
-            </button>
             <button class="btn button-big-custom" id="user-hang-up-button">
                 <span id="user-hang-up-button-tooltip">Hang Up</span>
                 <img src="/assets/pictures/hangUp.png" />
             </button>
-            <button class="btn button-small-custom" id="optional-button-trigger">
-                <i class="fas fa-sort-up" style="color: #ffffff;" id="optional-button-trigger-icon"></i>
+            <button class="btn button-small-custom" id="user-record-button">
+                <span id="user-record-button-tooltip">Record</span>
+                <i class="far fa-dot-circle" id="record-image" style="color: #bbb;"></i>
             </button>
-            <div class="optional-button-menu hide" id="optional-button-id">
-                <button class="btn button-small-custom" id="user-switch-camera-button">
-                    <span id="user-switch-camera-button-tooltip">Switch Camera</span>
-                    <img src="/assets/pictures/switchCamera.png" />
-                </button>
-                <button class="btn button-small-custom" id="user-screen-share-button">
-                    <span id="user-screen-share-button-tooltip">Sharing Screen</span>
-                    <img src="/assets/pictures/share.png" />
-                </button>
-                <button class="btn button-small-custom" id="user-record-button">
-                    <span id="user-record-button-tooltip">Record</span>
-                    <i class="far fa-dot-circle" id="record-image" style="color: #bbb;"></i>
-                </button>
-                <button class="btn button-small-custom" id="user-list-button">
-                    <span id="user-list-button-tooltip">Participants</span>
-                    <i class="fas fa-users" style="color: #ffffff;"></i>
-                </button>
-                <button class="btn button-small-custom" id="user-chat-button">
-                    <span id="user-chat-button-tooltip">Chat</span>
-                    <i class="fas fa-envelope notification invisible" style="color: yellow;"
-                        id="notification-element-id"></i>
-                    <i class="fas fa-comment-dots" style="color: white;"></i>
-                </button>
-                <button class="btn button-small-custom" id="share-link-button">
-                    <span id="share-link-button-tooltip">Share Link</span>
-                    <i class="far fa-share-square" style="color: white;"></i>
-                    <span id="snackbar">Successfully Copied</span>
-                </button>
-            </div>
             <button class="btn button-small-custom" id="option-button">
                 <span id="option-button-tooltip">Settings</span>
                 <i class="fas fa-ellipsis-v" style="color: white;"></i>

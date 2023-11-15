@@ -38,7 +38,8 @@ const timerLayout = ({ status }) => {
 			let timerElement = document.getElementById("timer")
 			if (timerElement) timerElement.remove()
 			let recordButton = document.getElementById("user-record-button")
-			recordButton.className = "btn button-small-custom"
+			recordButton.className = "btn btn-secondary"
+			recordButton.firstChild.innerHTML = "Start"
 		}
 	} catch (error) {
 		console.log("- Error At Timer Layout : ", error)
@@ -279,22 +280,22 @@ const changeAppData = ({ socket, data, remoteProducerId }) => {
 	socket.emit("change-app-data", { data, remoteProducerId })
 }
 
-const renderPage = ({ parameter, num }) => {
+const renderPage = ({ parameter, num, pdfDocument }) => {
 	try {
-		parameter.pdfDocuments.firstDocument.pageRendering = true
-		parameter.pdfDocuments.firstDocument.doc.getPage(num).then((page) => {
-			let viewport = page.getViewport({ scale: parameter.pdfDocuments.firstDocument.scale })
-			parameter.pdfDocuments.firstDocument.canvas.height = viewport.height
-			parameter.pdfDocuments.firstDocument.canvas.width = viewport.width
+		parameter.pdfDocuments[pdfDocument].pageRendering = true
+		parameter.pdfDocuments[pdfDocument].doc.getPage(num).then((page) => {
+			let viewport = page.getViewport({ scale: parameter.pdfDocuments[pdfDocument].scale })
+			parameter.pdfDocuments[pdfDocument].canvas.height = viewport.height
+			parameter.pdfDocuments[pdfDocument].canvas.width = viewport.width
 			let renderContext = {
-				canvasContext: parameter.pdfDocuments.firstDocument.ctx,
+				canvasContext: parameter.pdfDocuments[pdfDocument].ctx,
 				viewport,
 			}
 			let renderTask = page.render(renderContext)
 			renderTask.promise.then(() => {
-				parameter.pdfDocuments.firstDocument.pageRendering = false
-				if (parameter.pdfDocuments.firstDocument.pageNumPending !== null) {
-					renderPage({ parameter, num: parameter.pdfDocuments.firstDocument.pageNumPending })
+				parameter.pdfDocuments[pdfDocument].pageRendering = false
+				if (parameter.pdfDocuments[pdfDocument].pageNumPending !== null) {
+					renderPage({ parameter, num: parameter.pdfDocuments[pdfDocument].pageNumPending })
 				}
 			})
 			document.getElementById("current-page").textContent = num
@@ -304,58 +305,73 @@ const renderPage = ({ parameter, num }) => {
 	}
 }
 
-const getPdf = ({ parameter }) => {
+const getPdf = ({ parameter, pdfDocument }) => {
 	try {
-		parameter.pdfDocuments.firstDocument.canvas = document.getElementById("pdf-canvas")
-		parameter.pdfDocuments.firstDocument.ctx = parameter.pdfDocuments.firstDocument.canvas.getContext("2d")
-		window.pdfjsLib.getDocument("../../assets/pdf/mediasoupsfu.pdf").promise.then((pdf) => {
-			parameter.pdfDocuments.firstDocument.doc = pdf
+		let pdfContainer = document.getElementById("pdf-container")
+		let isExist = document.getElementById("pdf-canvas")
+		if (isExist) isExist.remove()
+		let pdfCanvas = document.createElement("canvas")
+		pdfCanvas.id = "pdf-canvas"
+		pdfContainer.appendChild(pdfCanvas)
+		let location
+		for (const key in parameter.pdfDocuments) {
+			if (key == pdfDocument) {
+				location = parameter.pdfDocuments[key].location
+				parameter.pdfDocuments[key].isDisplayed = true
+			} else parameter.pdfDocuments[key].isDisplayed = false
+		}
+		parameter.pdfDocuments[pdfDocument].canvas = document.getElementById("pdf-canvas")
+		parameter.pdfDocuments[pdfDocument].ctx = parameter.pdfDocuments[pdfDocument].canvas.getContext("2d")
+		parameter.pdfDocuments[pdfDocument].ctx.clearRect(
+			0,
+			0,
+			parameter.pdfDocuments[pdfDocument].canvas.width,
+			parameter.pdfDocuments[pdfDocument].canvas.height
+		)
+		window.pdfjsLib.getDocument(location).promise.then((pdf) => {
+			parameter.pdfDocuments[pdfDocument].doc = pdf
 			document.getElementById("total-page").textContent = pdf.numPages
-			renderPage({ parameter, num: parameter.pdfDocuments.firstDocument.currentPage })
+			parameter.pdfDocuments[pdfDocument].numPages = pdf.numPages
+			renderPage({ parameter, num: parameter.pdfDocuments[pdfDocument].currentPage, pdfDocument })
 		})
 	} catch (error) {
 		console.log("- Error Getting PDF : ", error)
 	}
 }
 
-const firstDocumentControl = async ({ parameter, socket }) => {
+const firstPdfControl = async ({ parameter, socket, pdfDocument }) => {
 	try {
-		let pdfController = document.getElementById("pdf-controller")
 		let pdfContainer = document.getElementById("pdf-container")
-		let nextButton = document.createElement("button")
-		nextButton.innerHTML = "Next"
-		let prevButton = document.createElement("button")
-		prevButton.innerHTML = "Prev"
+		let nextButton = document.getElementById("next-page")
+		let prevButton = document.getElementById("prev-page")
+		nextButton.className = "btn btn-info m-2"
+		prevButton.className = "btn btn-info m-2"
 
 		nextButton.addEventListener("click", () => {
-			if (parameter.pdfDocuments.firstDocument.currentPage >= parameter.pdfDocuments.firstDocument.doc.numPage) {
+			if (parameter.pdfDocuments[pdfDocument].currentPage >= parameter.pdfDocuments[pdfDocument].doc.numPages) {
 				return
 			}
-			parameter.pdfDocuments.firstDocument.currentPage++
+			parameter.pdfDocuments[pdfDocument].currentPage++
 			parameter.allUsers.forEach((data) => {
 				if (data.socketId != socket.id) {
-					socket.emit("change-page", { socketId: data.socketId, currentPage: parameter.pdfDocuments.firstDocument.currentPage })
+					socket.emit("change-page", { socketId: data.socketId, currentPage: parameter.pdfDocuments[pdfDocument].currentPage, pdfDocument })
 				}
 			})
-			renderPage({ parameter, num: parameter.pdfDocuments.firstDocument.currentPage })
+			renderPage({ parameter, num: parameter.pdfDocuments[pdfDocument].currentPage, pdfDocument })
 		})
 		prevButton.addEventListener("click", () => {
-			if (parameter.pdfDocuments.firstDocument.currentPage <= 1) {
+			if (parameter.pdfDocuments[pdfDocument].currentPage <= 1) {
 				return
 			}
-			parameter.pdfDocuments.firstDocument.currentPage--
+			parameter.pdfDocuments[pdfDocument].currentPage--
 			parameter.allUsers.forEach((data) => {
 				if (data.socketId != socket.id) {
-					socket.emit("change-page", { socketId: data.socketId, currentPage: parameter.pdfDocuments.firstDocument.currentPage })
+					socket.emit("change-page", { socketId: data.socketId, currentPage: parameter.pdfDocuments[pdfDocument].currentPage, pdfDocument })
 				}
 			})
-			renderPage({ parameter, num: parameter.pdfDocuments.firstDocument.currentPage })
+			renderPage({ parameter, num: parameter.pdfDocuments[pdfDocument].currentPage, pdfDocument })
 		})
 
-		pdfController.insertBefore(prevButton, pdfController.firstChild)
-		pdfController.append(nextButton)
-
-		pdfContainer.className = "unlock-scroll"
 		pdfContainer.addEventListener("scroll", () => {
 			let pdfContainer = document.getElementById("pdf-container")
 			clearTimeout(parameter.scrollTimer)
@@ -370,12 +386,43 @@ const firstDocumentControl = async ({ parameter, socket }) => {
 			}, 500)
 		})
 	} catch (error) {
+		console.log("- Error Controlling First PDF : ", error)
+	}
+}
+
+const addPdfController = async () => {
+	try {
+		let pdfController = document.getElementById("pdf-controller")
+		let pdfContainer = document.getElementById("pdf-container")
+		let nextButton = document.createElement("button")
+		nextButton.innerHTML = "Next"
+		nextButton.id = "next-page"
+		let prevButton = document.createElement("button")
+		prevButton.innerHTML = "Prev"
+		prevButton.id = "prev-page"
+		pdfController.insertBefore(prevButton, pdfController.firstChild)
+		pdfController.append(nextButton)
+		pdfContainer.className = "unlock-scroll"
+	} catch (error) {
 		console.log("- Error Document First Control : ")
 	}
 }
 
+const resetButton = () => {
+	try {
+		let nextButton = document.getElementById("next-page")
+		let prevButton = document.getElementById("prev-page")
+		let clonedNextButton = nextButton.cloneNode(true)
+		let clonedPrevButton = prevButton.cloneNode(true)
+		nextButton.remove()
+		prevButton.remove()
+	} catch (error) {
+		console.log("- Error Reset Button : ", error)
+	}
+}
+
 module.exports = {
-	firstDocumentControl,
+	addPdfController,
 	startTimer,
 	timerLayout,
 	createUserList,
@@ -392,4 +439,6 @@ module.exports = {
 	goToLobby,
 	getPdf,
 	renderPage,
+	firstPdfControl,
+	resetButton
 }

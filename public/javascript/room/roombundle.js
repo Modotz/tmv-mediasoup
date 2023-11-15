@@ -21981,7 +21981,8 @@ const timerLayout = ({ status }) => {
 			let timerElement = document.getElementById("timer")
 			if (timerElement) timerElement.remove()
 			let recordButton = document.getElementById("user-record-button")
-			recordButton.className = "btn button-small-custom"
+			recordButton.className = "btn btn-secondary"
+			recordButton.firstChild.innerHTML = "Start"
 		}
 	} catch (error) {
 		console.log("- Error At Timer Layout : ", error)
@@ -22222,22 +22223,22 @@ const changeAppData = ({ socket, data, remoteProducerId }) => {
 	socket.emit("change-app-data", { data, remoteProducerId })
 }
 
-const renderPage = ({ parameter, num }) => {
+const renderPage = ({ parameter, num, pdfDocument }) => {
 	try {
-		parameter.pdfDocuments.firstDocument.pageRendering = true
-		parameter.pdfDocuments.firstDocument.doc.getPage(num).then((page) => {
-			let viewport = page.getViewport({ scale: parameter.pdfDocuments.firstDocument.scale })
-			parameter.pdfDocuments.firstDocument.canvas.height = viewport.height
-			parameter.pdfDocuments.firstDocument.canvas.width = viewport.width
+		parameter.pdfDocuments[pdfDocument].pageRendering = true
+		parameter.pdfDocuments[pdfDocument].doc.getPage(num).then((page) => {
+			let viewport = page.getViewport({ scale: parameter.pdfDocuments[pdfDocument].scale })
+			parameter.pdfDocuments[pdfDocument].canvas.height = viewport.height
+			parameter.pdfDocuments[pdfDocument].canvas.width = viewport.width
 			let renderContext = {
-				canvasContext: parameter.pdfDocuments.firstDocument.ctx,
+				canvasContext: parameter.pdfDocuments[pdfDocument].ctx,
 				viewport,
 			}
 			let renderTask = page.render(renderContext)
 			renderTask.promise.then(() => {
-				parameter.pdfDocuments.firstDocument.pageRendering = false
-				if (parameter.pdfDocuments.firstDocument.pageNumPending !== null) {
-					renderPage({ parameter, num: parameter.pdfDocuments.firstDocument.pageNumPending })
+				parameter.pdfDocuments[pdfDocument].pageRendering = false
+				if (parameter.pdfDocuments[pdfDocument].pageNumPending !== null) {
+					renderPage({ parameter, num: parameter.pdfDocuments[pdfDocument].pageNumPending })
 				}
 			})
 			document.getElementById("current-page").textContent = num
@@ -22247,58 +22248,73 @@ const renderPage = ({ parameter, num }) => {
 	}
 }
 
-const getPdf = ({ parameter }) => {
+const getPdf = ({ parameter, pdfDocument }) => {
 	try {
-		parameter.pdfDocuments.firstDocument.canvas = document.getElementById("pdf-canvas")
-		parameter.pdfDocuments.firstDocument.ctx = parameter.pdfDocuments.firstDocument.canvas.getContext("2d")
-		window.pdfjsLib.getDocument("../../assets/pdf/mediasoupsfu.pdf").promise.then((pdf) => {
-			parameter.pdfDocuments.firstDocument.doc = pdf
+		let pdfContainer = document.getElementById("pdf-container")
+		let isExist = document.getElementById("pdf-canvas")
+		if (isExist) isExist.remove()
+		let pdfCanvas = document.createElement("canvas")
+		pdfCanvas.id = "pdf-canvas"
+		pdfContainer.appendChild(pdfCanvas)
+		let location
+		for (const key in parameter.pdfDocuments) {
+			if (key == pdfDocument) {
+				location = parameter.pdfDocuments[key].location
+				parameter.pdfDocuments[key].isDisplayed = true
+			} else parameter.pdfDocuments[key].isDisplayed = false
+		}
+		parameter.pdfDocuments[pdfDocument].canvas = document.getElementById("pdf-canvas")
+		parameter.pdfDocuments[pdfDocument].ctx = parameter.pdfDocuments[pdfDocument].canvas.getContext("2d")
+		parameter.pdfDocuments[pdfDocument].ctx.clearRect(
+			0,
+			0,
+			parameter.pdfDocuments[pdfDocument].canvas.width,
+			parameter.pdfDocuments[pdfDocument].canvas.height
+		)
+		window.pdfjsLib.getDocument(location).promise.then((pdf) => {
+			parameter.pdfDocuments[pdfDocument].doc = pdf
 			document.getElementById("total-page").textContent = pdf.numPages
-			renderPage({ parameter, num: parameter.pdfDocuments.firstDocument.currentPage })
+			parameter.pdfDocuments[pdfDocument].numPages = pdf.numPages
+			renderPage({ parameter, num: parameter.pdfDocuments[pdfDocument].currentPage, pdfDocument })
 		})
 	} catch (error) {
 		console.log("- Error Getting PDF : ", error)
 	}
 }
 
-const firstDocumentControl = async ({ parameter, socket }) => {
+const firstPdfControl = async ({ parameter, socket, pdfDocument }) => {
 	try {
-		let pdfController = document.getElementById("pdf-controller")
 		let pdfContainer = document.getElementById("pdf-container")
-		let nextButton = document.createElement("button")
-		nextButton.innerHTML = "Next"
-		let prevButton = document.createElement("button")
-		prevButton.innerHTML = "Prev"
+		let nextButton = document.getElementById("next-page")
+		let prevButton = document.getElementById("prev-page")
+		nextButton.className = "btn btn-info m-2"
+		prevButton.className = "btn btn-info m-2"
 
 		nextButton.addEventListener("click", () => {
-			if (parameter.pdfDocuments.firstDocument.currentPage >= parameter.pdfDocuments.firstDocument.doc.numPage) {
+			if (parameter.pdfDocuments[pdfDocument].currentPage >= parameter.pdfDocuments[pdfDocument].doc.numPages) {
 				return
 			}
-			parameter.pdfDocuments.firstDocument.currentPage++
+			parameter.pdfDocuments[pdfDocument].currentPage++
 			parameter.allUsers.forEach((data) => {
 				if (data.socketId != socket.id) {
-					socket.emit("change-page", { socketId: data.socketId, currentPage: parameter.pdfDocuments.firstDocument.currentPage })
+					socket.emit("change-page", { socketId: data.socketId, currentPage: parameter.pdfDocuments[pdfDocument].currentPage, pdfDocument })
 				}
 			})
-			renderPage({ parameter, num: parameter.pdfDocuments.firstDocument.currentPage })
+			renderPage({ parameter, num: parameter.pdfDocuments[pdfDocument].currentPage, pdfDocument })
 		})
 		prevButton.addEventListener("click", () => {
-			if (parameter.pdfDocuments.firstDocument.currentPage <= 1) {
+			if (parameter.pdfDocuments[pdfDocument].currentPage <= 1) {
 				return
 			}
-			parameter.pdfDocuments.firstDocument.currentPage--
+			parameter.pdfDocuments[pdfDocument].currentPage--
 			parameter.allUsers.forEach((data) => {
 				if (data.socketId != socket.id) {
-					socket.emit("change-page", { socketId: data.socketId, currentPage: parameter.pdfDocuments.firstDocument.currentPage })
+					socket.emit("change-page", { socketId: data.socketId, currentPage: parameter.pdfDocuments[pdfDocument].currentPage, pdfDocument })
 				}
 			})
-			renderPage({ parameter, num: parameter.pdfDocuments.firstDocument.currentPage })
+			renderPage({ parameter, num: parameter.pdfDocuments[pdfDocument].currentPage, pdfDocument })
 		})
 
-		pdfController.insertBefore(prevButton, pdfController.firstChild)
-		pdfController.append(nextButton)
-
-		pdfContainer.className = "unlock-scroll"
 		pdfContainer.addEventListener("scroll", () => {
 			let pdfContainer = document.getElementById("pdf-container")
 			clearTimeout(parameter.scrollTimer)
@@ -22313,12 +22329,43 @@ const firstDocumentControl = async ({ parameter, socket }) => {
 			}, 500)
 		})
 	} catch (error) {
+		console.log("- Error Controlling First PDF : ", error)
+	}
+}
+
+const addPdfController = async () => {
+	try {
+		let pdfController = document.getElementById("pdf-controller")
+		let pdfContainer = document.getElementById("pdf-container")
+		let nextButton = document.createElement("button")
+		nextButton.innerHTML = "Next"
+		nextButton.id = "next-page"
+		let prevButton = document.createElement("button")
+		prevButton.innerHTML = "Prev"
+		prevButton.id = "prev-page"
+		pdfController.insertBefore(prevButton, pdfController.firstChild)
+		pdfController.append(nextButton)
+		pdfContainer.className = "unlock-scroll"
+	} catch (error) {
 		console.log("- Error Document First Control : ")
 	}
 }
 
+const resetButton = () => {
+	try {
+		let nextButton = document.getElementById("next-page")
+		let prevButton = document.getElementById("prev-page")
+		let clonedNextButton = nextButton.cloneNode(true)
+		let clonedPrevButton = prevButton.cloneNode(true)
+		nextButton.remove()
+		prevButton.remove()
+	} catch (error) {
+		console.log("- Error Reset Button : ", error)
+	}
+}
+
 module.exports = {
-	firstDocumentControl,
+	addPdfController,
 	startTimer,
 	timerLayout,
 	createUserList,
@@ -22335,6 +22382,8 @@ module.exports = {
 	goToLobby,
 	getPdf,
 	renderPage,
+	firstPdfControl,
+	resetButton
 }
 
 },{}],59:[function(require,module,exports){
@@ -22462,8 +22511,16 @@ module.exports = { getMyStream, getRoomId, joinRoom }
 },{".":58,"../../socket":65,"./mediasoup":60}],60:[function(require,module,exports){
 const mediasoupClient = require("mediasoup-client")
 const { createVideo, createAudio, insertVideo, updatingLayout, changeLayout, createAudioVisualizer } = require("../ui/video")
-const { turnOffOnCamera, changeLayoutScreenSharingClient, addMuteAllButton } = require("../ui/button")
-const { createUserList, muteAllParticipants, goToLobby, firstDocumentControl, getPdf } = require(".")
+const {
+	turnOffOnCamera,
+	changeLayoutScreenSharingClient,
+	addMuteAllButton,
+	addEndButton,
+	addStartButton,
+	addRulesButton,
+	addAktaButton,
+} = require("../ui/button")
+const { createUserList, muteAllParticipants, goToLobby, addPdfController, getPdf, firstPdfControl } = require(".")
 const { encodingVP8, encodingsVP9 } = require("../config/mediasoup")
 
 const getEncoding = ({ parameter }) => {
@@ -22528,8 +22585,13 @@ const createSendTransport = async ({ socket, parameter }) => {
 								parameter.isHost = true
 								let pdfController = document.getElementById("pdf-controller")
 								if (pdfController.childElementCount == 1) {
-									firstDocumentControl({ parameter, socket })
+									addPdfController()
+									firstPdfControl({ parameter, socket, pdfDocument: "firstDocument" })
 									addMuteAllButton({ parameter, socket })
+									addEndButton({ parameter })
+									addStartButton({ parameter })
+									addRulesButton({ parameter, socket })
+									addAktaButton({ parameter, socket })
 								}
 							}
 						}
@@ -22586,29 +22648,6 @@ const connectSendTransport = async (parameter) => {
 		parameter.audioProducer.on("transportclose", () => {
 			console.log("audio transport ended")
 		})
-
-		// let r1,
-		// 	r2,
-		// 	r3 = 0
-
-		// const stat = setInterval(async () => {
-		// 	const report = await parameter.producerTransport.getStats()
-		// 	// console.log("- PT : ", )
-		// 	for (const value of report.values()) {
-		// 		if (value.kind == "video" && value.type == "outbound-rtp" && value.rid == "r1") {
-		// 			console.log("- Rid : ", value.rid, " - Sent : ", value.bytesSent - r1)
-		// 			r1 = value.bytesSent
-		// 		}
-		// 		if (value.kind == "video" && value.type == "outbound-rtp" && value.rid == "r2") {
-		// 			console.log("- Rid : ", value.rid, " - Sent : ", value.bytesSent - r2)
-		// 			r2 = value.bytesSent
-		// 		}
-		// 		if (value.kind == "video" && value.type == "outbound-rtp" && value.rid == "r3") {
-		// 			console.log("- Rid : ", value.rid, " - Sent : ", value.bytesSent - r3)
-		// 			r3 = value.bytesSent
-		// 		}
-		// 	}
-		// }, 1000)
 	} catch (error) {
 		console.log("- Error Connecting Transport Producer : ", error)
 	}
@@ -22676,7 +22715,20 @@ const connectRecvTransport = async ({ parameter, consumerTransport, socket, remo
 					}
 					let streamId
 					if (params?.appData?.label == "audio" && parameter.isHost) {
-						socket.emit("change-page", { socketId: params.producerSocketOwner, currentPage: parameter.pdfDocuments.firstDocument.currentPage })
+						let pdfDocument
+						for (const key in parameter.pdfDocuments) {
+							if (parameter.pdfDocuments[key].isDisplayed) {
+								pdfDocument = key
+							}
+						}
+						socket.emit("change-pdf", { socketId: params.producerSocketOwner, pdfDocument })
+						setTimeout(() => {
+							socket.emit("change-page", {
+								socketId: params.producerSocketOwner,
+								currentPage: parameter.pdfDocuments[pdfDocument].currentPage,
+								pdfDocument,
+							})
+						}, 500)
 					}
 					if (params?.appData?.label == "audio" || params?.appData?.label == "video") streamId = `${params.producerSocketOwner}-mic-webcam`
 					else streamId = `${params.producerSocketOwner}-screen-sharing`
@@ -22855,7 +22907,21 @@ class Parameters {
 			canvas: null,
 			ctx: null,
 			position: 0,
-			isDisplayed: true
+			isDisplayed: true,
+			location: "../../assets/pdf/mediasoupsfu.pdf",
+			numPages: undefined
+		},
+		secondDocument: {
+			currentPage: 1,
+			pageRendering: null,
+			pageNumPending: null,
+			scale: 1,
+			canvas: null,
+			ctx: null,
+			position: 0,
+			isDisplayed: false,
+			location: "../../assets/pdf/sample.pdf",
+			numPages: undefined
 		},
 	}
 }
@@ -22866,7 +22932,7 @@ module.exports = { Parameters }
 const { socket } = require("../socket")
 },{"../socket":65}],63:[function(require,module,exports){
 const RecordRTC = require("recordrtc")
-const { timerLayout, muteAllParticipants, unlockAllMic } = require("../../function")
+const { timerLayout, muteAllParticipants, unlockAllMic, getPdf, firstPdfControl, addPdfController, resetButton } = require("../../function")
 
 const changeMic = ({ parameter, socket, status }) => {
 	parameter.allUsers.forEach((data) => {
@@ -23081,10 +23147,11 @@ const slideUserVideoButton = ({ status }) => {
 const recordVideo = async ({ parameter }) => {
 	try {
 		let recordButton = document.getElementById("user-record-button")
+		console.log(recordButton.firstChild)
 
-		if (recordButton.classList[1] == "button-small-custom") {
-			recordButton.classList.remove("button-small-custom")
-			recordButton.classList.add("button-small-custom-clicked")
+		if (recordButton.firstChild.innerHTML == "Start") {
+			recordButton.firstChild.innerHTML = "Started"
+			recordButton.className = "btn btn-danger"
 			const videoStream = await navigator.mediaDevices.getDisplayMedia({
 				video: {
 					cursor: "always",
@@ -23130,7 +23197,6 @@ const recordVideo = async ({ parameter }) => {
 
 			parameter.record.recordedMedia.startRecording()
 			parameter.record.recordedStream.getAudioTracks()[0].onended = () => {
-				console.log("- Reset Audio Recording")
 				parameter.record.audioContext = null
 				parameter.record.audioDestination = null
 			}
@@ -23171,8 +23237,8 @@ const recordVideo = async ({ parameter }) => {
 
 			timerLayout({ status: true })
 		} else {
-			recordButton.classList.remove("button-small-custom-clicked")
-			recordButton.classList.add("button-small-custom")
+			recordButton.firstChild.innerHTML = "Start"
+			recordButton.className = "btn btn-secondary"
 			parameter.record.recordedMedia.stopRecording(() => {
 				// socket.send({ type: 'uploading' })
 				timerLayout({ status: false })
@@ -23243,24 +23309,26 @@ const recordVideo = async ({ parameter }) => {
 
 const addMuteAllButton = ({ parameter, socket }) => {
 	try {
-		let allOptionMenu = document.getElementById("all-option-menu")
+		let rightSection = document.getElementById("right-section")
 		let isExist = document.getElementById("mute-all")
 		parameter.micCondition.socketId = parameter.socketId
 		if (!isExist) {
-			const newElement = document.createElement("li")
+			const newElement = document.createElement("button")
 			newElement.id = "mute-all"
-			newElement.style.fontSize = "13px"
-			newElement.innerHTML = "Mute All Participants"
-			allOptionMenu.appendChild(newElement)
+			newElement.className = "btn btn-success"
+			newElement.innerHTML = `<span id="mute-all-text">Mute All</span>`
+			rightSection.insertBefore(newElement, rightSection.firstChild)
 			newElement.addEventListener("click", () => {
-				if (newElement.innerHTML == "Mute All Participants") {
+				if (newElement.firstChild.innerHTML == "Mute All") {
 					muteAllParticipants({ parameter, socket })
 					parameter.micCondition.isLocked = true
-					newElement.innerHTML = "Unmute All Participants"
-				} else if (newElement.innerHTML == "Unmute All Participants") {
+					newElement.className = "btn btn-danger"
+					newElement.firstChild.innerHTML = "Unmute All"
+				} else if (newElement.firstChild.innerHTML == "Unmute All") {
 					parameter.micCondition.isLocked = false
 					unlockAllMic({ parameter, socket })
-					newElement.innerHTML = "Mute All Participants"
+					newElement.firstChild.innerHTML = "Mute All"
+					newElement.className = "btn btn-success"
 				} else {
 					let ae = document.getElementById("alert-error")
 					ae.className = "show"
@@ -23278,6 +23346,89 @@ const addMuteAllButton = ({ parameter, socket }) => {
 	}
 }
 
+const addEndButton = ({ parameter }) => {
+	try {
+		let rightSection = document.getElementById("right-section")
+		let endButton = document.createElement("button")
+		endButton.id = "end-button"
+		endButton.className = "btn btn-danger"
+		endButton.innerHTML = `<span>End</span>`
+		rightSection.appendChild(endButton)
+	} catch (error) {
+		console.log("- Error Adding End Button : ", error)
+	}
+}
+
+const addStartButton = ({ parameter }) => {
+	try {
+		let leftSection = document.getElementById("left-section")
+		let startButton = document.createElement("button")
+		startButton.id = "user-record-button"
+		startButton.className = "btn btn-secondary"
+		startButton.innerHTML = `<span>Start</span>`
+		leftSection.appendChild(startButton)
+		startButton.addEventListener("click", () => {
+			recordVideo({ parameter })
+		})
+	} catch (error) {
+		console.log("- Error Adding Start Button : ", error)
+	}
+}
+
+const addRulesButton = ({ parameter, socket }) => {
+	try {
+		let leftSection = document.getElementById("left-section")
+		let rulesButton = document.createElement("button")
+		rulesButton.id = "rules-button"
+		rulesButton.className = "btn btn-success"
+		rulesButton.innerHTML = `<span>Tata Tertib</span>`
+		leftSection.appendChild(rulesButton)
+		rulesButton.addEventListener("click", () => {
+			let aktaButton = document.getElementById("akta-button")
+			aktaButton.className = "btn btn-secondary"
+			rulesButton.className = "btn btn-success"
+			getPdf({ parameter, pdfDocument: "firstDocument" })
+			addPdfController()
+			resetButton()
+			firstPdfControl({ parameter, socket, pdfDocument: "firstDocument" })
+			parameter.allUsers.forEach((data) => {
+				if (data.socketId != socket.id) {
+					socket.emit("change-pdf", { socketId: data.socketId, pdfDocument: "firstDocument" })
+				}
+			})
+		})
+	} catch (error) {
+		console.log("- Error Adding Rules Button : ", error)
+	}
+}
+
+const addAktaButton = ({ parameter, socket }) => {
+	try {
+		let leftSection = document.getElementById("left-section")
+		let aktaButton = document.createElement("button")
+		aktaButton.id = "akta-button"
+		aktaButton.className = "btn btn-secondary"
+		aktaButton.innerHTML = `<span>Akta</span>`
+		leftSection.appendChild(aktaButton)
+		aktaButton.addEventListener("click", () => {
+			let rulesButton = document.getElementById("rules-button")
+			rulesButton.className = "btn btn-secondary"
+			aktaButton.className = "btn btn-success"
+			getPdf({ parameter, pdfDocument: "secondDocument" })
+			addPdfController()
+			resetButton()
+			firstPdfControl({ parameter, socket, pdfDocument: "secondDocument" })
+			parameter.allUsers.forEach((data) => {
+				if (data.socketId != socket.id) {
+					socket.emit("change-pdf", { socketId: data.socketId, pdfDocument: "secondDocument" })
+				}
+			})
+		})
+	} catch (error) {
+		console.log("- Error Adding Rules Button : ", error)
+	}
+}
+
 module.exports = {
 	changeMic,
 	turnOffOnCamera,
@@ -23287,6 +23438,10 @@ module.exports = {
 	changeLayoutScreenSharingClient,
 	recordVideo,
 	addMuteAllButton,
+	addStartButton,
+	addEndButton,
+	addRulesButton,
+	addAktaButton,
 }
 
 },{"../../function":58,"recordrtc":51}],64:[function(require,module,exports){
@@ -23566,7 +23721,7 @@ socket.on("connection-success", async ({ socketId }) => {
 		parameter.socketId = socketId
 		parameter.isVideo = true
 		parameter.isAudio = true
-		await getPdf({ parameter })
+		await getPdf({ parameter, pdfDocument: "firstDocument" })
 		await getRoomId(parameter)
 		await checkLocalStorage({ parameter })
 		await getMyStream(parameter)
@@ -23653,18 +23808,17 @@ socket.on("receive-message", ({ message, sender, messageDate }) => {
 socket.on("mute-all", ({ hostSocketId }) => {
 	try {
 		let micButton = document.getElementById("user-mic-button")
-		let micImage = document.getElementById("mic-image")
 		let myIconMic = document.getElementById(`user-mic-${socket.id}`)
 		if (myIconMic) myIconMic.src = "/assets/pictures/micOff.png"
 		parameter.micCondition.isLocked = true
 		parameter.micCondition.socketId = hostSocketId
-		micButton.classList.replace("button-small-custom", "button-small-custom-clicked")
+		micButton.classList.replace("btn-success", "btn-danger")
+		micButton.firstElementChild.innerHTML = "Muted"
 		let user = parameter.allUsers.find((data) => data.socketId == socket.id)
 		user.audio.track.enabled = false
 		user.audio.isActive = false
 		changeMic({ parameter, status: false, socket })
 		changeUserListMicIcon({ status: true, id: socket.id })
-		micImage.src = "/assets/pictures/micOff.png"
 	} catch (error) {
 		console.log("- Error Muting All Participants : ", error)
 	}
@@ -23690,8 +23844,12 @@ socket.on("change-scroll", ({ socketId, value }) => {
 	}
 })
 
-socket.on("change-page", ({ currentPage }) => {
-	renderPage({ parameter, num: currentPage })
+socket.on("change-page", ({ currentPage, pdfDocument }) => {
+	renderPage({ parameter, num: currentPage, pdfDocument })
+})
+
+socket.on("change-pdf", ({ pdfDocument }) => {
+	getPdf({ parameter, pdfDocument })
 })
 
 /**  EVENT LISTENER  **/
@@ -23709,24 +23867,23 @@ micButton.addEventListener("click", () => {
 		}, 3000)
 		return
 	}
-	// let isActive = micButton.querySelector("img").src.split('/').pop();
-	let isActive = micButton.querySelector("img").src.includes("micOn.png")
+	let isActive = micButton.firstElementChild.innerHTML
 	let myIconMic = document.getElementById(`user-mic-${socket.id}`)
 	let user = parameter.allUsers.find((data) => data.socketId == socket.id)
-	if (isActive) {
+	console.log(isActive)
+	if (isActive == "Mute") {
 		parameter.isAudio = false
 		changeAppData({
 			socket,
 			data: { isActive: false, isMicActive: false, isVideoActive: parameter.videoProducer ? true : false },
 			remoteProducerId: parameter.audioProducer.id,
 		})
-		micButton.classList.replace("button-small-custom", "button-small-custom-clicked")
+		micButton.classList.replace("btn-success", "btn-danger")
 		user.audio.track.enabled = false
 		user.audio.isActive = false
 		myIconMic.src = "/assets/pictures/micOff.png"
-		micButton.querySelector("img").src = "/assets/pictures/micOff.png"
 		changeMic({ parameter, status: false, socket })
-		changeUserListMicIcon({ status: true, id: socket.id })
+		micButton.firstElementChild.innerHTML = "Muted"
 	} else {
 		parameter.isAudio = false
 		changeAppData({
@@ -23734,29 +23891,12 @@ micButton.addEventListener("click", () => {
 			data: { isActive: false, isMicActive: false, isVideoActive: parameter.videoProducer ? true : false },
 			remoteProducerId: parameter.audioProducer.id,
 		})
-		micButton.classList.replace("button-small-custom-clicked", "button-small-custom")
+		micButton.classList.replace("btn-danger", "btn-success")
 		user.audio.track.enabled = true
 		user.audio.isActive = true
 		myIconMic.src = "/assets/pictures/micOn.png"
-		micButton.querySelector("img").src = "/assets/pictures/micOn.png"
 		changeMic({ parameter, status: true, socket })
-		changeUserListMicIcon({ status: false, id: socket.id })
-	}
-})
-
-let recordButton = document.getElementById("user-record-button")
-recordButton.addEventListener("click", () => {
-	recordVideo({ parameter })
-})
-
-// Hang Up Button
-const hangUpButton = document.getElementById("user-hang-up-button")
-hangUpButton.addEventListener("click", () => {
-	try {
-		localStorage.clear()
-		window.location.href = window.location.origin
-	} catch (error) {
-		console.log("- Error At Hang Up Button : ", error)
+		micButton.firstElementChild.innerHTML = "Mute"
 	}
 })
 

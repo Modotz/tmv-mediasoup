@@ -57,7 +57,21 @@ class Parameters {
 			canvas: null,
 			ctx: null,
 			position: 0,
-			isDisplayed: true
+			isDisplayed: true,
+			location: "../../assets/pdf/mediasoupsfu.pdf",
+			numPages: undefined
+		},
+		secondDocument: {
+			currentPage: 1,
+			pageRendering: null,
+			pageNumPending: null,
+			scale: 1,
+			canvas: null,
+			ctx: null,
+			position: 0,
+			isDisplayed: false,
+			location: "../../assets/pdf/sample.pdf",
+			numPages: undefined
 		},
 	}
 }

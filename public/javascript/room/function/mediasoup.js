@@ -1,7 +1,15 @@
 const mediasoupClient = require("mediasoup-client")
 const { createVideo, createAudio, insertVideo, updatingLayout, changeLayout, createAudioVisualizer } = require("../ui/video")
-const { turnOffOnCamera, changeLayoutScreenSharingClient, addMuteAllButton } = require("../ui/button")
-const { createUserList, muteAllParticipants, goToLobby, firstDocumentControl, getPdf } = require(".")
+const {
+	turnOffOnCamera,
+	changeLayoutScreenSharingClient,
+	addMuteAllButton,
+	addEndButton,
+	addStartButton,
+	addRulesButton,
+	addAktaButton,
+} = require("../ui/button")
+const { createUserList, muteAllParticipants, goToLobby, addPdfController, getPdf, firstPdfControl } = require(".")
 const { encodingVP8, encodingsVP9 } = require("../config/mediasoup")
 
 const getEncoding = ({ parameter }) => {
@@ -66,8 +74,13 @@ const createSendTransport = async ({ socket, parameter }) => {
 								parameter.isHost = true
 								let pdfController = document.getElementById("pdf-controller")
 								if (pdfController.childElementCount == 1) {
-									firstDocumentControl({ parameter, socket })
+									addPdfController()
+									firstPdfControl({ parameter, socket, pdfDocument: "firstDocument" })
 									addMuteAllButton({ parameter, socket })
+									addEndButton({ parameter })
+									addStartButton({ parameter })
+									addRulesButton({ parameter, socket })
+									addAktaButton({ parameter, socket })
 								}
 							}
 						}
@@ -124,29 +137,6 @@ const connectSendTransport = async (parameter) => {
 		parameter.audioProducer.on("transportclose", () => {
 			console.log("audio transport ended")
 		})
-
-		// let r1,
-		// 	r2,
-		// 	r3 = 0
-
-		// const stat = setInterval(async () => {
-		// 	const report = await parameter.producerTransport.getStats()
-		// 	// console.log("- PT : ", )
-		// 	for (const value of report.values()) {
-		// 		if (value.kind == "video" && value.type == "outbound-rtp" && value.rid == "r1") {
-		// 			console.log("- Rid : ", value.rid, " - Sent : ", value.bytesSent - r1)
-		// 			r1 = value.bytesSent
-		// 		}
-		// 		if (value.kind == "video" && value.type == "outbound-rtp" && value.rid == "r2") {
-		// 			console.log("- Rid : ", value.rid, " - Sent : ", value.bytesSent - r2)
-		// 			r2 = value.bytesSent
-		// 		}
-		// 		if (value.kind == "video" && value.type == "outbound-rtp" && value.rid == "r3") {
-		// 			console.log("- Rid : ", value.rid, " - Sent : ", value.bytesSent - r3)
-		// 			r3 = value.bytesSent
-		// 		}
-		// 	}
-		// }, 1000)
 	} catch (error) {
 		console.log("- Error Connecting Transport Producer : ", error)
 	}
@@ -214,7 +204,20 @@ const connectRecvTransport = async ({ parameter, consumerTransport, socket, remo
 					}
 					let streamId
 					if (params?.appData?.label == "audio" && parameter.isHost) {
-						socket.emit("change-page", { socketId: params.producerSocketOwner, currentPage: parameter.pdfDocuments.firstDocument.currentPage })
+						let pdfDocument
+						for (const key in parameter.pdfDocuments) {
+							if (parameter.pdfDocuments[key].isDisplayed) {
+								pdfDocument = key
+							}
+						}
+						socket.emit("change-pdf", { socketId: params.producerSocketOwner, pdfDocument })
+						setTimeout(() => {
+							socket.emit("change-page", {
+								socketId: params.producerSocketOwner,
+								currentPage: parameter.pdfDocuments[pdfDocument].currentPage,
+								pdfDocument,
+							})
+						}, 500)
 					}
 					if (params?.appData?.label == "audio" || params?.appData?.label == "video") streamId = `${params.producerSocketOwner}-mic-webcam`
 					else streamId = `${params.producerSocketOwner}-screen-sharing`

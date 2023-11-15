@@ -36,7 +36,7 @@ socket.on("connection-success", async ({ socketId }) => {
 		parameter.socketId = socketId
 		parameter.isVideo = true
 		parameter.isAudio = true
-		await getPdf({ parameter })
+		await getPdf({ parameter, pdfDocument: "firstDocument" })
 		await getRoomId(parameter)
 		await checkLocalStorage({ parameter })
 		await getMyStream(parameter)
@@ -123,18 +123,17 @@ socket.on("receive-message", ({ message, sender, messageDate }) => {
 socket.on("mute-all", ({ hostSocketId }) => {
 	try {
 		let micButton = document.getElementById("user-mic-button")
-		let micImage = document.getElementById("mic-image")
 		let myIconMic = document.getElementById(`user-mic-${socket.id}`)
 		if (myIconMic) myIconMic.src = "/assets/pictures/micOff.png"
 		parameter.micCondition.isLocked = true
 		parameter.micCondition.socketId = hostSocketId
-		micButton.classList.replace("button-small-custom", "button-small-custom-clicked")
+		micButton.classList.replace("btn-success", "btn-danger")
+		micButton.firstElementChild.innerHTML = "Muted"
 		let user = parameter.allUsers.find((data) => data.socketId == socket.id)
 		user.audio.track.enabled = false
 		user.audio.isActive = false
 		changeMic({ parameter, status: false, socket })
 		changeUserListMicIcon({ status: true, id: socket.id })
-		micImage.src = "/assets/pictures/micOff.png"
 	} catch (error) {
 		console.log("- Error Muting All Participants : ", error)
 	}
@@ -160,8 +159,12 @@ socket.on("change-scroll", ({ socketId, value }) => {
 	}
 })
 
-socket.on("change-page", ({ currentPage }) => {
-	renderPage({ parameter, num: currentPage })
+socket.on("change-page", ({ currentPage, pdfDocument }) => {
+	renderPage({ parameter, num: currentPage, pdfDocument })
+})
+
+socket.on("change-pdf", ({ pdfDocument }) => {
+	getPdf({ parameter, pdfDocument })
 })
 
 /**  EVENT LISTENER  **/
@@ -179,24 +182,23 @@ micButton.addEventListener("click", () => {
 		}, 3000)
 		return
 	}
-	// let isActive = micButton.querySelector("img").src.split('/').pop();
-	let isActive = micButton.querySelector("img").src.includes("micOn.png")
+	let isActive = micButton.firstElementChild.innerHTML
 	let myIconMic = document.getElementById(`user-mic-${socket.id}`)
 	let user = parameter.allUsers.find((data) => data.socketId == socket.id)
-	if (isActive) {
+	console.log(isActive)
+	if (isActive == "Mute") {
 		parameter.isAudio = false
 		changeAppData({
 			socket,
 			data: { isActive: false, isMicActive: false, isVideoActive: parameter.videoProducer ? true : false },
 			remoteProducerId: parameter.audioProducer.id,
 		})
-		micButton.classList.replace("button-small-custom", "button-small-custom-clicked")
+		micButton.classList.replace("btn-success", "btn-danger")
 		user.audio.track.enabled = false
 		user.audio.isActive = false
 		myIconMic.src = "/assets/pictures/micOff.png"
-		micButton.querySelector("img").src = "/assets/pictures/micOff.png"
 		changeMic({ parameter, status: false, socket })
-		changeUserListMicIcon({ status: true, id: socket.id })
+		micButton.firstElementChild.innerHTML = "Muted"
 	} else {
 		parameter.isAudio = false
 		changeAppData({
@@ -204,29 +206,12 @@ micButton.addEventListener("click", () => {
 			data: { isActive: false, isMicActive: false, isVideoActive: parameter.videoProducer ? true : false },
 			remoteProducerId: parameter.audioProducer.id,
 		})
-		micButton.classList.replace("button-small-custom-clicked", "button-small-custom")
+		micButton.classList.replace("btn-danger", "btn-success")
 		user.audio.track.enabled = true
 		user.audio.isActive = true
 		myIconMic.src = "/assets/pictures/micOn.png"
-		micButton.querySelector("img").src = "/assets/pictures/micOn.png"
 		changeMic({ parameter, status: true, socket })
-		changeUserListMicIcon({ status: false, id: socket.id })
-	}
-})
-
-let recordButton = document.getElementById("user-record-button")
-recordButton.addEventListener("click", () => {
-	recordVideo({ parameter })
-})
-
-// Hang Up Button
-const hangUpButton = document.getElementById("user-hang-up-button")
-hangUpButton.addEventListener("click", () => {
-	try {
-		localStorage.clear()
-		window.location.href = window.location.origin
-	} catch (error) {
-		console.log("- Error At Hang Up Button : ", error)
+		micButton.firstElementChild.innerHTML = "Mute"
 	}
 })
 

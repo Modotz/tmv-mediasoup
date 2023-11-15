@@ -347,8 +347,12 @@ io.on("connection", async (socket) => {
 		socket.to(socketId).emit("change-scroll", { value })
 	})
 
-	socket.on("change-page", ({ socketId, currentPage }) => {
-		socket.to(socketId).emit("change-page", { currentPage })
+	socket.on("change-page", ({ socketId, currentPage, pdfDocument }) => {
+		socket.to(socketId).emit("change-page", { currentPage, pdfDocument })
+	})
+
+	socket.on("change-pdf", ({ socketId, pdfDocument }) => {
+		socket.to(socketId).emit("change-pdf", { pdfDocument })
 	})
 })
 

@@ -342,6 +342,10 @@ io.on("connection", async (socket) => {
 		socket.to(socketId).emit("unmute-all", { message: "Hello World" })
 	})
 
+	socket.on("end-meeting", ({ socketId }) => {
+		socket.to(socketId).emit("end-meeting", { message: "Hello World" })
+	})
+
 	socket.on("change-app-data", ({ data, remoteProducerId }) => {
 		let producerData = mediasoupParameter.producers.find((producer) => producer.producer.id == remoteProducerId)
 		producerData.producer.appData = { ...producerData.producer.appData, ...data }

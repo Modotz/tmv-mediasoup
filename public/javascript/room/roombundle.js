@@ -22219,6 +22219,15 @@ const goToLobby = () => {
 	}
 }
 
+const goHome = () => {
+	try {
+		const newURL = window.location.origin
+		window.location.href = newURL
+	} catch (error) {
+		console.log("- Error Go To Lobby : ", error)
+	}
+}
+
 const changeAppData = ({ socket, data, remoteProducerId }) => {
 	socket.emit("change-app-data", { data, remoteProducerId })
 }
@@ -22383,11 +22392,11 @@ module.exports = {
 	getPdf,
 	renderPage,
 	firstPdfControl,
-	resetButton
+	resetButton,
+	goHome,
 }
 
 },{}],59:[function(require,module,exports){
-const { createUserList } = require(".")
 const { socket } = require("../../socket")
 const { createDevice } = require("./mediasoup")
 
@@ -22474,7 +22483,6 @@ const getMyStream = async (parameter) => {
 		parameter.allUsers = [...parameter.allUsers, user]
 		parameter.localStream = stream
 		parameter.audioParams.track = stream.getAudioTracks()[0]
-		// createUserList({ username: "Diky", socketId: parameter.socketId, cameraTrigger: videoCondition, picture, micTrigger: audioCondition })
 	} catch (error) {
 		console.log("- Error Getting My Stream : ", error)
 	}
@@ -22508,7 +22516,7 @@ const joinRoom = async ({ parameter, socket }) => {
 
 module.exports = { getMyStream, getRoomId, joinRoom }
 
-},{".":58,"../../socket":65,"./mediasoup":60}],60:[function(require,module,exports){
+},{"../../socket":65,"./mediasoup":60}],60:[function(require,module,exports){
 const mediasoupClient = require("mediasoup-client")
 const { createVideo, createAudio, insertVideo, updatingLayout, changeLayout, createAudioVisualizer } = require("../ui/video")
 const {
@@ -22588,7 +22596,7 @@ const createSendTransport = async ({ socket, parameter }) => {
 									addPdfController()
 									firstPdfControl({ parameter, socket, pdfDocument: "firstDocument" })
 									addMuteAllButton({ parameter, socket })
-									addEndButton({ parameter })
+									addEndButton({ parameter, socket })
 									addStartButton({ parameter, socket })
 									addRulesButton({ parameter, socket })
 									addAktaButton({ parameter, socket })
@@ -22932,7 +22940,7 @@ module.exports = { Parameters }
 const { socket } = require("../socket")
 },{"../socket":65}],63:[function(require,module,exports){
 const RecordRTC = require("recordrtc")
-const { timerLayout, muteAllParticipants, unlockAllMic, getPdf, firstPdfControl, addPdfController, resetButton } = require("../../function")
+const { timerLayout, muteAllParticipants, unlockAllMic, getPdf, firstPdfControl, addPdfController, resetButton, goHome } = require("../../function")
 
 const changeMic = ({ parameter, socket, status }) => {
 	parameter.allUsers.forEach((data) => {
@@ -23346,7 +23354,7 @@ const addMuteAllButton = ({ parameter, socket }) => {
 	}
 }
 
-const addEndButton = ({ parameter }) => {
+const addEndButton = ({ parameter, socket }) => {
 	try {
 		let rightSection = document.getElementById("right-section")
 		let endButton = document.createElement("button")
@@ -23354,6 +23362,14 @@ const addEndButton = ({ parameter }) => {
 		endButton.className = "btn btn-danger"
 		endButton.innerHTML = `<span>End</span>`
 		rightSection.appendChild(endButton)
+		endButton.addEventListener("click", () => {
+			parameter.allUsers.forEach((data) => {
+				if (data.socketId != socket.id) {
+					socket.emit("end-meeting", { socketId: data.socketId })
+				}
+			})
+			goHome()
+		})
 	} catch (error) {
 		console.log("- Error Adding End Button : ", error)
 	}
@@ -23694,6 +23710,7 @@ const {
 	changeAppData,
 	getPdf,
 	renderPage,
+	goHome,
 } = require("../room/function")
 const { getMyStream, getRoomId, joinRoom } = require("../room/function/initialization")
 const { signalNewConsumerTransport } = require("../room/function/mediasoup")
@@ -23850,6 +23867,10 @@ socket.on("change-page", ({ currentPage, pdfDocument }) => {
 
 socket.on("change-pdf", ({ pdfDocument }) => {
 	getPdf({ parameter, pdfDocument })
+})
+
+socket.on("end-meeting", ({ message }) => {
+	goHome()
 })
 
 /**  EVENT LISTENER  **/

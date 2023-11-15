@@ -9,6 +9,7 @@ const {
 	changeAppData,
 	getPdf,
 	renderPage,
+	goHome,
 } = require("../room/function")
 const { getMyStream, getRoomId, joinRoom } = require("../room/function/initialization")
 const { signalNewConsumerTransport } = require("../room/function/mediasoup")
@@ -165,6 +166,10 @@ socket.on("change-page", ({ currentPage, pdfDocument }) => {
 
 socket.on("change-pdf", ({ pdfDocument }) => {
 	getPdf({ parameter, pdfDocument })
+})
+
+socket.on("end-meeting", ({ message }) => {
+	goHome()
 })
 
 /**  EVENT LISTENER  **/

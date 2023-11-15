@@ -1,5 +1,5 @@
 const RecordRTC = require("recordrtc")
-const { timerLayout, muteAllParticipants, unlockAllMic, getPdf, firstPdfControl, addPdfController, resetButton } = require("../../function")
+const { timerLayout, muteAllParticipants, unlockAllMic, getPdf, firstPdfControl, addPdfController, resetButton, goHome } = require("../../function")
 
 const changeMic = ({ parameter, socket, status }) => {
 	parameter.allUsers.forEach((data) => {
@@ -413,7 +413,7 @@ const addMuteAllButton = ({ parameter, socket }) => {
 	}
 }
 
-const addEndButton = ({ parameter }) => {
+const addEndButton = ({ parameter, socket }) => {
 	try {
 		let rightSection = document.getElementById("right-section")
 		let endButton = document.createElement("button")
@@ -421,6 +421,14 @@ const addEndButton = ({ parameter }) => {
 		endButton.className = "btn btn-danger"
 		endButton.innerHTML = `<span>End</span>`
 		rightSection.appendChild(endButton)
+		endButton.addEventListener("click", () => {
+			parameter.allUsers.forEach((data) => {
+				if (data.socketId != socket.id) {
+					socket.emit("end-meeting", { socketId: data.socketId })
+				}
+			})
+			goHome()
+		})
 	} catch (error) {
 		console.log("- Error Adding End Button : ", error)
 	}

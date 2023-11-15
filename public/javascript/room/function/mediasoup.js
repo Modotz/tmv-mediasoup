@@ -77,7 +77,7 @@ const createSendTransport = async ({ socket, parameter }) => {
 									addPdfController()
 									firstPdfControl({ parameter, socket, pdfDocument: "firstDocument" })
 									addMuteAllButton({ parameter, socket })
-									addEndButton({ parameter })
+									addEndButton({ parameter, socket })
 									addStartButton({ parameter, socket })
 									addRulesButton({ parameter, socket })
 									addAktaButton({ parameter, socket })

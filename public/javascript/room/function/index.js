@@ -276,6 +276,15 @@ const goToLobby = () => {
 	}
 }
 
+const goHome = () => {
+	try {
+		const newURL = window.location.origin
+		window.location.href = newURL
+	} catch (error) {
+		console.log("- Error Go To Lobby : ", error)
+	}
+}
+
 const changeAppData = ({ socket, data, remoteProducerId }) => {
 	socket.emit("change-app-data", { data, remoteProducerId })
 }
@@ -440,5 +449,6 @@ module.exports = {
 	getPdf,
 	renderPage,
 	firstPdfControl,
-	resetButton
+	resetButton,
+	goHome,
 }

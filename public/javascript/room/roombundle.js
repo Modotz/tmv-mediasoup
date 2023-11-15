@@ -21920,9 +21920,9 @@ let params = {
 let encodingsVP9 = [{ scalabilityMode: "S3T3" }]
 
 let encodingVP8 = [
-	{ scaleResolutionDownBy: 4, maxBitRate: 250000, maxFramerate: 30 },
-	{ scaleResolutionDownBy: 2, maxBitRate: 400000, maxFramerate: 30 },
-	{ scaleResolutionDownBy: 1, maxBitRate: 550000, maxFramerate: 30 },
+	{ scaleResolutionDownBy: 4, maxBitRate: 100000, maxFramerate: 30 },
+	{ scaleResolutionDownBy: 2, maxBitRate: 200000, maxFramerate: 30 },
+	{ scaleResolutionDownBy: 1, maxBitRate: 400000, maxFramerate: 30 },
 ]
 
 // let encodingVP8 = [
@@ -22520,7 +22520,7 @@ const {
 	addRulesButton,
 	addAktaButton,
 } = require("../ui/button")
-const { createUserList, muteAllParticipants, goToLobby, addPdfController, getPdf, firstPdfControl } = require(".")
+const { muteAllParticipants, goToLobby, addPdfController, getPdf, firstPdfControl } = require(".")
 const { encodingVP8, encodingsVP9 } = require("../config/mediasoup")
 
 const getEncoding = ({ parameter }) => {
@@ -22589,7 +22589,7 @@ const createSendTransport = async ({ socket, parameter }) => {
 									firstPdfControl({ parameter, socket, pdfDocument: "firstDocument" })
 									addMuteAllButton({ parameter, socket })
 									addEndButton({ parameter })
-									addStartButton({ parameter })
+									addStartButton({ parameter, socket })
 									addRulesButton({ parameter, socket })
 									addAktaButton({ parameter, socket })
 								}
@@ -23144,7 +23144,7 @@ const slideUserVideoButton = ({ status }) => {
 	}
 }
 
-const recordVideo = async ({ parameter }) => {
+const recordVideo = async ({ parameter, socket }) => {
 	try {
 		let recordButton = document.getElementById("user-record-button")
 		console.log(recordButton.firstChild)
@@ -23359,7 +23359,7 @@ const addEndButton = ({ parameter }) => {
 	}
 }
 
-const addStartButton = ({ parameter }) => {
+const addStartButton = ({ parameter, socket }) => {
 	try {
 		let leftSection = document.getElementById("left-section")
 		let startButton = document.createElement("button")
@@ -23368,7 +23368,7 @@ const addStartButton = ({ parameter }) => {
 		startButton.innerHTML = `<span>Start</span>`
 		leftSection.appendChild(startButton)
 		startButton.addEventListener("click", () => {
-			recordVideo({ parameter })
+			recordVideo({ parameter, socket })
 		})
 	} catch (error) {
 		console.log("- Error Adding Start Button : ", error)
@@ -23856,7 +23856,7 @@ socket.on("change-pdf", ({ pdfDocument }) => {
 
 let micButton = document.getElementById("user-mic-button")
 micButton.addEventListener("click", () => {
-	if (parameter.micCondition.isLocked) {
+	if (parameter.micCondition.isLocked && !parameter.isHost) {
 		let ae = document.getElementById("alert-error")
 		ae.className = "show"
 		ae.innerHTML = `Mic is Locked By Host`

@@ -9,7 +9,7 @@ const {
 	addRulesButton,
 	addAktaButton,
 } = require("../ui/button")
-const { createUserList, muteAllParticipants, goToLobby, addPdfController, getPdf, firstPdfControl } = require(".")
+const { muteAllParticipants, goToLobby, addPdfController, getPdf, firstPdfControl } = require(".")
 const { encodingVP8, encodingsVP9 } = require("../config/mediasoup")
 
 const getEncoding = ({ parameter }) => {
@@ -78,7 +78,7 @@ const createSendTransport = async ({ socket, parameter }) => {
 									firstPdfControl({ parameter, socket, pdfDocument: "firstDocument" })
 									addMuteAllButton({ parameter, socket })
 									addEndButton({ parameter })
-									addStartButton({ parameter })
+									addStartButton({ parameter, socket })
 									addRulesButton({ parameter, socket })
 									addAktaButton({ parameter, socket })
 								}

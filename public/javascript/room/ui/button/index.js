@@ -211,7 +211,7 @@ const slideUserVideoButton = ({ status }) => {
 	}
 }
 
-const recordVideo = async ({ parameter }) => {
+const recordVideo = async ({ parameter, socket }) => {
 	try {
 		let recordButton = document.getElementById("user-record-button")
 		console.log(recordButton.firstChild)
@@ -426,7 +426,7 @@ const addEndButton = ({ parameter }) => {
 	}
 }
 
-const addStartButton = ({ parameter }) => {
+const addStartButton = ({ parameter, socket }) => {
 	try {
 		let leftSection = document.getElementById("left-section")
 		let startButton = document.createElement("button")
@@ -435,7 +435,7 @@ const addStartButton = ({ parameter }) => {
 		startButton.innerHTML = `<span>Start</span>`
 		leftSection.appendChild(startButton)
 		startButton.addEventListener("click", () => {
-			recordVideo({ parameter })
+			recordVideo({ parameter, socket })
 		})
 	} catch (error) {
 		console.log("- Error Adding Start Button : ", error)

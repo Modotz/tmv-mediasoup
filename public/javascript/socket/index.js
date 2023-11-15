@@ -171,7 +171,7 @@ socket.on("change-pdf", ({ pdfDocument }) => {
 
 let micButton = document.getElementById("user-mic-button")
 micButton.addEventListener("click", () => {
-	if (parameter.micCondition.isLocked) {
+	if (parameter.micCondition.isLocked && !parameter.isHost) {
 		let ae = document.getElementById("alert-error")
 		ae.className = "show"
 		ae.innerHTML = `Mic is Locked By Host`

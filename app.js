@@ -4,6 +4,7 @@ const router = require("./routes/index.js")
 const app = express()
 const port = 3001
 // const port = 80
+const fs = require('fs')
 const http = require("http")
 const path = require("path")
 const https = require("httpolyglot")
@@ -25,17 +26,17 @@ app.use(express.json())
 app.use(express.static("public"))
 app.use(express.static(path.join(__dirname, "public")))
 
-const httpsServer = https.createServer(options, app)
-httpsServer.listen(port, () => {
-	console.log("App On : " + port)
-})
-const io = new Server(httpsServer)
-
-// const httpServer = http.createServer(app)
-// httpServer.listen(port, () => {
+// const httpsServer = https.createServer(options, app)
+// httpsServer.listen(port, () => {
 // 	console.log("App On : " + port)
 // })
-// const io = new Server(httpServer)
+// const io = new Server(httpsServer)
+
+const httpServer = http.createServer(app)
+httpServer.listen(port, () => {
+	console.log("App On : " + port)
+})
+const io = new Server(httpServer)
 
 let serverParameter = new Server_Parameter()
 let mediasoupParameter = new Mediasoup_Parameter()
@@ -60,6 +61,9 @@ io.on("connection", async (socket) => {
 	socket.on("disconnect", () => {
 		try {
 			console.log("- Disconnected : ", socket.id)
+			if (serverParameter.recording[socket.id]){
+				delete serverParameter.recording[socket.id]
+			}
 
 			if (!serverParameter.allUsers[socket.id]) {
 				return
@@ -128,8 +132,8 @@ io.on("connection", async (socket) => {
 		try {
 			let router = serverParameter.allRooms[roomName].router
 			const transport = await createWebRtcTransport({ router, serverParameter })
-			transport.setMaxIncomingBitrate(1500000)
-			transport.setMaxOutgoingBitrate(1500000)
+			transport.setMaxIncomingBitrate(1000000)
+			transport.setMaxOutgoingBitrate(1000000)
 			let username
 			const editParticipants = serverParameter.allRooms[roomName].participants.map((data) => {
 				if (data.socketId == socket.id) {
@@ -353,6 +357,46 @@ io.on("connection", async (socket) => {
 
 	socket.on("change-pdf", ({ socketId, pdfDocument }) => {
 		socket.to(socketId).emit("change-pdf", { pdfDocument })
+	})
+
+	socket.on("message", function (data) {
+		try {
+			if (data.type == "collecting") {
+				if (!serverParameter.recording[socket.id]) {
+					serverParameter.recording[socket.id] = [data.data]
+				} else {
+					serverParameter.recording[socket.id].push(data.data)
+				}
+			} else if (data.type == "uploading") {
+				// Check if there are chunks to save
+				if (serverParameter.recording[socket.id] && serverParameter.recording[socket.id].length > 0) {
+					const mergedBuffer = Buffer.concat(serverParameter.recording[socket.id])
+
+					// Generate a unique filename (or use any naming convention you prefer)
+					const filename = `recorded-video-${socket.id}.webm`
+
+					// Define the file path where the video will be saved
+					const filePath = path.join(__dirname, "files", filename)
+
+					// Write the mergedBuffer to the file
+					fs.writeFile(filePath, mergedBuffer, function (err) {
+						if (err) {
+							// Handle error while saving the file
+							console.error("Error saving video:", err)
+						} else {
+							// Handle the successful save operation
+							console.log(`Video saved as ${filename}`)
+						}
+					})
+				} else {
+					// Handle the case where there are no chunks to save
+					console.log("No chunks to save")
+				}
+				delete serverParameter.recording[socket.id]
+			}
+		} catch (error) {
+			console.log("- Error Uploading File : ", error)
+		}
 	})
 })
 

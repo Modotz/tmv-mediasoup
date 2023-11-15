@@ -22376,7 +22376,6 @@ const getEncoding = ({ parameter }) => {
 			parameter.videoParams.encodings = encodingsVP9
 		} else {
 			parameter.videoParams.encodings = encodingVP8
-			console.log("not VP9")
 		}
 		return firstVideoCodec
 	} catch (error) {

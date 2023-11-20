@@ -4,38 +4,55 @@ const { createDevice } = require("./mediasoup")
 
 const getMyStream = async (parameter) => {
 	try {
+		// Configuration for Audio
+		let audioConfiguration = {
+			autoGainControl: false,
+			noiseSuppression: true,
+			echoCancellation: true,
+		}
+
+		// Configuration for Video
 		let config = {
-			video: localStorage.getItem("is_video_active") == "true" ? { deviceId: { exact: localStorage.getItem("selectedVideoDevices") }, frameRate: { ideal: 30, max: 35 } } : false,
+			video:
+				localStorage.getItem("is_video_active") == "true"
+					? {
+							deviceId: { exact: localStorage.getItem("selectedVideoDevices") },
+							frameRate: { ideal: 30, max: 35 },
+					  }
+					: false,
 			audio: localStorage.getItem("selectedVideoDevices")
 				? {
 						deviceId: { exact: localStorage.getItem("selectedAudioDevices") },
-						autoGainControl: false,
-						noiseSuppression: true,
-						echoCancellation: true,
+						...audioConfiguration,
 				  }
-				: {
-						autoGainControl: false,
-						noiseSuppression: true,
-						echoCancellation: true,
-				  },
+				: audioConfiguration,
 		}
 
-		let username = localStorage.getItem("username")
+		// Get Username
+		let username = localStorage.getItem("username") ? localStorage.getItem("username") : "unknown"
 		parameter.username = username
 
+		// Get Mediastream
 		let stream = await navigator.mediaDevices.getUserMedia(config)
 		let picture = localStorage.getItem("picture") ? localStorage.getItem("picture") : "/assets/pictures/unknown.jpg"
 
+		// Check if Mic and Camera is Active or Not
 		let audioCondition
 		let videoCondition
+
+		// I Forgot What is this Parameters for
 		parameter.initialVideo = true
 		parameter.initialAudio = true
+		
+		// Checking Initial Mic is Active or Not from Lobby Configuration
 		if (localStorage.getItem("is_mic_active") == "false") {
 			document.getElementById("mic-image").src = "/assets/pictures/micOff.png"
 			document.getElementById("user-mic-button").className = "button-small-custom-clicked"
 			parameter.initialAudio = false
 			audioCondition = false
 		} else audioCondition = true
+
+		// Checking Initial Camera is Active or Not from Lobby Configuration
 		if (localStorage.getItem("is_video_active") == "false") {
 			document.getElementById("turn-on-off-camera-icons").className = "fas fa-video-slash"
 			document.getElementById("user-turn-on-off-camera-button").className = "button-small-custom-clicked"
@@ -43,9 +60,15 @@ const getMyStream = async (parameter) => {
 			parameter.initialVideo = false
 		} else {
 			videoCondition = true
+
+			// If Camera Active, Save Track to Send it to Server Later
 			parameter.videoParams.track = stream.getVideoTracks()[0]
 		}
+
+		// Enabled / Disabled Mic Based On Lobby Configuration
 		stream.getAudioTracks()[0].enabled = audioCondition
+
+		// Save User Information to Parameter
 		let user = {
 			username,
 			socketId: parameter.socketId,
@@ -59,6 +82,7 @@ const getMyStream = async (parameter) => {
 			},
 		}
 
+		// If Camera is Active from Lobby Configuration, then Save Video Information to Parameter
 		if (videoCondition) {
 			user.video = {
 				isActive: videoCondition,
@@ -69,8 +93,10 @@ const getMyStream = async (parameter) => {
 			}
 		}
 
+		// Save Picture Url to Parameter
 		parameter.picture = picture
 
+		// Configuration For Server (Current Condition of Camera and Mic)
 		parameter.audioParams.appData.isMicActive = audioCondition
 		parameter.audioParams.appData.isVideoActive = videoCondition
 		parameter.videoParams.appData.isMicActive = audioCondition
@@ -109,7 +135,9 @@ const joinRoom = async ({ parameter, socket }) => {
 		parameter.videoLayout = "user-video-container-1"
 		socket.emit("joinRoom", { roomName: parameter.roomName, username: parameter.username }, (data) => {
 			parameter.rtpCapabilities = data.rtpCapabilities
-			parameter.rtpCapabilities.headerExtensions = parameter.rtpCapabilities.headerExtensions.filter((ext) => ext.uri !== 'urn:3gpp:video-orientation');
+			parameter.rtpCapabilities.headerExtensions = parameter.rtpCapabilities.headerExtensions.filter(
+				(ext) => ext.uri !== "urn:3gpp:video-orientation"
+			)
 			createDevice({ parameter, socket })
 		})
 	} catch (error) {

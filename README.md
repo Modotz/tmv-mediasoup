@@ -5,6 +5,7 @@
 ### Server_Parameter || serverParameter
 
 ```js
+// Parameter for Server to Save All Rooms and Connected Users
 class Server_Parameter {
 	allRooms: {}
 	allUsers: {}
@@ -78,6 +79,7 @@ mediasoupParameter = {
 ```js
 const { params } = require("../config/mediasoup")
 
+// Initial Parameter
 class Parameters {
 	localStream = null
 	videoParams = { params, appData: { label: "video" } }
@@ -88,15 +90,36 @@ class Parameters {
 
 const parameter = new Parameter()
 
+// All Parameter
 parameter = {
+    // Username
+    username: "String",
+
+    // Socket Id
+    socketId: "String",
+
+    // Initial Video and Audio
+    initialVideo: true || false,
+    initialAudio: true || false,
+
+    // Local Stream
     localStream: MediaStream,
-    videoParams: { params, appData: { label: "video", isActive: true || false, isMicActive: true || false, isVideoActive: true || false }, track: MediaStream },
+
+    // Parameter Video
+    videoParams: { 
+        params, // Configuration for Media Codecs
+        appData: { // Information for Server
+            label: "video", 
+            isActive: true || false, 
+            isMicActive: true || false, 
+            isVideoActive: true || false 
+            }, 
+        track: MediaStream 
+    },
     audioParams: { appData: { label: "audio", isActive: true || false, isMicActive: true || false, isVideoActive: true || false }, track: MediaStream },
     screensharingVideoParams = { appData: { label: "screensharing" } },
 	screensharingAudioParams = { appData: { label: "screensharingaudio" } },
     consumingTransports = [remoteProducerId: "String", remoteProducerId: "String"],
-    username: "String",
-    socketId: "String",
     isVideo: true || false,
     isAudio: true || false,
     roomName: "String",
@@ -149,12 +172,10 @@ parameter = {
 		isScreenSharing: true || false,
 		socketId: "String",
 	},
-    initialVideo: true || false,
-    initialAudio: true || false,
 }
 ```
 
-
 ## Question
+
 - Case 1 hari bisa berapa total user yang menggunakan aplikasi
 - Case 1 room paling banyak berapa orang

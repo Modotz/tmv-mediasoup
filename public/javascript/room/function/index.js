@@ -263,13 +263,14 @@ const checkLocalStorage = ({ parameter }) => {
 
 const goToLobby = () => {
 	try {
-		const url = window.location.pathname
-		const parts = url.split("/")
-		const roomName = parts[2]
-		const goTo = "lobby/" + roomName
-		const newURL = window.location.origin + "/" + goTo
-		// If There Is Not, It Will Redirect To Lobby
-		window.location.href = newURL
+		setTimeout(() => {
+			const url = window.location.pathname
+			const parts = url.split("/")
+			const roomName = parts[2]
+			const goTo = "lobby/" + roomName
+			const newURL = window.location.origin + "/" + goTo
+			window.location.href = newURL
+		}, 4000)
 	} catch (error) {
 		console.log("- Error Go To Lobby : ", error)
 	}

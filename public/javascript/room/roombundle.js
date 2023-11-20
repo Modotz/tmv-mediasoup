@@ -22206,13 +22206,14 @@ const checkLocalStorage = ({ parameter }) => {
 
 const goToLobby = () => {
 	try {
-		const url = window.location.pathname
-		const parts = url.split("/")
-		const roomName = parts[2]
-		const goTo = "lobby/" + roomName
-		const newURL = window.location.origin + "/" + goTo
-		// If There Is Not, It Will Redirect To Lobby
-		window.location.href = newURL
+		setTimeout(() => {
+			const url = window.location.pathname
+			const parts = url.split("/")
+			const roomName = parts[2]
+			const goTo = "lobby/" + roomName
+			const newURL = window.location.origin + "/" + goTo
+			window.location.href = newURL
+		}, 4000)
 	} catch (error) {
 		console.log("- Error Go To Lobby : ", error)
 	}
@@ -22246,38 +22247,55 @@ const { createDevice } = require("./mediasoup")
 
 const getMyStream = async (parameter) => {
 	try {
+		// Configuration for Audio
+		let audioConfiguration = {
+			autoGainControl: false,
+			noiseSuppression: true,
+			echoCancellation: true,
+		}
+
+		// Configuration for Video
 		let config = {
-			video: localStorage.getItem("is_video_active") == "true" ? { deviceId: { exact: localStorage.getItem("selectedVideoDevices") }, frameRate: { ideal: 30, max: 35 } } : false,
+			video:
+				localStorage.getItem("is_video_active") == "true"
+					? {
+							deviceId: { exact: localStorage.getItem("selectedVideoDevices") },
+							frameRate: { ideal: 30, max: 35 },
+					  }
+					: false,
 			audio: localStorage.getItem("selectedVideoDevices")
 				? {
 						deviceId: { exact: localStorage.getItem("selectedAudioDevices") },
-						autoGainControl: false,
-						noiseSuppression: true,
-						echoCancellation: true,
+						...audioConfiguration,
 				  }
-				: {
-						autoGainControl: false,
-						noiseSuppression: true,
-						echoCancellation: true,
-				  },
+				: audioConfiguration,
 		}
 
-		let username = localStorage.getItem("username")
+		// Get Username
+		let username = localStorage.getItem("username") ? localStorage.getItem("username") : "unknown"
 		parameter.username = username
 
+		// Get Mediastream
 		let stream = await navigator.mediaDevices.getUserMedia(config)
 		let picture = localStorage.getItem("picture") ? localStorage.getItem("picture") : "/assets/pictures/unknown.jpg"
 
+		// Check if Mic and Camera is Active or Not
 		let audioCondition
 		let videoCondition
+
+		// I Forgot What is this Parameters for
 		parameter.initialVideo = true
 		parameter.initialAudio = true
+		
+		// Checking Initial Mic is Active or Not from Lobby Configuration
 		if (localStorage.getItem("is_mic_active") == "false") {
 			document.getElementById("mic-image").src = "/assets/pictures/micOff.png"
 			document.getElementById("user-mic-button").className = "button-small-custom-clicked"
 			parameter.initialAudio = false
 			audioCondition = false
 		} else audioCondition = true
+
+		// Checking Initial Camera is Active or Not from Lobby Configuration
 		if (localStorage.getItem("is_video_active") == "false") {
 			document.getElementById("turn-on-off-camera-icons").className = "fas fa-video-slash"
 			document.getElementById("user-turn-on-off-camera-button").className = "button-small-custom-clicked"
@@ -22285,9 +22303,15 @@ const getMyStream = async (parameter) => {
 			parameter.initialVideo = false
 		} else {
 			videoCondition = true
+
+			// If Camera Active, Save Track to Send it to Server Later
 			parameter.videoParams.track = stream.getVideoTracks()[0]
 		}
+
+		// Enabled / Disabled Mic Based On Lobby Configuration
 		stream.getAudioTracks()[0].enabled = audioCondition
+
+		// Save User Information to Parameter
 		let user = {
 			username,
 			socketId: parameter.socketId,
@@ -22301,6 +22325,7 @@ const getMyStream = async (parameter) => {
 			},
 		}
 
+		// If Camera is Active from Lobby Configuration, then Save Video Information to Parameter
 		if (videoCondition) {
 			user.video = {
 				isActive: videoCondition,
@@ -22311,8 +22336,10 @@ const getMyStream = async (parameter) => {
 			}
 		}
 
+		// Save Picture Url to Parameter
 		parameter.picture = picture
 
+		// Configuration For Server (Current Condition of Camera and Mic)
 		parameter.audioParams.appData.isMicActive = audioCondition
 		parameter.audioParams.appData.isVideoActive = videoCondition
 		parameter.videoParams.appData.isMicActive = audioCondition
@@ -22351,7 +22378,9 @@ const joinRoom = async ({ parameter, socket }) => {
 		parameter.videoLayout = "user-video-container-1"
 		socket.emit("joinRoom", { roomName: parameter.roomName, username: parameter.username }, (data) => {
 			parameter.rtpCapabilities = data.rtpCapabilities
-			parameter.rtpCapabilities.headerExtensions = parameter.rtpCapabilities.headerExtensions.filter((ext) => ext.uri !== 'urn:3gpp:video-orientation');
+			parameter.rtpCapabilities.headerExtensions = parameter.rtpCapabilities.headerExtensions.filter(
+				(ext) => ext.uri !== "urn:3gpp:video-orientation"
+			)
 			createDevice({ parameter, socket })
 		})
 	} catch (error) {
@@ -22361,7 +22390,7 @@ const joinRoom = async ({ parameter, socket }) => {
 
 module.exports = { getMyStream, getRoomId, joinRoom }
 
-},{".":58,"../../socket":65,"./mediasoup":60}],60:[function(require,module,exports){
+},{".":58,"../../socket":66,"./mediasoup":60}],60:[function(require,module,exports){
 const mediasoupClient = require("mediasoup-client")
 const { createVideo, createAudio, insertVideo, updatingLayout, changeLayout, createAudioVisualizer } = require("../ui/video")
 const { turnOffOnCamera, changeLayoutScreenSharingClient, addMuteAllButton } = require("../ui/button")
@@ -22686,7 +22715,7 @@ const connectRecvTransport = async ({ parameter, consumerTransport, socket, remo
 
 module.exports = { createDevice, createSendTransport, signalNewConsumerTransport }
 
-},{".":58,"../config/mediasoup":57,"../ui/button":63,"../ui/video":64,"mediasoup-client":42}],61:[function(require,module,exports){
+},{".":58,"../config/mediasoup":57,"../ui/button":63,"../ui/video":65,"mediasoup-client":42}],61:[function(require,module,exports){
 const { params, audioParams } = require("../config/mediasoup")
 
 class Parameters {
@@ -22741,9 +22770,10 @@ module.exports = { Parameters }
 
 },{"../config/mediasoup":57}],62:[function(require,module,exports){
 const { socket } = require("../socket")
-},{"../socket":65}],63:[function(require,module,exports){
+},{"../socket":66}],63:[function(require,module,exports){
 const RecordRTC = require("recordrtc")
 const { timerLayout, muteAllParticipants, unlockAllMic } = require("../../function")
+const { alertError } = require("../error")
 
 const changeMic = ({ parameter, socket, status }) => {
 	parameter.allUsers.forEach((data) => {
@@ -23139,14 +23169,7 @@ const addMuteAllButton = ({ parameter, socket }) => {
 					unlockAllMic({ parameter, socket })
 					newElement.innerHTML = "Mute All Participants"
 				} else {
-					let ae = document.getElementById("alert-error")
-					ae.className = "show"
-					ae.innerHTML = `You're Not Host`
-					// Show Warning
-					setTimeout(() => {
-						ae.className = ae.className.replace("show", "")
-						ae.innerHTML = ``
-					}, 3000)
+					alertError({ message: "You're Not Host" })
 				}
 			})
 		}
@@ -23166,7 +23189,21 @@ module.exports = {
 	addMuteAllButton,
 }
 
-},{"../../function":58,"recordrtc":51}],64:[function(require,module,exports){
+},{"../../function":58,"../error":64,"recordrtc":51}],64:[function(require,module,exports){
+const alertError = ({ message }) => {
+	let ae = document.getElementById("alert-error")
+	ae.className = "show"
+	ae.innerHTML = message
+	// Show Warning
+	setTimeout(() => {
+		ae.className = ae.className.replace("show", "")
+		ae.innerHTML = ``
+	}, 3000)
+}
+
+module.exports = { alertError }
+
+},{}],65:[function(require,module,exports){
 const createMyVideo = async (parameter) => {
 	try {
 		let picture = `<div class="${parameter.initialVideo ? "video-on" : "video-off"}" id="user-picture-container-${parameter.socketId}"><img src="${
@@ -23404,7 +23441,7 @@ module.exports = {
 	removeUserList,
 }
 
-},{}],65:[function(require,module,exports){
+},{}],66:[function(require,module,exports){
 const {
 	changeUserListMicIcon,
 	sendMessage,
@@ -23427,6 +23464,7 @@ const {
 	changeLayoutScreenSharingClient,
 	recordVideo,
 } = require("../room/ui/button")
+const { alertError } = require("../room/ui/error")
 const { createMyVideo, removeVideoAndAudio, updatingLayout, changeLayout, changeUserMic, removeUserList } = require("../room/ui/video")
 
 let parameter
@@ -23437,16 +23475,12 @@ socket.on("connection-success", async ({ socketId }) => {
 	try {
 		console.log("- Id : ", socketId)
 		parameter = new Parameters()
-		parameter.username = "Diky"
 		parameter.socketId = socketId
-		parameter.isVideo = true
-		parameter.isAudio = true
 		await getRoomId(parameter)
 		await checkLocalStorage({ parameter })
 		await getMyStream(parameter)
 		await createMyVideo(parameter)
 		await joinRoom({ socket, parameter })
-		// console.log("- Parameter : ", parameter)
 	} catch (error) {
 		console.log("- Error On Connecting : ", error)
 	}
@@ -23558,14 +23592,7 @@ socket.on("unmute-all", (data) => {
 let micButton = document.getElementById("user-mic-button")
 micButton.addEventListener("click", () => {
 	if (parameter.micCondition.isLocked) {
-		let ae = document.getElementById("alert-error")
-		ae.className = "show"
-		ae.innerHTML = `Mic is Locked By Host`
-		// Show Warning
-		setTimeout(() => {
-			ae.className = ae.className.replace("show", "")
-			ae.innerHTML = ``
-		}, 3000)
+		alertError({ message: "Mic is Locked By Host" })
 		return
 	}
 	// let isActive = micButton.querySelector("img").src.split('/').pop();
@@ -23864,14 +23891,8 @@ sendMessageButton.addEventListener("submit", (e) => {
 		let inputMessage = document.getElementById("message-input").value
 		let sender = parameter.username
 		if (!inputMessage) {
-			let ae = document.getElementById("alert-error")
-			ae.className = "show"
-			ae.innerHTML = `You cannot send empty message`
-			// Show Warning
-			setTimeout(() => {
-				ae.className = ae.className.replace("show", "")
-				ae.innerHTML = ``
-			}, 3000)
+			alertError({ message: "You cannot send an empty message!" })
+			return
 		}
 
 		const messageDate = new Date()
@@ -23954,4 +23975,4 @@ document.addEventListener("click", function () {
 
 module.exports = { socket, parameter }
 
-},{"../room/function":58,"../room/function/initialization":59,"../room/function/mediasoup":60,"../room/function/parameter":61,"../room/ui/button":63,"../room/ui/video":64}]},{},[62]);
+},{"../room/function":58,"../room/function/initialization":59,"../room/function/mediasoup":60,"../room/function/parameter":61,"../room/ui/button":63,"../room/ui/error":64,"../room/ui/video":65}]},{},[62]);

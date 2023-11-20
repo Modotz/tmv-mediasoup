@@ -2,7 +2,7 @@ let localVideo = document.getElementById("local-video")
 let localStream
 
 // let baseUrl = "https://modotz.net/"
-let baseUrl = 'https://meet.dikyardiyanto.site/'
+let baseUrl = "https://meet.dikyardiyanto.site/"
 // let baseUrl = "https://localhost:3001/"
 
 const joinRoom = document.getElementById("join-room")
@@ -63,6 +63,7 @@ const getMyMic = async () => {
 			audioButton.removeAttribute("disabled")
 			let submitButton = document.getElementById("submit-button")
 			submitButton.removeAttribute("disabled")
+			await initGoogleLogin()
 		}
 
 		let audioIcons = document.getElementById("select-audio")
@@ -140,6 +141,7 @@ const getMyDevices = async (config) => {
 			audioButton.removeAttribute("disabled")
 			let submitButton = document.getElementById("submit-button")
 			submitButton.removeAttribute("disabled")
+			await initGoogleLogin()
 		}
 
 		let videoIcons = document.getElementById("select-video")
@@ -423,34 +425,36 @@ const handleCredentialResponse = async (response) => {
 	}
 }
 
-window.onload = () => {
-	google.accounts.id.initialize({
-		client_id: "623403491943-290gkq7bnqtgeprtfaci3u76vtb39bjl.apps.googleusercontent.com",
-		callback: handleCredentialResponse,
-	})
-	google.accounts.id.prompt() // also display the One Tap dialog
-}
-
-window.handleCredentialResponse = async (response) => {
-	try {
-		const result = await fetch(baseUrl + "google-auth", {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-			},
-			body: JSON.stringify({ credential: response.credential }),
+const initGoogleLogin = () => {
+	window.onload = () => {
+		google.accounts.id.initialize({
+			client_id: "623403491943-290gkq7bnqtgeprtfaci3u76vtb39bjl.apps.googleusercontent.com",
+			callback: handleCredentialResponse,
 		})
+		google.accounts.id.prompt() // also display the One Tap dialog
+	}
 
-		const resultData = await result.json()
+	window.handleCredentialResponse = async (response) => {
+		try {
+			const result = await fetch(baseUrl + "google-auth", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ credential: response.credential }),
+			})
 
-		localStorage.setItem("username", resultData.name)
-		localStorage.setItem("picture", resultData.picture)
+			const resultData = await result.json()
 
-		const newURL = window.location.origin + "/" + goTo
-		setTimeout(() => {
-			window.location.href = newURL
-		}, 1000)
-	} catch (error) {
-		console.log("- Error : ", error)
+			localStorage.setItem("username", resultData.name)
+			localStorage.setItem("picture", resultData.picture)
+
+			const newURL = window.location.origin + "/" + goTo
+			setTimeout(() => {
+				window.location.href = newURL
+			}, 1000)
+		} catch (error) {
+			console.log("- Error : ", error)
+		}
 	}
 }

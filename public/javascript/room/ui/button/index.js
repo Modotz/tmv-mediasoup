@@ -1,5 +1,6 @@
 const RecordRTC = require("recordrtc")
 const { timerLayout, muteAllParticipants, unlockAllMic } = require("../../function")
+const { alertError } = require("../error")
 
 const changeMic = ({ parameter, socket, status }) => {
 	parameter.allUsers.forEach((data) => {
@@ -395,14 +396,7 @@ const addMuteAllButton = ({ parameter, socket }) => {
 					unlockAllMic({ parameter, socket })
 					newElement.innerHTML = "Mute All Participants"
 				} else {
-					let ae = document.getElementById("alert-error")
-					ae.className = "show"
-					ae.innerHTML = `You're Not Host`
-					// Show Warning
-					setTimeout(() => {
-						ae.className = ae.className.replace("show", "")
-						ae.innerHTML = ``
-					}, 3000)
+					alertError({ message: "You're Not Host" })
 				}
 			})
 		}

@@ -20,6 +20,7 @@ const {
 	changeLayoutScreenSharingClient,
 	recordVideo,
 } = require("../room/ui/button")
+const { alertError } = require("../room/ui/error")
 const { createMyVideo, removeVideoAndAudio, updatingLayout, changeLayout, changeUserMic, removeUserList } = require("../room/ui/video")
 
 let parameter
@@ -30,16 +31,12 @@ socket.on("connection-success", async ({ socketId }) => {
 	try {
 		console.log("- Id : ", socketId)
 		parameter = new Parameters()
-		parameter.username = "Diky"
 		parameter.socketId = socketId
-		parameter.isVideo = true
-		parameter.isAudio = true
 		await getRoomId(parameter)
 		await checkLocalStorage({ parameter })
 		await getMyStream(parameter)
 		await createMyVideo(parameter)
 		await joinRoom({ socket, parameter })
-		// console.log("- Parameter : ", parameter)
 	} catch (error) {
 		console.log("- Error On Connecting : ", error)
 	}
@@ -151,14 +148,7 @@ socket.on("unmute-all", (data) => {
 let micButton = document.getElementById("user-mic-button")
 micButton.addEventListener("click", () => {
 	if (parameter.micCondition.isLocked) {
-		let ae = document.getElementById("alert-error")
-		ae.className = "show"
-		ae.innerHTML = `Mic is Locked By Host`
-		// Show Warning
-		setTimeout(() => {
-			ae.className = ae.className.replace("show", "")
-			ae.innerHTML = ``
-		}, 3000)
+		alertError({ message: "Mic is Locked By Host" })
 		return
 	}
 	// let isActive = micButton.querySelector("img").src.split('/').pop();
@@ -457,14 +447,8 @@ sendMessageButton.addEventListener("submit", (e) => {
 		let inputMessage = document.getElementById("message-input").value
 		let sender = parameter.username
 		if (!inputMessage) {
-			let ae = document.getElementById("alert-error")
-			ae.className = "show"
-			ae.innerHTML = `You cannot send empty message`
-			// Show Warning
-			setTimeout(() => {
-				ae.className = ae.className.replace("show", "")
-				ae.innerHTML = ``
-			}, 3000)
+			alertError({ message: "You cannot send an empty message!" })
+			return
 		}
 
 		const messageDate = new Date()

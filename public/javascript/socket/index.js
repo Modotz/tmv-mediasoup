@@ -22,6 +22,7 @@ const {
 	changeLayoutScreenSharing,
 	changeLayoutScreenSharingClient,
 	recordVideo,
+	displayMainEvent,
 } = require("../room/ui/button")
 const { createMyVideo, removeVideoAndAudio, updatingLayout, changeLayout, changeUserMic, removeUserList } = require("../room/ui/video")
 
@@ -37,7 +38,7 @@ socket.on("connection-success", async ({ socketId }) => {
 		parameter.socketId = socketId
 		parameter.isVideo = true
 		parameter.isAudio = true
-		await getPdf({ parameter, pdfDocument: "firstDocument" })
+		await getPdf({ parameter, pdfDocument: "aktaDocument" })
 		await getRoomId(parameter)
 		await checkLocalStorage({ parameter })
 		await getMyStream(parameter)
@@ -149,12 +150,24 @@ socket.on("unmute-all", (data) => {
 	}
 })
 
-socket.on("change-scroll", ({ socketId, value }) => {
+socket.on("change-scroll", ({ socketId, value, type }) => {
 	try {
-		let pdfContainer = document.getElementById("pdf-container")
-		let totalScroll = pdfContainer.scrollHeight - pdfContainer.clientHeight
-		let scrolled = (value / 100) * totalScroll
-		pdfContainer.scrollTop = scrolled
+		switch (type) {
+			case "transaksi":
+				let pdfContainer = document.getElementById("pdf-container")
+				let totalScroll = pdfContainer.scrollHeight - pdfContainer.clientHeight
+				let scrolled = (value / 100) * totalScroll
+				pdfContainer.scrollTop = scrolled
+				break
+			case "tata-tertib":
+				let tataTertibContainer = document.getElementById("side-bar-container")
+				let totalScrollTataTerti = tataTertibContainer.scrollHeight - tataTertibContainer.clientHeight
+				let scrolledTataTertib = (value / 100) * totalScrollTataTerti
+				tataTertibContainer.scrollTop = scrolledTataTertib
+				break
+			default:
+				break
+		}
 	} catch (error) {
 		console.log("- Error Change Scroll : ", error)
 	}
@@ -164,8 +177,8 @@ socket.on("change-page", ({ currentPage, pdfDocument }) => {
 	renderPage({ parameter, num: currentPage, pdfDocument })
 })
 
-socket.on("change-pdf", ({ pdfDocument }) => {
-	getPdf({ parameter, pdfDocument })
+socket.on("change-event", ({ event }) => {
+	displayMainEvent({ event, parameter })
 })
 
 socket.on("end-meeting", ({ message }) => {
@@ -173,6 +186,31 @@ socket.on("end-meeting", ({ message }) => {
 })
 
 /**  EVENT LISTENER  **/
+
+// let dummyButton = document.getElementById("dummy-button")
+// dummyButton.addEventListener("click", async () => {
+// 	let url = "https://192.168.18.68:3001/documents"
+
+// 	let data = {
+// 		isPPAT: true,
+// 		username: parameter.username,
+// 		room: parameter.roomName,
+// 		role: "PPAT",
+// 	}
+// 	let response = await fetch(url, {
+// 		method: "POST",
+// 		headers: {
+// 			"Content-Type": "application/json",
+// 		},
+// 		body: JSON.stringify(data),
+// 	})
+
+// 	if (response.ok) {
+// 		console.log("File uploaded successfully")
+// 	} else {
+// 		console.error("File upload failed")
+// 	}
+// })
 
 let micButton = document.getElementById("user-mic-button")
 micButton.addEventListener("click", () => {

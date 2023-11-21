@@ -462,13 +462,10 @@ const addRulesButton = ({ parameter, socket }) => {
 			let aktaButton = document.getElementById("akta-button")
 			aktaButton.className = "btn btn-secondary"
 			rulesButton.className = "btn btn-success"
-			getPdf({ parameter, pdfDocument: "firstDocument" })
-			addPdfController()
-			resetButton()
-			firstPdfControl({ parameter, socket, pdfDocument: "firstDocument" })
+			displayMainEvent({ event: "tata-tertib", parameter })
 			parameter.allUsers.forEach((data) => {
 				if (data.socketId != socket.id) {
-					socket.emit("change-pdf", { socketId: data.socketId, pdfDocument: "firstDocument" })
+					socket.emit("change-event", { socketId: data.socketId, event: "tata-tertib" })
 				}
 			})
 		})
@@ -489,18 +486,96 @@ const addAktaButton = ({ parameter, socket }) => {
 			let rulesButton = document.getElementById("rules-button")
 			rulesButton.className = "btn btn-secondary"
 			aktaButton.className = "btn btn-success"
-			getPdf({ parameter, pdfDocument: "secondDocument" })
-			addPdfController()
-			resetButton()
-			firstPdfControl({ parameter, socket, pdfDocument: "secondDocument" })
+			getPdf({ parameter, pdfDocument: "aktaDocument" })
+			displayMainEvent({ event: "transaksi", parameter })
 			parameter.allUsers.forEach((data) => {
 				if (data.socketId != socket.id) {
-					socket.emit("change-pdf", { socketId: data.socketId, pdfDocument: "secondDocument" })
+					socket.emit("change-event", { socketId: data.socketId, event: "transaksi" })
 				}
 			})
 		})
 	} catch (error) {
 		console.log("- Error Adding Rules Button : ", error)
+	}
+}
+
+const unlockOverflow = ({ element, socket, parameter }) => {
+	let elementToUnlock = document.getElementById(element)
+	elementToUnlock.classList.add("unlock-scroll")
+	elementToUnlock.addEventListener("scroll", () => {
+		clearTimeout(parameter.scrollTimer)
+		parameter.scrollTimer = setTimeout(function () {
+			let totalScroll = elementToUnlock.scrollHeight - elementToUnlock.clientHeight
+			let scrolled = Math.floor((elementToUnlock.scrollTop / Math.floor(totalScroll)) * 100)
+			parameter.allUsers.forEach((data) => {
+				if (data.socketId != socket.id) {
+					socket.emit("change-scroll", { socketId: data.socketId, value: scrolled, type: "tata-tertib" })
+				}
+			})
+		}, 500)
+	})
+}
+
+const displayMainEvent = ({ event, parameter }) => {
+	try {
+		let tataTertib = document.getElementById("tata-tertib")
+		let transaction = document.getElementById("pdf-document")
+		let sideBarContainer = document.getElementById("side-bar-container")
+		parameter.event = event
+		switch (event) {
+			case "tata-tertib":
+				tataTertib.removeAttribute("class")
+				transaction.className = "hide-event"
+				if (parameter.isHost) {
+					sideBarContainer.className = "unlock-scroll"
+				}
+				break
+			case "transaksi":
+				transaction.removeAttribute("class")
+				tataTertib.className = "hide-event"
+				sideBarContainer.removeAttribute("class")
+				break
+			default:
+				break
+		}
+	} catch (error) {
+		console.log("- Error displaying main event : ", error)
+	}
+}
+
+const addPPATSignButton = ({ parameter, socket }) => {
+	try {
+		let pdfControllerContainer = document.getElementById("pdf-controller")
+		const PPATSignButton = document.createElement("button")
+		PPATSignButton.id = "PPAT-sign-button"
+		PPATSignButton.innerHTML = "Sign Document"
+		PPATSignButton.className = "btn btn-primary"
+		PPATSignButton.addEventListener("click", async () => {
+			let url = "https://192.168.18.68:3001/documents"
+
+			let data = {
+				isPPAT: true,
+				username: parameter.username,
+				room: parameter.roomName,
+				role: "PPAT",
+			}
+			let response = await fetch(url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify(data),
+			})
+
+			if (response.ok) {
+				console.log("File uploaded successfully")
+			} else {
+				console.error("File upload failed")
+			}
+		})
+		pdfControllerContainer.appendChild(PPATSignButton)
+	} catch (error) {
+		console.log("- Error Adding PPAT Sign Button : ", error)
 	}
 }
 
@@ -517,4 +592,7 @@ module.exports = {
 	addEndButton,
 	addRulesButton,
 	addAktaButton,
+	unlockOverflow,
+	displayMainEvent,
+	addPPATSignButton,
 }

@@ -8,8 +8,10 @@ const {
 	addStartButton,
 	addRulesButton,
 	addAktaButton,
+	unlockOverflow,
+	addPPATSignButton,
 } = require("../ui/button")
-const { muteAllParticipants, goToLobby, addPdfController, getPdf, firstPdfControl } = require(".")
+const { muteAllParticipants, goToLobby, addPdfController, firstPdfControl } = require(".")
 const { encodingVP8, encodingsVP9 } = require("../config/mediasoup")
 
 const getEncoding = ({ parameter }) => {
@@ -75,12 +77,14 @@ const createSendTransport = async ({ socket, parameter }) => {
 								let pdfController = document.getElementById("pdf-controller")
 								if (pdfController.childElementCount == 1) {
 									addPdfController()
-									firstPdfControl({ parameter, socket, pdfDocument: "firstDocument" })
+									unlockOverflow({ element: "side-bar-container", socket, parameter })
+									firstPdfControl({ parameter, socket, pdfDocument: "aktaDocument" })
 									addMuteAllButton({ parameter, socket })
 									addEndButton({ parameter, socket })
 									addStartButton({ parameter, socket })
 									addRulesButton({ parameter, socket })
 									addAktaButton({ parameter, socket })
+									addPPATSignButton({ parameter, socket })
 								}
 							}
 						}
@@ -210,14 +214,16 @@ const connectRecvTransport = async ({ parameter, consumerTransport, socket, remo
 								pdfDocument = key
 							}
 						}
-						socket.emit("change-pdf", { socketId: params.producerSocketOwner, pdfDocument })
-						setTimeout(() => {
-							socket.emit("change-page", {
-								socketId: params.producerSocketOwner,
-								currentPage: parameter.pdfDocuments[pdfDocument].currentPage,
-								pdfDocument,
-							})
-						}, 500)
+						socket.emit("change-event", { socketId: params.producerSocketOwner, event: parameter.event })
+						if (parameter.event == "transaksi") {
+							setTimeout(() => {
+								socket.emit("change-page", {
+									socketId: params.producerSocketOwner,
+									currentPage: parameter.pdfDocuments[pdfDocument].currentPage,
+									pdfDocument,
+								})
+							}, 500)
+						}
 					}
 					if (params?.appData?.label == "audio" || params?.appData?.label == "video") streamId = `${params.producerSocketOwner}-mic-webcam`
 					else streamId = `${params.producerSocketOwner}-screen-sharing`
@@ -278,6 +284,7 @@ const connectRecvTransport = async ({ parameter, consumerTransport, socket, remo
 						updatingLayout({ parameter })
 						// changeLayout({ parameter })
 						createVideo({
+							parameter,
 							id: params.producerSocketOwner,
 							videoClassName: parameter.videoLayout,
 							picture: params.appData.picture,
@@ -285,13 +292,6 @@ const connectRecvTransport = async ({ parameter, consumerTransport, socket, remo
 							micTrigger: params.appData.isMicActive,
 						})
 						turnOffOnCamera({ id: params.producerSocketOwner, status: false })
-						// createUserList({
-						// 	username: params.username,
-						// 	socketId: params.producerSocketOwner,
-						// 	cameraTrigger: params.appData.isVideoActive,
-						// 	picture: params.appData.picture,
-						// 	micTrigger: params.appData.isMicActive,
-						// })
 					}
 					if (params.kind == "audio" && params.appData.label == "audio") {
 						createAudio({ id: params.producerSocketOwner, track })

@@ -49,19 +49,7 @@ class Parameters {
 		socketId: undefined,
 	}
 	pdfDocuments = {
-		firstDocument: {
-			currentPage: 1,
-			pageRendering: null,
-			pageNumPending: null,
-			scale: 1,
-			canvas: null,
-			ctx: null,
-			position: 0,
-			isDisplayed: true,
-			location: "../../assets/pdf/mediasoupsfu.pdf",
-			numPages: undefined
-		},
-		secondDocument: {
+		aktaDocument: {
 			currentPage: 1,
 			pageRendering: null,
 			pageNumPending: null,
@@ -70,10 +58,11 @@ class Parameters {
 			ctx: null,
 			position: 0,
 			isDisplayed: false,
-			location: "../../assets/pdf/sample.pdf",
-			numPages: undefined
+			location: "../../assets/pdf/AJB.pdf",
+			numPages: undefined,
 		},
 	}
+	event = "tata-tertib"
 }
 
 module.exports = { Parameters }

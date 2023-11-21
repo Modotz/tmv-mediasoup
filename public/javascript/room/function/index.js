@@ -1,3 +1,10 @@
+const pdfLib = require("pdf-lib")
+// let url = "https://modotz.net/documents" /`/ VPS Mr. Indra IP
+// let url = "https://meet.dikyardiyanto.site/documents" // My VPS
+let url = "https://192.168.18.68:3001/documents" // Laptop Jaringan 5G
+// let url = 'https://192.168.3.135' // IP Kost
+// let url = "https://192.168.3.208"
+
 const startTimer = () => {
 	try {
 		let startTime = Date.now()
@@ -337,12 +344,18 @@ const getPdf = ({ parameter, pdfDocument }) => {
 			parameter.pdfDocuments[pdfDocument].canvas.width,
 			parameter.pdfDocuments[pdfDocument].canvas.height
 		)
-		window.pdfjsLib.getDocument(location).promise.then((pdf) => {
-			parameter.pdfDocuments[pdfDocument].doc = pdf
-			document.getElementById("total-page").textContent = pdf.numPages
-			parameter.pdfDocuments[pdfDocument].numPages = pdf.numPages
-			renderPage({ parameter, num: parameter.pdfDocuments[pdfDocument].currentPage, pdfDocument })
-		})
+		fetch(url)
+			.then((res) => {
+				return res.arrayBuffer()
+			})
+			.then((data) => {
+				window.pdfjsLib.getDocument(data).promise.then((pdf) => {
+					parameter.pdfDocuments[pdfDocument].doc = pdf
+					document.getElementById("total-page").textContent = pdf.numPages
+					parameter.pdfDocuments[pdfDocument].numPages = pdf.numPages
+					renderPage({ parameter, num: parameter.pdfDocuments[pdfDocument].currentPage, pdfDocument })
+				})
+			})
 	} catch (error) {
 		console.log("- Error Getting PDF : ", error)
 	}
@@ -389,7 +402,7 @@ const firstPdfControl = async ({ parameter, socket, pdfDocument }) => {
 				let scrolled = Math.floor((pdfContainer.scrollTop / Math.floor(totalScroll)) * 100)
 				parameter.allUsers.forEach((data) => {
 					if (data.socketId != socket.id) {
-						socket.emit("change-scroll", { socketId: data.socketId, value: scrolled })
+						socket.emit("change-scroll", { socketId: data.socketId, value: scrolled, type: "transaksi" })
 					}
 				})
 			}, 500)
@@ -413,7 +426,7 @@ const addPdfController = async () => {
 		pdfController.append(nextButton)
 		pdfContainer.className = "unlock-scroll"
 	} catch (error) {
-		console.log("- Error Document First Control : ")
+		console.log("- Error Document First Control : ", error)
 	}
 }
 

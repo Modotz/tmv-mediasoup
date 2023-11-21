@@ -4,7 +4,7 @@ const router = require("./routes/index.js")
 const app = express()
 const port = 3001
 // const port = 80
-const fs = require('fs')
+const fs = require("fs")
 const http = require("http")
 const path = require("path")
 const https = require("httpolyglot")
@@ -26,17 +26,17 @@ app.use(express.json())
 app.use(express.static("public"))
 app.use(express.static(path.join(__dirname, "public")))
 
-// const httpsServer = https.createServer(options, app)
-// httpsServer.listen(port, () => {
-// 	console.log("App On : " + port)
-// })
-// const io = new Server(httpsServer)
-
-const httpServer = http.createServer(app)
-httpServer.listen(port, () => {
+const httpsServer = https.createServer(options, app)
+httpsServer.listen(port, () => {
 	console.log("App On : " + port)
 })
-const io = new Server(httpServer)
+const io = new Server(httpsServer)
+
+// const httpServer = http.createServer(app)
+// httpServer.listen(port, () => {
+// 	console.log("App On : " + port)
+// })
+// const io = new Server(httpServer)
 
 let serverParameter = new Server_Parameter()
 let mediasoupParameter = new Mediasoup_Parameter()
@@ -61,7 +61,7 @@ io.on("connection", async (socket) => {
 	socket.on("disconnect", () => {
 		try {
 			console.log("- Disconnected : ", socket.id)
-			if (serverParameter.recording[socket.id]){
+			if (serverParameter.recording[socket.id]) {
 				delete serverParameter.recording[socket.id]
 			}
 
@@ -351,16 +351,16 @@ io.on("connection", async (socket) => {
 		producerData.producer.appData = { ...producerData.producer.appData, ...data }
 	})
 
-	socket.on("change-scroll", ({ socketId, value }) => {
-		socket.to(socketId).emit("change-scroll", { value })
+	socket.on("change-scroll", ({ socketId, value, type }) => {
+		socket.to(socketId).emit("change-scroll", { value, type })
 	})
 
 	socket.on("change-page", ({ socketId, currentPage, pdfDocument }) => {
 		socket.to(socketId).emit("change-page", { currentPage, pdfDocument })
 	})
 
-	socket.on("change-pdf", ({ socketId, pdfDocument }) => {
-		socket.to(socketId).emit("change-pdf", { pdfDocument })
+	socket.on("change-event", ({ socketId, event }) => {
+		socket.to(socketId).emit("change-event", { event })
 	})
 
 	socket.on("message", function (data) {

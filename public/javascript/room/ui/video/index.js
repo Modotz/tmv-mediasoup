@@ -19,7 +19,7 @@ const createMyVideo = async (parameter) => {
 	}
 }
 
-const createVideo = ({ id, picture, username, micTrigger }) => {
+const createVideo = ({ id, picture, username, micTrigger, parameter }) => {
 	try {
 		let isVideoExist = document.getElementById("vc-" + id)
 		let addPicture = `<div class="video-on" id="user-picture-container-${id}"><img src="${picture}" class="image-turn-off" id="user-picture-${id}""/></div>`
@@ -31,8 +31,15 @@ const createVideo = ({ id, picture, username, micTrigger }) => {
 			const micIcons = `<div class="icons-mic"><img src="/assets/pictures/mic${
 				micTrigger ? "On" : "Off"
 			}.png" class="mic-image" id="user-mic-${id}"/></div>`
-			userVideoContainer.innerHTML = `${micIcons}<video id="v-${id}" class="user-video" poster="/assets/pictures/unknown.jpg" autoplay></video>${addPicture}<div class="username">${username}</div>`
-			videoContainer.appendChild(userVideoContainer)
+			if (parameter.isHost) {
+				userVideoContainer.innerHTML = `${micIcons}<video id="v-${id}" class="user-video" poster="/assets/pictures/unknown.jpg" autoplay></video>${addPicture}<div class="username">${username}</div><button id="signature-${id}" class="signature">Sign</button>`
+				videoContainer.appendChild(userVideoContainer)
+				// document.getElementById(`signature-${id}`).addEventListener("click", () => {
+				// })
+			} else {
+				userVideoContainer.innerHTML = `${micIcons}<video id="v-${id}" class="user-video" poster="/assets/pictures/unknown.jpg" autoplay></video>${addPicture}<div class="username">${username}</div>`
+				videoContainer.appendChild(userVideoContainer)
+			}
 		}
 	} catch (error) {
 		console.log("- Error Creating User Video : ", error)

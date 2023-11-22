@@ -31,6 +31,22 @@ class Controller {
 		}
 	}
 
+	static login(req, res) {
+		try {
+			res.render("login")
+		} catch (error) {
+			console.log(error)
+		}
+	}
+
+	static register(req, res) {
+		try {
+			res.render("register")
+		} catch (error) {
+			console.log(error)
+		}
+	}
+
 	static async googleAuth(req, res) {
 		try {
 			const ticket = await client.verifyIdToken({

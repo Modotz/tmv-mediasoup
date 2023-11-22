@@ -1,9 +1,13 @@
+require("dotenv").config()
+const mongoose = require("mongoose")
+const connect = require("./config/mongodb/mongodb.js")
 const express = require("express")
 const cors = require("cors")
 const router = require("./routes/index.js")
 const app = express()
 const port = 3001
 // const port = 80
+const session = require("express-session")
 const fs = require("fs")
 const http = require("http")
 const path = require("path")
@@ -16,6 +20,9 @@ const { Server_Parameter } = require("./helpers/server_parameters.js")
 const { Room } = require("./helpers/rooms.js")
 const { Users } = require("./helpers/users.js")
 const { createWorker, Mediasoup_Parameter, createWebRtcTransport, getTransport, informConsumer } = require("./helpers/mediasoup/index.js")
+const errorHandler = require("./middlewares/errorHandlers.js")
+
+connect()
 
 app.use(cors())
 app.set("view engine", "ejs")
@@ -27,14 +34,18 @@ app.use(express.static("public"))
 app.use(express.static(path.join(__dirname, "public")))
 
 const httpsServer = https.createServer(options, app)
-httpsServer.listen(port, () => {
-	console.log("App On : " + port)
+mongoose.connection.once("open", () => {
+	httpsServer.listen(port, () => {
+		console.log("App On : " + port)
+	})
 })
 const io = new Server(httpsServer)
 
 // const httpServer = http.createServer(app)
-// httpServer.listen(port, () => {
-// 	console.log("App On : " + port)
+// mongoose.connection.once('open', () => {
+//     httpServer.listen(port, () => {
+//         console.log('App On : ' + port)
+//     })
 // })
 // const io = new Server(httpServer)
 
@@ -403,5 +414,5 @@ io.on("connection", async (socket) => {
 		}
 	})
 })
-
 app.use(router)
+app.use(errorHandler)

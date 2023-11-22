@@ -405,6 +405,7 @@ const handleCredentialResponse = async (response) => {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
+				"access_token": sessionStorage.getItem("access_token")
 			},
 			body: JSON.stringify({ credential: response.credential }),
 		})
@@ -437,6 +438,7 @@ window.handleCredentialResponse = async (response) => {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
+				"access_token": sessionStorage.getItem("access_token")
 			},
 			body: JSON.stringify({ credential: response.credential }),
 		})

@@ -344,7 +344,13 @@ const getPdf = ({ parameter, pdfDocument }) => {
 			parameter.pdfDocuments[pdfDocument].canvas.width,
 			parameter.pdfDocuments[pdfDocument].canvas.height
 		)
-		fetch(url)
+		fetch(url, {
+			method: "GET",
+			headers: {
+				"Content-Type": "application/json",
+				access_token: sessionStorage.getItem("access_token"),
+			},
+		})
 			.then((res) => {
 				return res.arrayBuffer()
 			})
@@ -445,11 +451,11 @@ const resetButton = () => {
 
 const signDocument = async ({ parameter, socket, data }) => {
 	try {
-		let url = "https://192.168.18.68:3001/documents"
 		let response = await fetch(url, {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
+				access_token: sessionStorage.getItem("access_token"),
 			},
 			body: JSON.stringify(data),
 		})
@@ -485,5 +491,5 @@ module.exports = {
 	firstPdfControl,
 	resetButton,
 	goHome,
-	signDocument
+	signDocument,
 }

@@ -1,5 +1,27 @@
 const joinForm = document.getElementById("join-form")
 const url = window.location
+
+// const checkToken = async () => {
+// 	try {
+// 		const api = "https://192.168.18.68:3001/api/user"
+// 		const response = await fetch(api, {
+// 			method: "get",
+// 			headers: {
+// 				"Content-Type": "application/json",
+// 				access_token: sessionStorage.getItem("access_token"),
+// 			},
+// 		})
+
+// 		if (!response.ok) {
+// 			window.location.href = window.location.origin + "/login"
+// 		}
+// 	} catch (error) {
+// 		console.log("Invalid Token : ", error)
+// 	}
+// }
+
+// checkToken()
+
 joinForm.addEventListener("submit", (e) => {
 	e.preventDefault()
 	const roomId = document.getElementById("room-id").value

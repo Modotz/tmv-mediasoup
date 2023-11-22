@@ -1,3 +1,5 @@
+const { addSaksiSignButton } = require("../button")
+
 const createMyVideo = async (parameter) => {
 	try {
 		let picture = `<div class="${parameter.initialVideo ? "video-on" : "video-off"}" id="user-picture-container-${parameter.socketId}"><img src="${
@@ -19,7 +21,7 @@ const createMyVideo = async (parameter) => {
 	}
 }
 
-const createVideo = ({ id, picture, username, micTrigger, parameter }) => {
+const createVideo = ({ id, picture, username, micTrigger, parameter, role = "Saksi", socket }) => {
 	try {
 		let isVideoExist = document.getElementById("vc-" + id)
 		let addPicture = `<div class="video-on" id="user-picture-container-${id}"><img src="${picture}" class="image-turn-off" id="user-picture-${id}""/></div>`
@@ -31,14 +33,11 @@ const createVideo = ({ id, picture, username, micTrigger, parameter }) => {
 			const micIcons = `<div class="icons-mic"><img src="/assets/pictures/mic${
 				micTrigger ? "On" : "Off"
 			}.png" class="mic-image" id="user-mic-${id}"/></div>`
+
+			userVideoContainer.innerHTML = `${micIcons}<video id="v-${id}" class="user-video" poster="/assets/pictures/unknown.jpg" autoplay></video>${addPicture}<div class="username">${username}</div>`
+			videoContainer.appendChild(userVideoContainer)
 			if (parameter.isHost) {
-				userVideoContainer.innerHTML = `${micIcons}<video id="v-${id}" class="user-video" poster="/assets/pictures/unknown.jpg" autoplay></video>${addPicture}<div class="username">${username}</div><button id="signature-${id}" class="signature">Sign</button>`
-				videoContainer.appendChild(userVideoContainer)
-				// document.getElementById(`signature-${id}`).addEventListener("click", () => {
-				// })
-			} else {
-				userVideoContainer.innerHTML = `${micIcons}<video id="v-${id}" class="user-video" poster="/assets/pictures/unknown.jpg" autoplay></video>${addPicture}<div class="username">${username}</div>`
-				videoContainer.appendChild(userVideoContainer)
+				addSaksiSignButton({ id, role, username, socket, parameter, socket })
 			}
 		}
 	} catch (error) {

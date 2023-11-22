@@ -46,7 +46,8 @@ class Controller {
 
 	static async getDocuments(req, res) {
 		try {
-			const originalPDFPath = path.join(__dirname, "..", "documents", "pdf", "AJB.pdf")
+			// const { room } = req.body
+			const originalPDFPath = path.join(__dirname, "..", "documents", "pdf", "22", "AJB.pdf")
 			res.sendFile(originalPDFPath, (err) => {
 				if (err) {
 					console.error(err)
@@ -60,31 +61,23 @@ class Controller {
 
 	static async createDocuments(req, res) {
 		try {
+			const { isPPAT, username, room, role } = req.body
 			const createDirectoryIfNotExists = async (directoryPath) => {
 				try {
 					await fs.access(directoryPath) // Check if the directory already exists
 				} catch (error) {
 					if (error.code === "ENOENT") {
-						// Directory doesn't exist, create it
 						await fs.mkdir(directoryPath, { recursive: true })
 						console.log(`Directory created: ${directoryPath}`)
-					} else {
-						// Other error, propagate it
-						throw error
 					}
 				}
 			}
-			const originialPDFPath = path.join(__dirname, "..", "documents", "pdf", "AJB.pdf")
+			const originialPDFPath = path.join(__dirname, "..", "documents", "pdf", room, "AJB.pdf")
 			// Read the existing PDF file
 			const pdfBytes = await fs.readFile(originialPDFPath)
 
-			const signaturePath = path.join(__dirname, "..", "documents", "signature", "QR-Code.jpg")
-			const signatureBytes = await fs.readFile(signaturePath)
-
 			// Load the existing PDF document
 			const pdfDoc = await PDFDocument.load(pdfBytes)
-
-			const signatureJpg = await pdfDoc.embedJpg(signatureBytes)
 
 			const pages = pdfDoc.getPages()
 			const lastPages = pages[5]
@@ -94,19 +87,45 @@ class Controller {
 			// const { width, height } = signatureJpg.scale(1)
 			// const textContent = await lastPages.getTextContent();
 			// console.log(textContent)
+			if (isPPAT) {
+				const signaturePath = path.join(__dirname, "..", "documents", "signature", "QR-Code.jpg")
+				const signatureBytes = await fs.readFile(signaturePath)
+				const signatureJpg = await pdfDoc.embedJpg(signatureBytes)
+				lastPages.drawImage(signatureJpg, {
+					x: width / 2 + 90,
+					y: height - 440,
+					width: 50,
+					height: 50,
+				})
+				lastPages.drawText(username, {
+					x: width / 2 + 70,
+					y: height - 470,
+					size: 12,
+				})
+			} else if (role == "Saksi") {
+				const signaturePath = path.join(__dirname, "..", "documents", "signature", "QR-Code.jpg")
+				const signatureBytes = await fs.readFile(signaturePath)
+				const signatureJpg = await pdfDoc.embedJpg(signatureBytes)
+				lastPages.drawImage(signatureJpg, {
+					x: 215,
+					y: height - 300,
+					width: 50,
+					height: 50,
+				})
+				lastPages.drawText(username, {
+					x: 210,
+					y: height - 330,
+					size: 12,
+				})
+			}
 
-			lastPages.drawImage(signatureJpg, {
-				x: width / 2 + 90,
-				y: height - 440,
-				width: 50,
-				height: 50,
-			})
-
-			const newPdf = "modified_AJB.pdf"
-			const newPdfFilePath = path.join(__dirname, "..", "documents", "pdf", newPdf)
-			createDirectoryIfNotExists(newPdfFilePath)
+			const newPdf = "AJB.pdf"
+			const filePathPDF = path.join(__dirname, "..", "documents", "pdf", room)
+			await createDirectoryIfNotExists(filePathPDF)
+			const newPdfFilePath = path.join(__dirname, "..", "documents", "pdf", room, newPdf)
 			const modifiedPdf = await pdfDoc.save()
 			await fs.writeFile(newPdfFilePath, modifiedPdf)
+			await res.status(200).json({ message: `success-signing-${role}` })
 		} catch (error) {
 			console.log(error)
 		}

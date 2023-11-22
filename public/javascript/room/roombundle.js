@@ -50817,6 +50817,27 @@ const resetButton = () => {
 	}
 }
 
+const signDocument = async ({ parameter, socket, data }) => {
+	try {
+		let url = "https://192.168.18.68:3001/documents"
+		let response = await fetch(url, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify(data),
+		})
+
+		if (response.ok) {
+			console.log(await response.json())
+		} else {
+			console.error("File upload failed")
+		}
+	} catch (error) {
+		console.log("- Error Signing Document : ", error)
+	}
+}
+
 module.exports = {
 	addPdfController,
 	startTimer,
@@ -50838,6 +50859,7 @@ module.exports = {
 	firstPdfControl,
 	resetButton,
 	goHome,
+	signDocument
 }
 
 },{"pdf-lib":206}],232:[function(require,module,exports){
@@ -51255,6 +51277,7 @@ const connectRecvTransport = async ({ parameter, consumerTransport, socket, remo
 							picture: params.appData.picture,
 							username: params.username,
 							micTrigger: params.appData.isMicActive,
+							socket,
 						})
 						turnOffOnCamera({ id: params.producerSocketOwner, status: false })
 					}
@@ -51375,7 +51398,17 @@ module.exports = { Parameters }
 const { socket } = require("../socket")
 },{"../socket":238}],236:[function(require,module,exports){
 const RecordRTC = require("recordrtc")
-const { timerLayout, muteAllParticipants, unlockAllMic, getPdf, firstPdfControl, addPdfController, resetButton, goHome } = require("../../function")
+const {
+	timerLayout,
+	muteAllParticipants,
+	unlockAllMic,
+	getPdf,
+	firstPdfControl,
+	addPdfController,
+	resetButton,
+	goHome,
+	signDocument,
+} = require("../../function")
 
 const changeMic = ({ parameter, socket, status }) => {
 	parameter.allUsers.forEach((data) => {
@@ -51927,32 +51960,36 @@ const addPPATSignButton = ({ parameter, socket }) => {
 		PPATSignButton.innerHTML = "Sign Document"
 		PPATSignButton.className = "btn btn-primary"
 		PPATSignButton.addEventListener("click", async () => {
-			let url = "https://192.168.18.68:3001/documents"
-
 			let data = {
 				isPPAT: true,
 				username: parameter.username,
 				room: parameter.roomName,
 				role: "PPAT",
 			}
-			let response = await fetch(url, {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify(data),
-			})
-
-			if (response.ok) {
-				console.log("File uploaded successfully")
-			} else {
-				console.error("File upload failed")
-			}
+			await signDocument({ parameter, socket, data })
 		})
 		pdfControllerContainer.appendChild(PPATSignButton)
 	} catch (error) {
 		console.log("- Error Adding PPAT Sign Button : ", error)
 	}
+}
+
+const addSaksiSignButton = async ({ id, role, username, parameter, socket }) => {
+	let videoId = document.getElementById(`vc-${id}`)
+	let saksiSignButton = document.createElement("button")
+	saksiSignButton.id = "signature-" + id
+	saksiSignButton.className = "signature"
+	saksiSignButton.innerHTML = "Sign"
+	videoId.appendChild(saksiSignButton)
+	saksiSignButton.addEventListener("click", async () => {
+		let data = {
+			isPPAT: false,
+			username,
+			room: parameter.roomName,
+			role,
+		}
+		await signDocument({ data, parameter, socket })
+	})
 }
 
 module.exports = {
@@ -51971,9 +52008,12 @@ module.exports = {
 	unlockOverflow,
 	displayMainEvent,
 	addPPATSignButton,
+	addSaksiSignButton,
 }
 
 },{"../../function":231,"recordrtc":223}],237:[function(require,module,exports){
+const { addSaksiSignButton } = require("../button")
+
 const createMyVideo = async (parameter) => {
 	try {
 		let picture = `<div class="${parameter.initialVideo ? "video-on" : "video-off"}" id="user-picture-container-${parameter.socketId}"><img src="${
@@ -51995,7 +52035,7 @@ const createMyVideo = async (parameter) => {
 	}
 }
 
-const createVideo = ({ id, picture, username, micTrigger, parameter }) => {
+const createVideo = ({ id, picture, username, micTrigger, parameter, role = "Saksi", socket }) => {
 	try {
 		let isVideoExist = document.getElementById("vc-" + id)
 		let addPicture = `<div class="video-on" id="user-picture-container-${id}"><img src="${picture}" class="image-turn-off" id="user-picture-${id}""/></div>`
@@ -52007,14 +52047,11 @@ const createVideo = ({ id, picture, username, micTrigger, parameter }) => {
 			const micIcons = `<div class="icons-mic"><img src="/assets/pictures/mic${
 				micTrigger ? "On" : "Off"
 			}.png" class="mic-image" id="user-mic-${id}"/></div>`
+
+			userVideoContainer.innerHTML = `${micIcons}<video id="v-${id}" class="user-video" poster="/assets/pictures/unknown.jpg" autoplay></video>${addPicture}<div class="username">${username}</div>`
+			videoContainer.appendChild(userVideoContainer)
 			if (parameter.isHost) {
-				userVideoContainer.innerHTML = `${micIcons}<video id="v-${id}" class="user-video" poster="/assets/pictures/unknown.jpg" autoplay></video>${addPicture}<div class="username">${username}</div><button id="signature-${id}" class="signature">Sign</button>`
-				videoContainer.appendChild(userVideoContainer)
-				// document.getElementById(`signature-${id}`).addEventListener("click", () => {
-				// })
-			} else {
-				userVideoContainer.innerHTML = `${micIcons}<video id="v-${id}" class="user-video" poster="/assets/pictures/unknown.jpg" autoplay></video>${addPicture}<div class="username">${username}</div>`
-				videoContainer.appendChild(userVideoContainer)
+				addSaksiSignButton({ id, role, username, socket, parameter, socket })
 			}
 		}
 	} catch (error) {
@@ -52218,7 +52255,7 @@ module.exports = {
 	removeUserList,
 }
 
-},{}],238:[function(require,module,exports){
+},{"../button":236}],238:[function(require,module,exports){
 const {
 	changeUserListMicIcon,
 	sendMessage,

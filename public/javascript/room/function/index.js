@@ -443,6 +443,27 @@ const resetButton = () => {
 	}
 }
 
+const signDocument = async ({ parameter, socket, data }) => {
+	try {
+		let url = "https://192.168.18.68:3001/documents"
+		let response = await fetch(url, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify(data),
+		})
+
+		if (response.ok) {
+			console.log(await response.json())
+		} else {
+			console.error("File upload failed")
+		}
+	} catch (error) {
+		console.log("- Error Signing Document : ", error)
+	}
+}
+
 module.exports = {
 	addPdfController,
 	startTimer,
@@ -464,4 +485,5 @@ module.exports = {
 	firstPdfControl,
 	resetButton,
 	goHome,
+	signDocument
 }

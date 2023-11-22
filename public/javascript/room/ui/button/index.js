@@ -1,5 +1,15 @@
 const RecordRTC = require("recordrtc")
-const { timerLayout, muteAllParticipants, unlockAllMic, getPdf, firstPdfControl, addPdfController, resetButton, goHome } = require("../../function")
+const {
+	timerLayout,
+	muteAllParticipants,
+	unlockAllMic,
+	getPdf,
+	firstPdfControl,
+	addPdfController,
+	resetButton,
+	goHome,
+	signDocument,
+} = require("../../function")
 
 const changeMic = ({ parameter, socket, status }) => {
 	parameter.allUsers.forEach((data) => {
@@ -551,32 +561,36 @@ const addPPATSignButton = ({ parameter, socket }) => {
 		PPATSignButton.innerHTML = "Sign Document"
 		PPATSignButton.className = "btn btn-primary"
 		PPATSignButton.addEventListener("click", async () => {
-			let url = "https://192.168.18.68:3001/documents"
-
 			let data = {
 				isPPAT: true,
 				username: parameter.username,
 				room: parameter.roomName,
 				role: "PPAT",
 			}
-			let response = await fetch(url, {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify(data),
-			})
-
-			if (response.ok) {
-				console.log("File uploaded successfully")
-			} else {
-				console.error("File upload failed")
-			}
+			await signDocument({ parameter, socket, data })
 		})
 		pdfControllerContainer.appendChild(PPATSignButton)
 	} catch (error) {
 		console.log("- Error Adding PPAT Sign Button : ", error)
 	}
+}
+
+const addSaksiSignButton = async ({ id, role, username, parameter, socket }) => {
+	let videoId = document.getElementById(`vc-${id}`)
+	let saksiSignButton = document.createElement("button")
+	saksiSignButton.id = "signature-" + id
+	saksiSignButton.className = "signature"
+	saksiSignButton.innerHTML = "Sign"
+	videoId.appendChild(saksiSignButton)
+	saksiSignButton.addEventListener("click", async () => {
+		let data = {
+			isPPAT: false,
+			username,
+			room: parameter.roomName,
+			role,
+		}
+		await signDocument({ data, parameter, socket })
+	})
 }
 
 module.exports = {
@@ -595,4 +609,5 @@ module.exports = {
 	unlockOverflow,
 	displayMainEvent,
 	addPPATSignButton,
+	addSaksiSignButton,
 }

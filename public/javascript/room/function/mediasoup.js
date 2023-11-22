@@ -290,6 +290,7 @@ const connectRecvTransport = async ({ parameter, consumerTransport, socket, remo
 							picture: params.appData.picture,
 							username: params.username,
 							micTrigger: params.appData.isMicActive,
+							socket,
 						})
 						turnOffOnCamera({ id: params.producerSocketOwner, status: false })
 					}

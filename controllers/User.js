@@ -18,7 +18,7 @@ class Users {
 				throw { name: "Bad Request", message: "Password Is Required" }
 			}
 			const hashPasswordUser = hashPassword(password)
-			await User.create({ email, password: hashPasswordUser, authority: 'PPAT' })
+			await User.create({ email, password: hashPasswordUser, authority: "PPAT" })
 			await res.status(201).json({ message: "Successfully Register" })
 		} catch (error) {
 			next(error)
@@ -50,11 +50,11 @@ class Users {
 		}
 	}
 
-	static async getUser (req, res, next) {
+	static async getUser(req, res, next) {
 		try {
 			const { id } = req.user
 			const user = await User.findById(id)
-			await res.status(200).json(user)
+			await res.status(200).json({ email: user.email })
 		} catch (error) {
 			next(error)
 		}

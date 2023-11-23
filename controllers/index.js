@@ -6,44 +6,52 @@ const fs = require("fs").promises
 const { PDFDocument, rgb } = require("pdf-lib")
 
 class Controller {
-	static room(req, res) {
+	static room(req, res, next) {
 		try {
 			// res.render("home")
 			res.render("room")
 		} catch (error) {
-			console.log(error)
+			next.log(error)
 		}
 	}
 
-	static home(req, res) {
+	static home(req, res, next) {
 		try {
 			res.render("home")
 		} catch (error) {
-			console.log(error)
+			next.log(error)
 		}
 	}
 
-	static lobby(req, res) {
+	static lobby(req, res, next) {
 		try {
 			res.render("lobby")
 		} catch (error) {
-			console.log(error)
+			next.log(error)
 		}
 	}
 
-	static login(req, res) {
+	static login(req, res, next) {
 		try {
 			res.render("login")
 		} catch (error) {
-			console.log(error)
+			next.log(error)
 		}
 	}
 
-	static register(req, res) {
+	static register(req, res, next) {
 		try {
 			res.render("register")
 		} catch (error) {
-			console.log(error)
+			next.log(error)
+		}
+	}
+
+	static registerMeeting(req, res, next) {
+		try {
+			res.render("register-meeting")
+		} catch (error) {
+			next(err)
 		}
 	}
 

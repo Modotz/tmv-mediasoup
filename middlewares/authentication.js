@@ -17,7 +17,7 @@ const authentication = async (req, res, next) => {
 			toLoginPage()
 			// throw { name: "Invalid", message: "Token is invalid" }
 		}
-		req.user = { id: user.id }
+		req.user = { id: user.id, email: user.email }
 		next()
 	} catch (error) {
 		next(error)

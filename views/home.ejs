@@ -20,65 +20,19 @@
         .full-container {
             width: 100vw;
             height: 100vh;
-            display: flex;
-            flex-wrap: wrap ;
+            /* display: flex;
+            flex-wrap: wrap;
+            position: relative;
+            justify-content: center; */
         }
 
         .left-bar {
-            width: 50%;
+            width: 100%;
             height: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
             position: relative;
-        }
-
-        .right-bar {
-            /* background-color: black; */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 50%;
-            height: 100%;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .enter-code {
-            font-weight: bold;
-        }
-
-        .join-image {
-            margin: 10px;
-            width: 75%;
-        }
-
-        .join-text {
-            font-weight: bold;
-            color: black;
-        }
-
-        @media (max-width: 1000px) {
-            .left-bar {
-                width: 100%;
-            }
-
-            .right-bar {
-                width: 100%;
-            }
-        }
-
-        .text-title {
-            font-size: 30px;
-            font-weight: bold;
-            font-family: 'Times New Roman', Times, serif;
-        }
-
-        .text-content {
-            font-size: 15px;
-            font-family: 'Times New Roman', Times, serif;
-            margin: 0 100px 20px 100px;
         }
 
         .icons-meet {
@@ -88,34 +42,7 @@
             width: 50px;
         }
 
-        .text-content-1 {
-            font-size: 20px;
-            font-weight: bold;
-        }
-        .text-content-2 {
-            font-size: 15px;
-            margin: 0;
-        }
-        .carousel {
-            display: none;
-        }
-        .hide {
-            animation-name: slideleft;
-            animation-duration: 5s;
-        }
-        .active {
-            display: block;
-            animation-name: slideleft2;
-            animation-duration: 5s;
-        }
-        @keyframes slideleft {
-            0% {left: 0%;}
-            25% {left: -100%;}
-        }
-        @keyframes slideleft2 {
-            0% {left: 100%;}
-            25% {left: 0%;}
-        }
+
         #left-button {
             position: absolute;
             left: 30px;
@@ -124,6 +51,7 @@
             border: none;
             background: none;
         }
+
         #right-button {
             position: absolute;
             right: 30px;
@@ -131,11 +59,6 @@
             padding: 0;
             border: none;
             background: none;
-        }
-        .carousel-image{
-            margin-left: auto;
-            margin-right: auto;
-            width: 50%;
         }
 
         .join-form-container {
@@ -151,44 +74,38 @@
         .button-custom-new-meeting {
             height: 40px;
         }
+
+        .table-meeting {
+            width: 50%;
+            height: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+        }
     </style>
 </head>
 
 <body>
     <%- include('partials/provider2.ejs') %>
-    <div class="full-container">
-        <section class="left-bar text-center">
-            <img class="icons-meet" src="/assets/pictures/icons-meeting.png"/>
-            <div>
-                <p class="text-title">Free Video Meeting For Everyone!</p>
-                <p class="text-content">Welcome to the future of virtual collaboration! Our Conference Video Meeting platform is your gateway to seamless, face-to-face interactions no matter where you are in the world.</p>
-                <!-- <p class="text-content">Our mission is to redefine the way we connect, learn, and work by providing a user-friendly, secure, and dynamic virtual meeting experience.</p> -->
-                <form id="join-form" class="join-form-container">
-                    <button id="new-meeting" type="button" class="btn btn-primary">New Meeting</button>
-                    <input id="room-id" type='text' class='m-1 form-control join-form'/>
-                    <button disabled type='submit' class='btn btn-info m-1' id="button-submit-room-id">JOIN</button>
-                </form>
-            </div>
-        </section>
-        <section class="right-bar" id="right-bar-id">
-            <div class="carousel active">
-                <lottie-player class="carousel-image" src="https://lottie.host/09a64aad-0838-455d-9698-7da751338c41/Vqt0kRofgZ.json" background="transparent" speed="1" style="width: 300px; height: 300px;" loop autoplay></lottie-player>
-                <!-- <img class="join-image" src="/assets/pictures/Join.png" /> -->
-                <p class="text-content-1">Join Meeting Room For Free</p>
-                <p class="text-content-2">You can meet everyone for free!</p>
-                <p class="text-content-2">Enter your room id to meet your family, friends and colleagues</p>
-            </div>
-            <div class="carousel">
-                <lottie-player class="carousel-image" src="https://lottie.host/f27d41d1-223d-47e8-9dea-97bd1204accc/NHd7LZi2Hk.json" background="transparent" speed="1" style="width: 300px; height: 300px;" loop autoplay></lottie-player>
-                <p class="text-content-1">Reunite with your family, friends and colleagues</p>
-                <p class="text-content-2">Distance is no longer problem to continue your activities</p>
-            </div>
-            <!-- <button id="left-button"><i class="far fa-arrow-alt-circle-left"></i></button>
-            <button id="right-button"><i class="far fa-arrow-alt-circle-right"></i></button> -->
-        </section>
-    </div>
-    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
-    <script src="/javascript/home/home.js"></script>
+        <div class="full-container">
+            <img class="icons-meet" src="/assets/pictures/icons-meeting.png" />
+            <p class="text-title" id="rooms-title"></p>
+            <table class="table table-striped table-meeting" id="rooms-table" style="display: none;">
+                <thead>
+                    <tr>
+                        <th scope="col">No</th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Participants</th>
+                    </tr>
+                </thead>
+                <tbody id="rooms-table-body">
+                </tbody>
+            </table>
+            <form id="join-form" class="join-form-container">
+                <button id="create-meeting" type="button" class="btn btn-primary">Create Meeting</button>
+            </form>
+        </div>
+        <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+        <script src="/javascript/home/home.js"></script>
 </body>
 
 </html>

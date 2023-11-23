@@ -1,26 +1,8 @@
 const joinForm = document.getElementById("join-form")
 const url = window.location
-
-// const checkToken = async () => {
-// 	try {
-// 		const api = "https://192.168.18.68:3001/api/user"
-// 		const response = await fetch(api, {
-// 			method: "get",
-// 			headers: {
-// 				"Content-Type": "application/json",
-// 				access_token: sessionStorage.getItem("access_token"),
-// 			},
-// 		})
-
-// 		if (!response.ok) {
-// 			window.location.href = window.location.origin + "/login"
-// 		}
-// 	} catch (error) {
-// 		console.log("Invalid Token : ", error)
-// 	}
-// }
-
-// checkToken()
+const roomTable = document.getElementById("rooms-table")
+const roomTableBody = document.getElementById("rooms-table-body")
+const baseUrl = "https://192.168.18.68:3001/"
 
 joinForm.addEventListener("submit", (e) => {
 	e.preventDefault()
@@ -45,45 +27,58 @@ function generateRandomId(length, separator = "-", separatorInterval = 4) {
 	return randomId
 }
 
-const newMeetingButton = document.getElementById("new-meeting")
-newMeetingButton.addEventListener("click", (e) => {
-	const id = generateRandomId(12)
-	localStorage.setItem("room-id", id)
-	const goTo = url + "lobby/" + id
+const createMeeting = document.getElementById("create-meeting")
+createMeeting.addEventListener("click", () => {
+	const goTo = url + "register-meeting"
 	window.location.href = goTo
 })
 
-const roomId = document.getElementById("room-id")
-roomId.addEventListener("input", (e) => {
-	const buttonSubmit = document.getElementById("button-submit-room-id")
-	if (!e.target.value) {
-		buttonSubmit.setAttribute("disabled", "true")
-	} else {
-		buttonSubmit.removeAttribute("disabled", "false")
+const getRooms = async () => {
+	try {
+		const api = baseUrl + "api/rooms"
+		const response = await fetch(api, {
+			method: "get",
+			headers: {
+				"Content-Type": "application/json",
+				access_token: sessionStorage.getItem("access_token"),
+			},
+		})
+
+		const rooms = await response.json()
+		if (rooms.length == 0) {
+			const roomTitle = document.getElementById("rooms-title")
+			roomTitle.innerHTML = "You Dont Have Any Scheduled Meeting"
+		} else {
+			roomTable.removeAttribute("style")
+			rooms.map(async (data, index) => {
+				const apiParticipants = baseUrl + "api/participants/" + data.roomId
+				const responseParticipants = await fetch(apiParticipants, {
+					method: "get",
+					headers: {
+						"Content-Type": "application/json",
+						access_token: sessionStorage.getItem("access_token"),
+					},
+				})
+				if (responseParticipants.ok) {
+					const participants = await responseParticipants.json()
+					let list = ""
+					participants.map((data) => {
+						list += `<p>${data.email}      <span id="cp-${data._id}" style="cursor: pointer;">copy</span></p>`
+					})
+					let rowTable = document.createElement("tr")
+					rowTable.innerHTML = `<th>${index + 1}</th><td>${data.name}</td><td><details><summary>List</summary>${list}</details></td>`
+					roomTableBody.appendChild(rowTable)
+					participants.map((data) => {
+						document.getElementById(`cp-${data._id}`).addEventListener("click", () => {
+							navigator.clipboard.writeText(`${baseUrl}user/${data._id}`)
+						})
+					})
+				}
+			})
+		}
+	} catch (error) {
+		console.log("- Error Getting Rooms : ", error)
 	}
-	localStorage.setItem("room-id", e.target.value)
-})
-
-// const rightBar = document.getElementById('right-bar-id')
-// const totalCarousel = rightBar.children.length
-const carousels = document.querySelectorAll(".carousel")
-let currentIndex = 0
-
-function showCarousel(index) {
-	carousels[currentIndex].classList.remove("active")
-	carousels[currentIndex].classList.add("hide")
-	currentIndex = index
-	carousels[currentIndex].classList.add("hide")
-	carousels[currentIndex].classList.add("active")
 }
 
-function nextSlide() {
-	const nextIndex = (currentIndex + 1) % carousels.length
-	showCarousel(nextIndex)
-}
-
-function startCarousel() {
-	setInterval(nextSlide, 5000) // Change slide every 5 seconds (adjust the interval as needed)
-}
-
-startCarousel()
+getRooms()

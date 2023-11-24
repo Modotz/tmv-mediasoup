@@ -42,7 +42,7 @@ class Users {
 			if (!isValidPassword) {
 				throw { name: "Invalid", message: "Invalid Email/Password" }
 			}
-			const encodedToken = { id: user._id }
+			const encodedToken = { id: user._id, role: "PPAT" }
 			const access_token = encodeToken(encodedToken)
 			await res.status(201).json({ access_token })
 		} catch (error) {

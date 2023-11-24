@@ -50697,6 +50697,7 @@ const renderPage = ({ parameter, num, pdfDocument }) => {
 
 const getPdf = ({ parameter, pdfDocument }) => {
 	try {
+		let url = `https://192.168.18.68:3001/documents/${parameter.roomName}` // Laptop Jaringan 5G
 		let pdfContainer = document.getElementById("pdf-container")
 		let isExist = document.getElementById("pdf-canvas")
 		if (isExist) isExist.remove()
@@ -50844,6 +50845,29 @@ const signDocument = async ({ parameter, socket, data }) => {
 	}
 }
 
+const verifyUser = async ({ id }) => {
+	try {
+		console.log("Id V", id) // Log the id to the console
+		let url = `https://192.168.18.68:3001/verify/${id}` // Laptop Jaringan 5G
+
+		let response = await fetch(url, {
+			method: "get",
+			headers: {
+				"Content-Type": "application/json",
+			},
+		})
+
+		if (response.ok) {
+			const { access_token } = await response.json()
+			sessionStorage.setItem("access_token", access_token)
+		} else {
+			console.error("File upload failed")
+		}
+	} catch (error) {
+		console.log("- Error Verifying User : ", error)
+	}
+}
+
 module.exports = {
 	addPdfController,
 	startTimer,
@@ -50866,6 +50890,7 @@ module.exports = {
 	resetButton,
 	goHome,
 	signDocument,
+	verifyUser,
 }
 
 },{"pdf-lib":206}],232:[function(require,module,exports){
@@ -51396,6 +51421,7 @@ class Parameters {
 		},
 	}
 	event = "tata-tertib"
+	userData
 }
 
 module.exports = { Parameters }
@@ -52274,6 +52300,7 @@ const {
 	getPdf,
 	renderPage,
 	goHome,
+	verifyUser,
 } = require("../room/function")
 const { getMyStream, getRoomId, joinRoom } = require("../room/function/initialization")
 const { signalNewConsumerTransport } = require("../room/function/mediasoup")
@@ -52297,13 +52324,17 @@ const socket = io("/")
 socket.on("connection-success", async ({ socketId }) => {
 	try {
 		console.log("- Id : ", socketId)
+
 		parameter = new Parameters()
+		parameter.userData = parsedData
+		parameter.roomName = parsedData.roomId
 		parameter.username = "Diky"
 		parameter.socketId = socketId
 		parameter.isVideo = true
 		parameter.isAudio = true
+		// await verifyUser({ id: parameter.userData._id })
 		await getPdf({ parameter, pdfDocument: "aktaDocument" })
-		await getRoomId(parameter)
+		// await getRoomId(parameter)
 		await checkLocalStorage({ parameter })
 		await getMyStream(parameter)
 		await createMyVideo(parameter)

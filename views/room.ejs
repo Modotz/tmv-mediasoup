@@ -61,14 +61,16 @@
             position: relative;
         }
 
-        #left-section, #right-section {
+        #left-section,
+        #right-section {
             display: flex;
         }
 
-        #right-section > button, #left-section > button {
+        #right-section>button,
+        #left-section>button {
             margin: 3px;
         }
-        
+
 
         #video-container {
             padding: 10px;
@@ -994,7 +996,7 @@
 </head>
 
 <body>
-    <%- include('partials/provider2.ejs') %>
+    <!-- <%- include('partials/provider2.ejs') %> -->
     <div id="full-container">
         <span id="alert-error"></span>
         <section id="upper-container">
@@ -1002,16 +1004,36 @@
             <div id="side-bar-container">
                 <section id="tata-tertib">
                     <h1>Tata Tertib Transaksi Jual Beli</h1>
-                    <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Voluptatum aut similique architecto totam, dolor minus et temporibus. Voluptas molestiae, dolore modi delectus praesentium dicta laudantium consequuntur temporibus odit accusantium cupiditate.</p>
-                    <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Voluptatum aut similique architecto totam, dolor minus et temporibus. Voluptas molestiae, dolore modi delectus praesentium dicta laudantium consequuntur temporibus odit accusantium cupiditate.</p>
-                    <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Voluptatum aut similique architecto totam, dolor minus et temporibus. Voluptas molestiae, dolore modi delectus praesentium dicta laudantium consequuntur temporibus odit accusantium cupiditate.</p>
-                    <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Voluptatum aut similique architecto totam, dolor minus et temporibus. Voluptas molestiae, dolore modi delectus praesentium dicta laudantium consequuntur temporibus odit accusantium cupiditate.</p>
-                    <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Voluptatum aut similique architecto totam, dolor minus et temporibus. Voluptas molestiae, dolore modi delectus praesentium dicta laudantium consequuntur temporibus odit accusantium cupiditate.</p>
-                    <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Voluptatum aut similique architecto totam, dolor minus et temporibus. Voluptas molestiae, dolore modi delectus praesentium dicta laudantium consequuntur temporibus odit accusantium cupiditate.</p>
-                    <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Voluptatum aut similique architecto totam, dolor minus et temporibus. Voluptas molestiae, dolore modi delectus praesentium dicta laudantium consequuntur temporibus odit accusantium cupiditate.</p>
-                    <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Voluptatum aut similique architecto totam, dolor minus et temporibus. Voluptas molestiae, dolore modi delectus praesentium dicta laudantium consequuntur temporibus odit accusantium cupiditate.</p>
-                    <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Voluptatum aut similique architecto totam, dolor minus et temporibus. Voluptas molestiae, dolore modi delectus praesentium dicta laudantium consequuntur temporibus odit accusantium cupiditate.</p>
-                    <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Voluptatum aut similique architecto totam, dolor minus et temporibus. Voluptas molestiae, dolore modi delectus praesentium dicta laudantium consequuntur temporibus odit accusantium cupiditate.</p>
+                    <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Voluptatum aut similique architecto
+                        totam, dolor minus et temporibus. Voluptas molestiae, dolore modi delectus praesentium dicta
+                        laudantium consequuntur temporibus odit accusantium cupiditate.</p>
+                    <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Voluptatum aut similique architecto
+                        totam, dolor minus et temporibus. Voluptas molestiae, dolore modi delectus praesentium dicta
+                        laudantium consequuntur temporibus odit accusantium cupiditate.</p>
+                    <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Voluptatum aut similique architecto
+                        totam, dolor minus et temporibus. Voluptas molestiae, dolore modi delectus praesentium dicta
+                        laudantium consequuntur temporibus odit accusantium cupiditate.</p>
+                    <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Voluptatum aut similique architecto
+                        totam, dolor minus et temporibus. Voluptas molestiae, dolore modi delectus praesentium dicta
+                        laudantium consequuntur temporibus odit accusantium cupiditate.</p>
+                    <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Voluptatum aut similique architecto
+                        totam, dolor minus et temporibus. Voluptas molestiae, dolore modi delectus praesentium dicta
+                        laudantium consequuntur temporibus odit accusantium cupiditate.</p>
+                    <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Voluptatum aut similique architecto
+                        totam, dolor minus et temporibus. Voluptas molestiae, dolore modi delectus praesentium dicta
+                        laudantium consequuntur temporibus odit accusantium cupiditate.</p>
+                    <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Voluptatum aut similique architecto
+                        totam, dolor minus et temporibus. Voluptas molestiae, dolore modi delectus praesentium dicta
+                        laudantium consequuntur temporibus odit accusantium cupiditate.</p>
+                    <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Voluptatum aut similique architecto
+                        totam, dolor minus et temporibus. Voluptas molestiae, dolore modi delectus praesentium dicta
+                        laudantium consequuntur temporibus odit accusantium cupiditate.</p>
+                    <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Voluptatum aut similique architecto
+                        totam, dolor minus et temporibus. Voluptas molestiae, dolore modi delectus praesentium dicta
+                        laudantium consequuntur temporibus odit accusantium cupiditate.</p>
+                    <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Voluptatum aut similique architecto
+                        totam, dolor minus et temporibus. Voluptas molestiae, dolore modi delectus praesentium dicta
+                        laudantium consequuntur temporibus odit accusantium cupiditate.</p>
                 </section>
                 <section id="pdf-document" class="hide-event">
                     <div id="pdf-controller">
@@ -1035,6 +1057,10 @@
             </div>
         </section>
     </div>
+    <script>
+        let participantData = `<%- JSON.stringify(participantData) %>`
+        let parsedData = JSON.parse(participantData);
+    </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.js"></script>
     <script>
         NProgress.start();

@@ -39,6 +39,15 @@ class Controller {
 		}
 	}
 
+	static verify(req, res, next) {
+		try {
+			const { id } = req.params
+			res.render("verify", { id })
+		} catch (error) {
+			next.log(error)
+		}
+	}
+
 	static register(req, res, next) {
 		try {
 			res.render("register")
@@ -70,9 +79,9 @@ class Controller {
 
 	static async getDocuments(req, res) {
 		try {
-			// const { room } = req.body
-			const originalPDFPath = path.join(__dirname, "..", "documents", "pdf", "22", "AJB.pdf")
-			res.sendFile(originalPDFPath, (err) => {
+			const { roomid } = req.params
+			const originalPDFPath = path.join(__dirname, "..", "documents", "pdf", roomid, "AJB.pdf")
+			await res.sendFile(originalPDFPath, (err) => {
 				if (err) {
 					console.error(err)
 					res.status(500).send("Internal Server Error")

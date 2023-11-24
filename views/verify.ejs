@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- <link rel="stylesheet" href="assets/css/room.css" type="text/css" /> -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <title>Telepati</title>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+        }
+
+        #full-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="full-container">
+        <button id="confirm-button" class="btn btn-primary">Confirm Button</button>
+    </div>
+    <script>
+        let id = `<%- id %>`
+        const confirmButton = document.getElementById("confirm-button")
+        const baseUrl = "https://192.168.18.68:3001/"
+        confirmButton.addEventListener("click", async () => {
+            try {
+                const responseToken = await fetch(baseUrl + "verify", {
+                    method: "post",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ id })
+                })
+
+                if (responseToken.ok) {
+                    const {access_token} = await responseToken.json()
+                    await sessionStorage.setItem("access_token", access_token)
+                    window.location.href = window.location.origin + "/user/" + id
+                }
+            } catch (error) {
+                console.log(error)
+            }
+
+        })
+    </script>
+</body>
+
+</html>

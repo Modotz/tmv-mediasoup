@@ -63,6 +63,7 @@ class Parameters {
 		},
 	}
 	event = "tata-tertib"
+	userData
 }
 
 module.exports = { Parameters }

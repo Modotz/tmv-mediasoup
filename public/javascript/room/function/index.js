@@ -323,6 +323,7 @@ const renderPage = ({ parameter, num, pdfDocument }) => {
 
 const getPdf = ({ parameter, pdfDocument }) => {
 	try {
+		let url = `https://192.168.18.68:3001/documents/${parameter.roomName}` // Laptop Jaringan 5G
 		let pdfContainer = document.getElementById("pdf-container")
 		let isExist = document.getElementById("pdf-canvas")
 		if (isExist) isExist.remove()
@@ -470,6 +471,29 @@ const signDocument = async ({ parameter, socket, data }) => {
 	}
 }
 
+const verifyUser = async ({ id }) => {
+	try {
+		console.log("Id V", id) // Log the id to the console
+		let url = `https://192.168.18.68:3001/verify/${id}` // Laptop Jaringan 5G
+
+		let response = await fetch(url, {
+			method: "get",
+			headers: {
+				"Content-Type": "application/json",
+			},
+		})
+
+		if (response.ok) {
+			const { access_token } = await response.json()
+			sessionStorage.setItem("access_token", access_token)
+		} else {
+			console.error("File upload failed")
+		}
+	} catch (error) {
+		console.log("- Error Verifying User : ", error)
+	}
+}
+
 module.exports = {
 	addPdfController,
 	startTimer,
@@ -492,4 +516,5 @@ module.exports = {
 	resetButton,
 	goHome,
 	signDocument,
+	verifyUser,
 }

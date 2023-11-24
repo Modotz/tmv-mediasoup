@@ -10,6 +10,7 @@ const {
 	getPdf,
 	renderPage,
 	goHome,
+	verifyUser,
 } = require("../room/function")
 const { getMyStream, getRoomId, joinRoom } = require("../room/function/initialization")
 const { signalNewConsumerTransport } = require("../room/function/mediasoup")
@@ -33,13 +34,17 @@ const socket = io("/")
 socket.on("connection-success", async ({ socketId }) => {
 	try {
 		console.log("- Id : ", socketId)
+
 		parameter = new Parameters()
+		parameter.userData = parsedData
+		parameter.roomName = parsedData.roomId
 		parameter.username = "Diky"
 		parameter.socketId = socketId
 		parameter.isVideo = true
 		parameter.isAudio = true
+		// await verifyUser({ id: parameter.userData._id })
 		await getPdf({ parameter, pdfDocument: "aktaDocument" })
-		await getRoomId(parameter)
+		// await getRoomId(parameter)
 		await checkLocalStorage({ parameter })
 		await getMyStream(parameter)
 		await createMyVideo(parameter)

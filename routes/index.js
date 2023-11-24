@@ -4,6 +4,7 @@ const { Rooms } = require("../controllers/Room.js")
 const { Users } = require("../controllers/User.js")
 const authentication = require("../middlewares/authentication.js")
 const { Participants } = require("../controllers/Participant.js")
+const authorization = require("../middlewares/authorization.js")
 const router = express.Router()
 
 // API Login / Register
@@ -15,13 +16,19 @@ router.get("/login", Controller.login)
 router.get("/register", Controller.register)
 router.get("/", Controller.home)
 router.get("/lobby/:room", Controller.lobby)
-router.get("/room/:room", Controller.room)
+// router.get("/room/:room", Controller.room)
 router.get("/register-meeting", Controller.registerMeeting)
 router.post("/google-auth", Controller.googleAuth)
+router.get("/verify/:id", Controller.verify)
+router.post("/verify", Participants.verifyParticipant)
+router.get("/verified/:id", Participants.verifiedParticipant)
 router.get("/user/:id", Participants.getParticipant)
 
 router.use(authentication)
-router.get("/documents", Controller.getDocuments)
+
+router.get("/documents/:roomid", Controller.getDocuments)
+
+router.use(authorization)
 router.post("/documents", Controller.createDocuments)
 
 // Api

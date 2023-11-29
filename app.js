@@ -425,6 +425,10 @@ io.on("connection", async (socket) => {
 	socket.on("document-sign-agreed", ({ PPATSocket, data }) => {
 		socket.to(PPATSocket).emit("document-sign-agreed", { message: "Saksi Signed Document", data })
 	})
+
+	socket.on("reload-document", ({ socketId }) => {
+		socket.to(socketId).emit("reload-document", { message: "Refresh Document" })
+	})
 })
 app.use(router)
 app.use(errorHandler)

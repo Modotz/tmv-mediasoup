@@ -577,6 +577,27 @@ const addPPATSignButton = ({ parameter, socket }) => {
 	}
 }
 
+const addReloadButton = ({ parameter, socket }) => {
+	try {
+		let pdfControllerContainer = document.getElementById("pdf-controller")
+		const reloadPageButton = document.createElement("button")
+		reloadPageButton.id = "reload-button"
+		reloadPageButton.innerHTML = "Refresh Document"
+		reloadPageButton.className = "btn btn-info"
+		pdfControllerContainer.insertBefore(reloadPageButton, pdfControllerContainer.firstChild)
+		reloadPageButton.addEventListener("click", () => {
+			getPdf({ parameter, pdfDocument: "aktaDocument" })
+			parameter.allUsers.forEach((data) => {
+				if (data.socketId != socket.id) {
+					socket.emit("reload-document", { socketId: data.socketId })
+				}
+			})
+		})
+	} catch (error) {
+		console.log(error)
+	}
+}
+
 const addSaksiSignButton = async ({ id, role, username, parameter, socket }) => {
 	let videoId = document.getElementById(`vc-${id}`)
 	let saksiSignButton = document.createElement("button")
@@ -631,4 +652,5 @@ module.exports = {
 	addPPATSignButton,
 	addSaksiSignButton,
 	signPermission,
+	addReloadButton,
 }

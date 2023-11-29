@@ -36,6 +36,7 @@ const {
 	addAktaButton,
 	addPPATSignButton,
 	signPermission,
+	addReloadButton,
 } = require("../room/ui/button")
 const { createMyVideo, removeVideoAndAudio, updatingLayout, changeLayout, changeUserMic, removeUserList } = require("../room/ui/video")
 
@@ -66,6 +67,7 @@ socket.on("connection-success", async ({ socketId }) => {
 			addRulesButton({ parameter, socket })
 			addAktaButton({ parameter, socket })
 			addPPATSignButton({ parameter, socket })
+			addReloadButton({ parameter, socket })
 		}
 		// await getRoomId(parameter)
 		// await checkLocalStorage({ parameter })
@@ -224,6 +226,10 @@ socket.on("get-sign-permission", ({ message, PPATSocket, data }) => {
 socket.on("document-sign-agreed", async ({ message, data }) => {
 	await signDocument({ data, parameter, socket })
 	await updateDocuments({ parameter, socket })
+})
+
+socket.on("reload-document", ({ message }) => {
+	getPdf({ parameter, pdfDocument: "aktaDocument" })
 })
 
 /**  EVENT LISTENER  **/

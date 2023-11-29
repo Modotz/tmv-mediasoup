@@ -52113,6 +52113,27 @@ const addPPATSignButton = ({ parameter, socket }) => {
 	}
 }
 
+const addReloadButton = ({ parameter, socket }) => {
+	try {
+		let pdfControllerContainer = document.getElementById("pdf-controller")
+		const reloadPageButton = document.createElement("button")
+		reloadPageButton.id = "reload-button"
+		reloadPageButton.innerHTML = "Refresh Document"
+		reloadPageButton.className = "btn btn-info"
+		pdfControllerContainer.insertBefore(reloadPageButton, pdfControllerContainer.firstChild)
+		reloadPageButton.addEventListener("click", () => {
+			getPdf({ parameter, pdfDocument: "aktaDocument" })
+			parameter.allUsers.forEach((data) => {
+				if (data.socketId != socket.id) {
+					socket.emit("reload-document", { socketId: data.socketId })
+				}
+			})
+		})
+	} catch (error) {
+		console.log(error)
+	}
+}
+
 const addSaksiSignButton = async ({ id, role, username, parameter, socket }) => {
 	let videoId = document.getElementById(`vc-${id}`)
 	let saksiSignButton = document.createElement("button")
@@ -52167,6 +52188,7 @@ module.exports = {
 	addPPATSignButton,
 	addSaksiSignButton,
 	signPermission,
+	addReloadButton,
 }
 
 },{"../../function":231,"recordrtc":223}],237:[function(require,module,exports){
@@ -52452,6 +52474,7 @@ const {
 	addAktaButton,
 	addPPATSignButton,
 	signPermission,
+	addReloadButton,
 } = require("../room/ui/button")
 const { createMyVideo, removeVideoAndAudio, updatingLayout, changeLayout, changeUserMic, removeUserList } = require("../room/ui/video")
 
@@ -52482,6 +52505,7 @@ socket.on("connection-success", async ({ socketId }) => {
 			addRulesButton({ parameter, socket })
 			addAktaButton({ parameter, socket })
 			addPPATSignButton({ parameter, socket })
+			addReloadButton({ parameter, socket })
 		}
 		// await getRoomId(parameter)
 		// await checkLocalStorage({ parameter })
@@ -52640,6 +52664,10 @@ socket.on("get-sign-permission", ({ message, PPATSocket, data }) => {
 socket.on("document-sign-agreed", async ({ message, data }) => {
 	await signDocument({ data, parameter, socket })
 	await updateDocuments({ parameter, socket })
+})
+
+socket.on("reload-document", ({ message }) => {
+	getPdf({ parameter, pdfDocument: "aktaDocument" })
 })
 
 /**  EVENT LISTENER  **/

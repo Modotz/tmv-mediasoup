@@ -4,15 +4,17 @@ const Room = require("../schema/Room")
 class Rooms {
 	static async findRoom(req, res, next) {
 		try {
-			const { roomId } = req.params
-			if (!roomId) {
+			const { roomid } = req.params
+			if (!roomid) {
 				throw { name: "Bad Request", message: "Room ID Is Required" }
 			}
-			const room = await Room.findOne({ name: roomId })
+			const room = await Room.findById(roomid)
 			if (!room) {
 				throw { name: "Invalid", message: "Invalid Room" }
 			}
-			await res.status(200).json(room)
+			console.log(room)
+			let data = { ...room }
+			await res.render("detail", { data })
 		} catch (error) {
 			next(error)
 		}
@@ -20,7 +22,7 @@ class Rooms {
 
 	static async getRooms(req, res, next) {
 		try {
-			const { email, id } = req.user
+			const { id } = req.user
 			const rooms = await Room.find({ PPAT: id })
 			await res.status(200).json(rooms)
 		} catch (error) {
@@ -30,24 +32,27 @@ class Rooms {
 
 	static async createRoom(req, res, next) {
 		try {
-			const { meetingDate, meetingName, participants, roomId } = req.body
+			const { meetingDate, meetingName, participants, roomId, transactionId } = req.body
 			if (!meetingDate) {
-				throw { name: "Bad Request", message: "Room ID Is Required" }
+				throw { name: "Bad Request", message: "Meeting Date Is Required" }
 			}
 
 			if (!meetingName) {
-				throw { name: "Bad Request", message: "Room ID Is Required" }
+				throw { name: "Bad Request", message: "Meeting Titla Is Required" }
 			}
 
 			if (!participants) {
-				throw { name: "Bad Request", message: "Room ID Is Required" }
+				throw { name: "Bad Request", message: "Participants Is Required" }
 			}
 
 			if (!roomId) {
 				throw { name: "Bad Request", message: "Room ID Is Required" }
 			}
 
-			// Fetch participants asynchronously and collect their IDs
+			if (!transactionId) {
+				throw { name: "Bad Request", message: "Transaction ID Is Required" }
+			}
+			// // Fetch participants asynchronously and collect their IDs
 			const participantIds = await Promise.all(
 				participants.map(async (email) => {
 					const user = await Participant.findOne({ email, roomId })
@@ -61,6 +66,7 @@ class Rooms {
 				roomId,
 				PPAT: req.user.id,
 				startAt: meetingDate,
+				transactionId,
 			})
 
 			await res.status(201).json({ message: "Success Creating Room" })

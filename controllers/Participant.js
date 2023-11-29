@@ -3,7 +3,7 @@ const Participant = require("../schema/Participant")
 class Participants {
 	static async createParticipant(req, res, next) {
 		try {
-			const { email, roomId, authority } = req.body
+			const { email, roomId, authority, transactionId } = req.body
 			const findParticipants = await Participant.findOne({ email })
 
 			let isConfirmed = authority == "PPAT" ? true : false
@@ -12,8 +12,23 @@ class Participants {
 				await res.status(409).json({ name: "Is already exists", message: `${email} has already registered` })
 			}
 
-			await Participant.create({ email, roomId, authority, isConfirmed })
+			await Participant.create({ email, roomId, authority, isConfirmed, transactionId })
 			await res.status(201).json({ message: `Success Registering ${email}` })
+		} catch (error) {
+			next(error)
+		}
+	}
+
+	static async verifyParticipant(req, res, next) {
+		try {
+			const { id } = req.params
+			let participantData = await Participant.findById(id)
+			if (!participantData) {
+				res.render("notfound")
+				return
+			} else {
+				res.render("verify", { id })
+			}
 		} catch (error) {
 			next(error)
 		}
@@ -22,15 +37,13 @@ class Participants {
 	static async getParticipant(req, res, next) {
 		try {
 			const { id } = req.params
+			console.log("ID", id)
 			let participantData = await Participant.findById(id)
 			if (!participantData) {
-				throw { name: "Not Found", message: "Participant Not Found" }
+				await res.render("notfound")
+				return
 			}
 			await res.render("room", { participantData })
-			// if (participantData.authority == "PPAT" || (participantData.authority != "PPAT" && req.headers.access_token)) {
-			// } else {
-			// 	await res.render("verify", { id })
-			// }
 		} catch (error) {
 			next(error)
 		}
@@ -45,14 +58,16 @@ class Participants {
 			next(error)
 		}
 	}
-	static async verifyParticipant(req, res, next) {
+
+	static async isParticipantValid(req, res, next) {
 		try {
 			const { id } = req.body
 			let participantData = await Participant.findById(id)
 			if (!participantData) {
 				throw { name: "Not Found", message: "Participant Not Found" }
 			}
-			const encodedToken = { id: participantData._id, role: "Saksi" }
+			console.log(participantData)
+			const encodedToken = { id: participantData._id, role: participantData.authority }
 			let access_token = await encodeToken(encodedToken)
 			await res.status(200).json({ access_token })
 		} catch (error) {

@@ -13,8 +13,8 @@ document.addEventListener("DOMContentLoaded", function () {
 				email,
 				password,
 			}
-
-			const response = await fetch("https://192.168.18.68:3001/api/login", {
+			console.log(window.location.origin)
+			const response = await fetch(`${window.location.origin}/api/login`, {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",

@@ -10,9 +10,15 @@ const roomSchema = new Schema({
 		type: String,
 		required: true,
 	},
+	transactionId: {
+		type: Schema.Types.ObjectId,
+		ref: "Transaction",
+		required: true,
+	},
 	PPAT: {
 		type: Schema.Types.ObjectId,
 		ref: "User",
+		required: true,
 	},
 	participants: [
 		{

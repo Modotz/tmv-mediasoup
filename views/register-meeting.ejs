@@ -12,15 +12,15 @@
     <link rel="icon" type="image/png" href="/favicon.png">
     <title>Telepati</title>
     <style>
-        body {
+        #full-container {
             font-family: Arial, sans-serif;
             background-color: #f4f4f4;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
             margin: 0;
             position: relative;
+            padding: 20px;
         }
 
         .register-meeting-container {
@@ -95,26 +95,55 @@
             justify-content: center;
             align-items: baseline;
         }
+
+        .register-meeting-container>form {
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        #registered-transaction {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+        }
     </style>
 </head>
 
 <body>
     <%- include('partials/provider2.ejs') %>
+        <div id="full-container">
+            <span id="alert-error"></span>
+            <div class="register-meeting-container" id="register-meeting-container-id">
+                <h2>Register Meeting</h2>
+                <!-- <form id="register-meeting-form" autocomplete="off"> -->
+                <span>Transaction Title</span>
+                <!-- <div id="registered-transaction">
+                    <p id="registered-transaction-name">AJB 1</p>
+                    <button id="edit-transaction-name">Edit</button>
+                </div> -->
+                <form id="transaction-form">
+                    <input id="transaction-name" placeholder="Transaction Title..." type="text" required />
+                    <button type="submit">Create Transaction</button>
+                </form>
 
-        <span id="alert-error"></span>
-        <div class="register-meeting-container">
-            <h2>Register Meeting</h2>
-            <form id="register-meeting-form" autocomplete="off">
-                <section id="form-container">
-                    <input type="text" id="meeting-name" required placeholder="Meeting Name..." />
-                    <label for="meeting-date">Start At : </label>
-                    <input type="datetime-local" id="meeting-date" required>
-                    <button type="button" class="btn btn-primary" id="add-participants">Add Participants</button>
-                    <div id="participants-list">
-                    </div>
-                </section>
-                <button type="submit" class="btn btn-primary">Create Meeting</button>
-            </form>
+                <form id="template-transaction-pdf-file-upload" enctype="multipart/form-data">
+                    <label for="template-pdf">Template File</label>
+                    <input type="file" name="pdf" id="template-pdf" />
+                    <button type="submit" class="btn btn-primary">Upload File</button>
+                </form>
+                <form id="register-meeting-form" autocomplete="off">
+                    <section id="form-container">
+                        <label for="meeting-date">Start At : </label>
+                        <input type="datetime-local" id="meeting-date" required>
+                        <button type="button" class="btn btn-primary" id="add-participants">Add Participants</button>
+                        <div id="participants-list">
+                        </div>
+                    </section>
+                    <button type="submit" class="btn btn-primary">Create Meeting</button>
+                </form>
+            </div>
+
         </div>
         <script src="/javascript/registermeeting/registermeeting.js"></script>
 </body>

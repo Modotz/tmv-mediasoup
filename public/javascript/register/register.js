@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", function () {
-	let baseUrl = "https://192.168.18.68:3001"
 	const registerForm = document.getElementById("register-form")
 
 	registerForm.addEventListener("submit", async (event) => {
@@ -16,7 +15,7 @@ document.addEventListener("DOMContentLoaded", function () {
 				password,
 			}
 
-			const response = await fetch(`${baseUrl}/api/register`, {
+			const response = await fetch(`${window.location.origin}/api/register`, {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",

@@ -1,6 +1,6 @@
 <script>
     if (sessionStorage.getItem("access_token")) {
-        const api = "https://192.168.18.68:3001/api/user"
+        const api = `${window.location.origin}/api/user`
         fetch(api, {
             method: "get",
             headers: {

@@ -374,6 +374,10 @@ io.on("connection", async (socket) => {
 		socket.to(socketId).emit("change-event", { event })
 	})
 
+	socket.on("update-document", ({ socketId }) => {
+		socket.to(socketId).emit("update-document", { message: "Updating Document" })
+	})
+
 	socket.on("message", function (data) {
 		try {
 			if (data.type == "collecting") {
@@ -412,6 +416,14 @@ io.on("connection", async (socket) => {
 		} catch (error) {
 			console.log("- Error Uploading File : ", error)
 		}
+	})
+
+	socket.on("get-sign-permission", ({ PPATSocket, saksiSocket, data }) => {
+		socket.to(saksiSocket).emit("get-sign-permission", { PPATSocket, saksiSocket, message: "PPAT Request Your Sign", data })
+	})
+
+	socket.on("document-sign-agreed", ({ PPATSocket, data }) => {
+		socket.to(PPATSocket).emit("document-sign-agreed", { message: "Saksi Signed Document", data })
 	})
 })
 app.use(router)

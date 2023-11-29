@@ -39,12 +39,11 @@ class Controller {
 		}
 	}
 
-	static verify(req, res, next) {
+	static notfound(req, res, next) {
 		try {
-			const { id } = req.params
-			res.render("verify", { id })
+			res.render("notfound")
 		} catch (error) {
-			next.log(error)
+			next(error)
 		}
 	}
 
@@ -77,23 +76,25 @@ class Controller {
 		}
 	}
 
-	static async getDocuments(req, res) {
+	static async getDocuments(req, res, next) {
 		try {
 			const { roomid } = req.params
 			const originalPDFPath = path.join(__dirname, "..", "documents", "pdf", roomid, "AJB.pdf")
 			await res.sendFile(originalPDFPath, (err) => {
 				if (err) {
-					console.error(err)
-					res.status(500).send("Internal Server Error")
+					next(err)
 				}
 			})
 		} catch (error) {
-			console.log(error)
+			next(error)
 		}
 	}
 
-	static async createDocuments(req, res) {
+	static async createDocuments(req, res, next) {
 		try {
+			if (req.user.role != "PPAT") {
+				throw { name: "Unauthorized", message: "Unauthorized User" }
+			}
 			const { isPPAT, username, room, role } = req.body
 			const createDirectoryIfNotExists = async (directoryPath) => {
 				try {
@@ -116,10 +117,6 @@ class Controller {
 			const lastPages = pages[5]
 			const { width, height } = lastPages.getSize()
 
-			// Adjust the image dimensions as needed
-			// const { width, height } = signatureJpg.scale(1)
-			// const textContent = await lastPages.getTextContent();
-			// console.log(textContent)
 			if (isPPAT) {
 				const signaturePath = path.join(__dirname, "..", "documents", "signature", "QR-Code.jpg")
 				const signatureBytes = await fs.readFile(signaturePath)
@@ -160,7 +157,7 @@ class Controller {
 			await fs.writeFile(newPdfFilePath, modifiedPdf)
 			await res.status(200).json({ message: `success-signing-${role}` })
 		} catch (error) {
-			console.log(error)
+			next(error)
 		}
 	}
 }

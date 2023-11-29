@@ -34,10 +34,11 @@
     <script>
         let id = `<%- id %>`
         const confirmButton = document.getElementById("confirm-button")
-        const baseUrl = "https://192.168.18.68:3001/"
+        const baseUrl = window.location.origin
         confirmButton.addEventListener("click", async () => {
             try {
-                const responseToken = await fetch(baseUrl + "verify", {
+                console.log(id)
+                const responseToken = await fetch(baseUrl + "/verify", {
                     method: "post",
                     headers: {
                         "Content-Type": "application/json",
@@ -46,8 +47,8 @@
                 })
 
                 if (responseToken.ok) {
-                    const {access_token} = await responseToken.json()
-                    await sessionStorage.setItem("access_token", access_token)
+                    const { access_token } = await responseToken.json()
+                    await sessionStorage.setItem("user_token", access_token)
                     window.location.href = window.location.origin + "/user/" + id
                 }
             } catch (error) {

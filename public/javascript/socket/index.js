@@ -11,6 +11,10 @@ const {
 	renderPage,
 	goHome,
 	verifyUser,
+	addPdfController,
+	firstPdfControl,
+	signDocument,
+	updateDocuments,
 } = require("../room/function")
 const { getMyStream, getRoomId, joinRoom } = require("../room/function/initialization")
 const { signalNewConsumerTransport } = require("../room/function/mediasoup")
@@ -24,6 +28,14 @@ const {
 	changeLayoutScreenSharingClient,
 	recordVideo,
 	displayMainEvent,
+	unlockOverflow,
+	addMuteAllButton,
+	addEndButton,
+	addStartButton,
+	addRulesButton,
+	addAktaButton,
+	addPPATSignButton,
+	signPermission,
 } = require("../room/ui/button")
 const { createMyVideo, removeVideoAndAudio, updatingLayout, changeLayout, changeUserMic, removeUserList } = require("../room/ui/video")
 
@@ -42,10 +54,21 @@ socket.on("connection-success", async ({ socketId }) => {
 		parameter.socketId = socketId
 		parameter.isVideo = true
 		parameter.isAudio = true
-		// await verifyUser({ id: parameter.userData._id })
 		await getPdf({ parameter, pdfDocument: "aktaDocument" })
+		if (parameter.userData.authority == "PPAT") {
+			parameter.isHost = true
+			addPdfController()
+			unlockOverflow({ element: "side-bar-container", socket, parameter })
+			firstPdfControl({ parameter, socket, pdfDocument: "aktaDocument" })
+			addMuteAllButton({ parameter, socket })
+			addEndButton({ parameter, socket })
+			addStartButton({ parameter, socket })
+			addRulesButton({ parameter, socket })
+			addAktaButton({ parameter, socket })
+			addPPATSignButton({ parameter, socket })
+		}
 		// await getRoomId(parameter)
-		await checkLocalStorage({ parameter })
+		// await checkLocalStorage({ parameter })
 		await getMyStream(parameter)
 		await createMyVideo(parameter)
 		await joinRoom({ socket, parameter })
@@ -188,6 +211,19 @@ socket.on("change-event", ({ event }) => {
 
 socket.on("end-meeting", ({ message }) => {
 	goHome()
+})
+
+socket.on("update-document", ({ message }) => {
+	getPdf({ parameter, pdfDocument: "aktaDocument" })
+})
+
+socket.on("get-sign-permission", ({ message, PPATSocket, data }) => {
+	signPermission({ socket, parameter, PPATSocket, data })
+})
+
+socket.on("document-sign-agreed", async ({ message, data }) => {
+	await signDocument({ data, parameter, socket })
+	await updateDocuments({ parameter, socket })
 })
 
 /**  EVENT LISTENER  **/

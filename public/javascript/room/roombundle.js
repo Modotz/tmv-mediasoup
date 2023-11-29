@@ -50375,7 +50375,6 @@ module.exports = { params, audioParams, encodingVP8, encodingsVP9 }
 const pdfLib = require("pdf-lib")
 // let url = "https://modotz.net/documents" /`/ VPS Mr. Indra IP
 // let url = "https://meet.dikyardiyanto.site/documents" // My VPS
-let url = "https://192.168.18.68:3001/documents" // Laptop Jaringan 5G
 // let url = 'https://192.168.3.135' // IP Kost
 // let url = "https://192.168.3.208"
 
@@ -50614,6 +50613,19 @@ const muteAllParticipants = ({ parameter, socket }) => {
 	})
 }
 
+const updateDocuments = async ({ parameter, socket }) => {
+	try {
+		await getPdf({ parameter, pdfDocument: "aktaDocument" })
+		parameter.allUsers.forEach((data) => {
+			if (data.socketId != socket.id) {
+				socket.emit("update-document", { socketId: data.socketId })
+			}
+		})
+	} catch (error) {
+		console.log(error)
+	}
+}
+
 const unlockAllMic = ({ parameter, socket }) => {
 	parameter.allUsers.forEach((data) => {
 		if (data.socketId != socket.id) {
@@ -50672,11 +50684,20 @@ const changeAppData = ({ socket, data, remoteProducerId }) => {
 
 const renderPage = ({ parameter, num, pdfDocument }) => {
 	try {
+		// if (parameter.pdfDocuments[pdfDocument].pageRendering){
+		// 	parameter.pdfDocuments[pdfDocument].pageNumPending = num
+		// } else {}
 		parameter.pdfDocuments[pdfDocument].pageRendering = true
 		parameter.pdfDocuments[pdfDocument].doc.getPage(num).then((page) => {
-			let viewport = page.getViewport({ scale: parameter.pdfDocuments[pdfDocument].scale })
+			let viewport = page.getViewport({ scale: parameter.pdfDocuments[pdfDocument].scale, rotation: 0 })
 			parameter.pdfDocuments[pdfDocument].canvas.height = viewport.height
 			parameter.pdfDocuments[pdfDocument].canvas.width = viewport.width
+			parameter.pdfDocuments[pdfDocument].ctx.clearRect(
+				0,
+				0,
+				parameter.pdfDocuments[pdfDocument].canvas.width,
+				parameter.pdfDocuments[pdfDocument].canvas.height
+			)
 			let renderContext = {
 				canvasContext: parameter.pdfDocuments[pdfDocument].ctx,
 				viewport,
@@ -50689,6 +50710,7 @@ const renderPage = ({ parameter, num, pdfDocument }) => {
 				}
 			})
 			document.getElementById("current-page").textContent = num
+			parameter.pdfDocuments[pdfDocument].currentPage = num
 		})
 	} catch (error) {
 		console.log("- Error Rendering Page : ", error)
@@ -50697,21 +50719,17 @@ const renderPage = ({ parameter, num, pdfDocument }) => {
 
 const getPdf = ({ parameter, pdfDocument }) => {
 	try {
-		let url = `https://192.168.18.68:3001/documents/${parameter.roomName}` // Laptop Jaringan 5G
+		if (!sessionStorage.getItem("user_token")) {
+			window.location.href = window.location.origin + "/verify/" + parameter.userData._id
+		}
+		let url = `${window.location.origin}/documents/${parameter.userData.transactionId}`
 		let pdfContainer = document.getElementById("pdf-container")
 		let isExist = document.getElementById("pdf-canvas")
 		if (isExist) isExist.remove()
 		let pdfCanvas = document.createElement("canvas")
 		pdfCanvas.id = "pdf-canvas"
 		pdfContainer.appendChild(pdfCanvas)
-		let location
-		for (const key in parameter.pdfDocuments) {
-			if (key == pdfDocument) {
-				location = parameter.pdfDocuments[key].location
-				parameter.pdfDocuments[key].isDisplayed = true
-			} else parameter.pdfDocuments[key].isDisplayed = false
-		}
-		parameter.pdfDocuments[pdfDocument].canvas = document.getElementById("pdf-canvas")
+		parameter.pdfDocuments[pdfDocument].canvas = pdfCanvas
 		parameter.pdfDocuments[pdfDocument].ctx = parameter.pdfDocuments[pdfDocument].canvas.getContext("2d")
 		parameter.pdfDocuments[pdfDocument].ctx.clearRect(
 			0,
@@ -50719,23 +50737,41 @@ const getPdf = ({ parameter, pdfDocument }) => {
 			parameter.pdfDocuments[pdfDocument].canvas.width,
 			parameter.pdfDocuments[pdfDocument].canvas.height
 		)
+
 		fetch(url, {
 			method: "GET",
 			headers: {
 				"Content-Type": "application/json",
-				access_token: sessionStorage.getItem("access_token"),
+				user_token: sessionStorage.getItem("user_token"),
 			},
 		})
 			.then((res) => {
-				return res.arrayBuffer()
+				if (res.ok) {
+					return res.arrayBuffer()
+				} else {
+					return res.json()
+					// window.location.href = window.location.origin + "/verify/" + parameter.userData.id
+				}
 			})
 			.then((data) => {
+				if (data?.name == "JsonWebTokenError") {
+					throw data
+				}
 				window.pdfjsLib.getDocument(data).promise.then((pdf) => {
+					if (parameter.pdfDocuments[pdfDocument].doc){
+						parameter.pdfDocuments[pdfDocument].doc.destroy()
+					}
 					parameter.pdfDocuments[pdfDocument].doc = pdf
 					document.getElementById("total-page").textContent = pdf.numPages
 					parameter.pdfDocuments[pdfDocument].numPages = pdf.numPages
 					renderPage({ parameter, num: parameter.pdfDocuments[pdfDocument].currentPage, pdfDocument })
 				})
+			})
+			.catch((error) => {
+				console.log("- Error Getting PDF : ", error)
+				if (error?.name == "JsonWebTokenError") {
+					window.location.href = window.location.origin + "/verify/" + parameter.userData._id
+				}
 			})
 	} catch (error) {
 		console.log("- Error Getting PDF : ", error)
@@ -50826,17 +50862,17 @@ const resetButton = () => {
 
 const signDocument = async ({ parameter, socket, data }) => {
 	try {
-		let response = await fetch(url, {
+		let response = await fetch(`${window.location.origin}/documents`, {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
-				access_token: sessionStorage.getItem("access_token"),
+				user_token: sessionStorage.getItem("user_token"),
 			},
 			body: JSON.stringify(data),
 		})
 
 		if (response.ok) {
-			console.log(await response.json())
+			getPdf({ parameter, pdfDocument: "aktaDocument" })
 		} else {
 			console.error("File upload failed")
 		}
@@ -50848,7 +50884,7 @@ const signDocument = async ({ parameter, socket, data }) => {
 const verifyUser = async ({ id }) => {
 	try {
 		console.log("Id V", id) // Log the id to the console
-		let url = `https://192.168.18.68:3001/verify/${id}` // Laptop Jaringan 5G
+		let url = `${window.location.origin}/verify/${id}` // Laptop Jaringan 5G
 
 		let response = await fetch(url, {
 			method: "get",
@@ -50891,6 +50927,7 @@ module.exports = {
 	goHome,
 	signDocument,
 	verifyUser,
+	updateDocuments,
 }
 
 },{"pdf-lib":206}],232:[function(require,module,exports){
@@ -50898,49 +50935,118 @@ const { createUserList } = require(".")
 const { socket } = require("../../socket")
 const { createDevice } = require("./mediasoup")
 
+// const getMyStream = async (parameter) => {
+// 	try {
+// 		let config = {
+// 			video: localStorage.getItem("is_video_active") == "true" ? { deviceId: { exact: localStorage.getItem("selectedVideoDevices") }, frameRate: { ideal: 30, max: 35 } } : false,
+// 			audio: localStorage.getItem("selectedVideoDevices")
+// 				? {
+// 						deviceId: { exact: localStorage.getItem("selectedAudioDevices") },
+// 						autoGainControl: false,
+// 						noiseSuppression: true,
+// 						echoCancellation: true,
+// 				  }
+// 				: {
+// 						autoGainControl: false,
+// 						noiseSuppression: true,
+// 						echoCancellation: true,
+// 				  },
+// 		}
+
+// 		let username = localStorage.getItem("username")
+// 		parameter.username = username
+
+// 		let stream = await navigator.mediaDevices.getUserMedia(config)
+// 		let picture = localStorage.getItem("picture") ? localStorage.getItem("picture") : "/assets/pictures/unknown.jpg"
+
+// 		let audioCondition
+// 		let videoCondition
+// 		parameter.initialVideo = true
+// 		parameter.initialAudio = true
+// 		if (localStorage.getItem("is_mic_active") == "false") {
+// 			document.getElementById("mic-image").src = "/assets/pictures/micOff.png"
+// 			document.getElementById("user-mic-button").className = "button-small-custom-clicked"
+// 			parameter.initialAudio = false
+// 			audioCondition = false
+// 		} else audioCondition = true
+// 		if (localStorage.getItem("is_video_active") == "false") {
+// 			document.getElementById("turn-on-off-camera-icons").className = "fas fa-video-slash"
+// 			document.getElementById("user-turn-on-off-camera-button").className = "button-small-custom-clicked"
+// 			videoCondition = false
+// 			parameter.initialVideo = false
+// 		} else {
+// 			videoCondition = true
+// 			parameter.videoParams.track = stream.getVideoTracks()[0]
+// 		}
+// 		stream.getAudioTracks()[0].enabled = audioCondition
+// 		let user = {
+// 			username,
+// 			socketId: parameter.socketId,
+// 			picture,
+// 			audio: {
+// 				isActive: audioCondition,
+// 				track: stream.getAudioTracks()[0],
+// 				producerId: undefined,
+// 				transportId: undefined,
+// 				consumerId: undefined,
+// 			},
+// 		}
+
+// 		if (videoCondition) {
+// 			user.video = {
+// 				isActive: videoCondition,
+// 				track: stream.getVideoTracks()[0],
+// 				producerId: undefined,
+// 				transportId: undefined,
+// 				consumerId: undefined,
+// 			}
+// 		}
+
+// 		parameter.picture = picture
+
+// 		parameter.audioParams.appData.isMicActive = audioCondition
+// 		parameter.audioParams.appData.isVideoActive = videoCondition
+// 		parameter.videoParams.appData.isMicActive = audioCondition
+// 		parameter.videoParams.appData.isVideoActive = videoCondition
+
+// 		parameter.audioParams.appData.isActive = audioCondition
+// 		parameter.videoParams.appData.isActive = videoCondition
+
+// 		parameter.videoParams.appData.picture = picture
+// 		parameter.audioParams.appData.picture = picture
+
+// 		parameter.allUsers = [...parameter.allUsers, user]
+// 		parameter.localStream = stream
+// 		parameter.audioParams.track = stream.getAudioTracks()[0]
+// 		// createUserList({ username: "Diky", socketId: parameter.socketId, cameraTrigger: videoCondition, picture, micTrigger: audioCondition })
+// 	} catch (error) {
+// 		console.log("- Error Getting My Stream : ", error)
+// 	}
+// }
+
 const getMyStream = async (parameter) => {
 	try {
 		let config = {
-			video: localStorage.getItem("is_video_active") == "true" ? { deviceId: { exact: localStorage.getItem("selectedVideoDevices") }, frameRate: { ideal: 30, max: 35 } } : false,
-			audio: localStorage.getItem("selectedVideoDevices")
-				? {
-						deviceId: { exact: localStorage.getItem("selectedAudioDevices") },
-						autoGainControl: false,
-						noiseSuppression: true,
-						echoCancellation: true,
-				  }
-				: {
-						autoGainControl: false,
-						noiseSuppression: true,
-						echoCancellation: true,
-				  },
+			video: { frameRate: { ideal: 30, max: 35 } },
+			audio: {
+				autoGainControl: false,
+				noiseSuppression: true,
+				echoCancellation: true,
+			},
 		}
 
-		let username = localStorage.getItem("username")
+		let username = parameter.userData.email
 		parameter.username = username
 
 		let stream = await navigator.mediaDevices.getUserMedia(config)
 		let picture = localStorage.getItem("picture") ? localStorage.getItem("picture") : "/assets/pictures/unknown.jpg"
 
-		let audioCondition
-		let videoCondition
+		let audioCondition = true
+		let videoCondition = true
 		parameter.initialVideo = true
 		parameter.initialAudio = true
-		if (localStorage.getItem("is_mic_active") == "false") {
-			document.getElementById("mic-image").src = "/assets/pictures/micOff.png"
-			document.getElementById("user-mic-button").className = "button-small-custom-clicked"
-			parameter.initialAudio = false
-			audioCondition = false
-		} else audioCondition = true
-		if (localStorage.getItem("is_video_active") == "false") {
-			document.getElementById("turn-on-off-camera-icons").className = "fas fa-video-slash"
-			document.getElementById("user-turn-on-off-camera-button").className = "button-small-custom-clicked"
-			videoCondition = false
-			parameter.initialVideo = false
-		} else {
-			videoCondition = true
-			parameter.videoParams.track = stream.getVideoTracks()[0]
-		}
+
+		parameter.videoParams.track = stream.getVideoTracks()[0]
 		stream.getAudioTracks()[0].enabled = audioCondition
 		let user = {
 			username,
@@ -50953,16 +51059,13 @@ const getMyStream = async (parameter) => {
 				transportId: undefined,
 				consumerId: undefined,
 			},
-		}
-
-		if (videoCondition) {
-			user.video = {
+			video: {
 				isActive: videoCondition,
 				track: stream.getVideoTracks()[0],
 				producerId: undefined,
 				transportId: undefined,
 				consumerId: undefined,
-			}
+			},
 		}
 
 		parameter.picture = picture
@@ -50981,7 +51084,7 @@ const getMyStream = async (parameter) => {
 		parameter.allUsers = [...parameter.allUsers, user]
 		parameter.localStream = stream
 		parameter.audioParams.track = stream.getAudioTracks()[0]
-		// createUserList({ username: "Diky", socketId: parameter.socketId, cameraTrigger: videoCondition, picture, micTrigger: audioCondition })
+		console.log("- Error getting my stream")
 	} catch (error) {
 		console.log("- Error Getting My Stream : ", error)
 	}
@@ -51005,7 +51108,9 @@ const joinRoom = async ({ parameter, socket }) => {
 		parameter.videoLayout = "user-video-container-1"
 		socket.emit("joinRoom", { roomName: parameter.roomName, username: parameter.username }, (data) => {
 			parameter.rtpCapabilities = data.rtpCapabilities
-			parameter.rtpCapabilities.headerExtensions = parameter.rtpCapabilities.headerExtensions.filter((ext) => ext.uri !== 'urn:3gpp:video-orientation');
+			parameter.rtpCapabilities.headerExtensions = parameter.rtpCapabilities.headerExtensions.filter(
+				(ext) => ext.uri !== "urn:3gpp:video-orientation"
+			)
 			createDevice({ parameter, socket })
 		})
 	} catch (error) {
@@ -51090,21 +51195,21 @@ const createSendTransport = async ({ socket, parameter }) => {
 						async ({ id, producersExist, kind }) => {
 							await callback({ id })
 							if (producersExist && kind == "audio") await getProducers({ parameter, socket })
-							if (!producersExist) {
-								parameter.isHost = true
-								let pdfController = document.getElementById("pdf-controller")
-								if (pdfController.childElementCount == 1) {
-									addPdfController()
-									unlockOverflow({ element: "side-bar-container", socket, parameter })
-									firstPdfControl({ parameter, socket, pdfDocument: "aktaDocument" })
-									addMuteAllButton({ parameter, socket })
-									addEndButton({ parameter, socket })
-									addStartButton({ parameter, socket })
-									addRulesButton({ parameter, socket })
-									addAktaButton({ parameter, socket })
-									addPPATSignButton({ parameter, socket })
-								}
-							}
+							// if (!producersExist) {
+							// 	parameter.isHost = true
+							// 	let pdfController = document.getElementById("pdf-controller")
+							// 	if (pdfController.childElementCount == 1) {
+							// 		addPdfController()
+							// 		unlockOverflow({ element: "side-bar-container", socket, parameter })
+							// 		firstPdfControl({ parameter, socket, pdfDocument: "aktaDocument" })
+							// 		addMuteAllButton({ parameter, socket })
+							// 		addEndButton({ parameter, socket })
+							// 		addStartButton({ parameter, socket })
+							// 		addRulesButton({ parameter, socket })
+							// 		addAktaButton({ parameter, socket })
+							// 		addPPATSignButton({ parameter, socket })
+							// 	}
+							// }
 						}
 					)
 				} catch (error) {
@@ -51440,6 +51545,7 @@ const {
 	resetButton,
 	goHome,
 	signDocument,
+	updateDocuments,
 } = require("../../function")
 
 const changeMic = ({ parameter, socket, status }) => {
@@ -51995,10 +52101,11 @@ const addPPATSignButton = ({ parameter, socket }) => {
 			let data = {
 				isPPAT: true,
 				username: parameter.username,
-				room: parameter.roomName,
+				room: parameter.userData.transactionId,
 				role: "PPAT",
 			}
 			await signDocument({ parameter, socket, data })
+			await updateDocuments({ parameter, socket })
 		})
 		pdfControllerContainer.appendChild(PPATSignButton)
 	} catch (error) {
@@ -52017,11 +52124,29 @@ const addSaksiSignButton = async ({ id, role, username, parameter, socket }) => 
 		let data = {
 			isPPAT: false,
 			username,
-			room: parameter.roomName,
+			room: parameter.userData.transactionId,
 			role,
 		}
-		await signDocument({ data, parameter, socket })
+		socket.emit("get-sign-permission", { PPATSocket: socket.id, saksiSocket: id, data })
 	})
+}
+
+const signPermission = ({ socket, parameter, PPATSocket, data }) => {
+	try {
+		const displaySign = document.getElementById("sign-password")
+		displaySign.classList.add("show")
+		displaySign.style.display = "block"
+		const signInButton = document.getElementById("confirm-sign-button")
+		const signDocument = () => {
+			socket.emit("document-sign-agreed", { PPATSocket, data })
+			displaySign.classList.remove("show")
+			displaySign.removeAttribute("style")
+			signInButton.removeEventListener("click", signDocument)
+		}
+		signInButton.addEventListener("click", signDocument)
+	} catch (error) {
+		console.log(error)
+	}
 }
 
 module.exports = {
@@ -52041,6 +52166,7 @@ module.exports = {
 	displayMainEvent,
 	addPPATSignButton,
 	addSaksiSignButton,
+	signPermission,
 }
 
 },{"../../function":231,"recordrtc":223}],237:[function(require,module,exports){
@@ -52301,6 +52427,10 @@ const {
 	renderPage,
 	goHome,
 	verifyUser,
+	addPdfController,
+	firstPdfControl,
+	signDocument,
+	updateDocuments,
 } = require("../room/function")
 const { getMyStream, getRoomId, joinRoom } = require("../room/function/initialization")
 const { signalNewConsumerTransport } = require("../room/function/mediasoup")
@@ -52314,6 +52444,14 @@ const {
 	changeLayoutScreenSharingClient,
 	recordVideo,
 	displayMainEvent,
+	unlockOverflow,
+	addMuteAllButton,
+	addEndButton,
+	addStartButton,
+	addRulesButton,
+	addAktaButton,
+	addPPATSignButton,
+	signPermission,
 } = require("../room/ui/button")
 const { createMyVideo, removeVideoAndAudio, updatingLayout, changeLayout, changeUserMic, removeUserList } = require("../room/ui/video")
 
@@ -52332,10 +52470,21 @@ socket.on("connection-success", async ({ socketId }) => {
 		parameter.socketId = socketId
 		parameter.isVideo = true
 		parameter.isAudio = true
-		// await verifyUser({ id: parameter.userData._id })
 		await getPdf({ parameter, pdfDocument: "aktaDocument" })
+		if (parameter.userData.authority == "PPAT") {
+			parameter.isHost = true
+			addPdfController()
+			unlockOverflow({ element: "side-bar-container", socket, parameter })
+			firstPdfControl({ parameter, socket, pdfDocument: "aktaDocument" })
+			addMuteAllButton({ parameter, socket })
+			addEndButton({ parameter, socket })
+			addStartButton({ parameter, socket })
+			addRulesButton({ parameter, socket })
+			addAktaButton({ parameter, socket })
+			addPPATSignButton({ parameter, socket })
+		}
 		// await getRoomId(parameter)
-		await checkLocalStorage({ parameter })
+		// await checkLocalStorage({ parameter })
 		await getMyStream(parameter)
 		await createMyVideo(parameter)
 		await joinRoom({ socket, parameter })
@@ -52478,6 +52627,19 @@ socket.on("change-event", ({ event }) => {
 
 socket.on("end-meeting", ({ message }) => {
 	goHome()
+})
+
+socket.on("update-document", ({ message }) => {
+	getPdf({ parameter, pdfDocument: "aktaDocument" })
+})
+
+socket.on("get-sign-permission", ({ message, PPATSocket, data }) => {
+	signPermission({ socket, parameter, PPATSocket, data })
+})
+
+socket.on("document-sign-agreed", async ({ message, data }) => {
+	await signDocument({ data, parameter, socket })
+	await updateDocuments({ parameter, socket })
 })
 
 /**  EVENT LISTENER  **/

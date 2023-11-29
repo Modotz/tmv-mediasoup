@@ -10,6 +10,10 @@ const participantSchema = new Schema({
 		type: String,
 		required: true,
 	},
+	transactionId: {
+		type: Schema.Types.ObjectId,
+		ref: "Transaction",
+	},
 	roomId: {
 		type: String,
 		required: true,

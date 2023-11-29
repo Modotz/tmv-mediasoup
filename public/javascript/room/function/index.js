@@ -1,7 +1,6 @@
 const pdfLib = require("pdf-lib")
 // let url = "https://modotz.net/documents" /`/ VPS Mr. Indra IP
 // let url = "https://meet.dikyardiyanto.site/documents" // My VPS
-let url = "https://192.168.18.68:3001/documents" // Laptop Jaringan 5G
 // let url = 'https://192.168.3.135' // IP Kost
 // let url = "https://192.168.3.208"
 
@@ -240,6 +239,19 @@ const muteAllParticipants = ({ parameter, socket }) => {
 	})
 }
 
+const updateDocuments = async ({ parameter, socket }) => {
+	try {
+		await getPdf({ parameter, pdfDocument: "aktaDocument" })
+		parameter.allUsers.forEach((data) => {
+			if (data.socketId != socket.id) {
+				socket.emit("update-document", { socketId: data.socketId })
+			}
+		})
+	} catch (error) {
+		console.log(error)
+	}
+}
+
 const unlockAllMic = ({ parameter, socket }) => {
 	parameter.allUsers.forEach((data) => {
 		if (data.socketId != socket.id) {
@@ -298,11 +310,20 @@ const changeAppData = ({ socket, data, remoteProducerId }) => {
 
 const renderPage = ({ parameter, num, pdfDocument }) => {
 	try {
+		// if (parameter.pdfDocuments[pdfDocument].pageRendering){
+		// 	parameter.pdfDocuments[pdfDocument].pageNumPending = num
+		// } else {}
 		parameter.pdfDocuments[pdfDocument].pageRendering = true
 		parameter.pdfDocuments[pdfDocument].doc.getPage(num).then((page) => {
-			let viewport = page.getViewport({ scale: parameter.pdfDocuments[pdfDocument].scale })
+			let viewport = page.getViewport({ scale: parameter.pdfDocuments[pdfDocument].scale, rotation: 0 })
 			parameter.pdfDocuments[pdfDocument].canvas.height = viewport.height
 			parameter.pdfDocuments[pdfDocument].canvas.width = viewport.width
+			parameter.pdfDocuments[pdfDocument].ctx.clearRect(
+				0,
+				0,
+				parameter.pdfDocuments[pdfDocument].canvas.width,
+				parameter.pdfDocuments[pdfDocument].canvas.height
+			)
 			let renderContext = {
 				canvasContext: parameter.pdfDocuments[pdfDocument].ctx,
 				viewport,
@@ -315,6 +336,7 @@ const renderPage = ({ parameter, num, pdfDocument }) => {
 				}
 			})
 			document.getElementById("current-page").textContent = num
+			parameter.pdfDocuments[pdfDocument].currentPage = num
 		})
 	} catch (error) {
 		console.log("- Error Rendering Page : ", error)
@@ -323,21 +345,17 @@ const renderPage = ({ parameter, num, pdfDocument }) => {
 
 const getPdf = ({ parameter, pdfDocument }) => {
 	try {
-		let url = `https://192.168.18.68:3001/documents/${parameter.roomName}` // Laptop Jaringan 5G
+		if (!sessionStorage.getItem("user_token")) {
+			window.location.href = window.location.origin + "/verify/" + parameter.userData._id
+		}
+		let url = `${window.location.origin}/documents/${parameter.userData.transactionId}`
 		let pdfContainer = document.getElementById("pdf-container")
 		let isExist = document.getElementById("pdf-canvas")
 		if (isExist) isExist.remove()
 		let pdfCanvas = document.createElement("canvas")
 		pdfCanvas.id = "pdf-canvas"
 		pdfContainer.appendChild(pdfCanvas)
-		let location
-		for (const key in parameter.pdfDocuments) {
-			if (key == pdfDocument) {
-				location = parameter.pdfDocuments[key].location
-				parameter.pdfDocuments[key].isDisplayed = true
-			} else parameter.pdfDocuments[key].isDisplayed = false
-		}
-		parameter.pdfDocuments[pdfDocument].canvas = document.getElementById("pdf-canvas")
+		parameter.pdfDocuments[pdfDocument].canvas = pdfCanvas
 		parameter.pdfDocuments[pdfDocument].ctx = parameter.pdfDocuments[pdfDocument].canvas.getContext("2d")
 		parameter.pdfDocuments[pdfDocument].ctx.clearRect(
 			0,
@@ -345,23 +363,41 @@ const getPdf = ({ parameter, pdfDocument }) => {
 			parameter.pdfDocuments[pdfDocument].canvas.width,
 			parameter.pdfDocuments[pdfDocument].canvas.height
 		)
+
 		fetch(url, {
 			method: "GET",
 			headers: {
 				"Content-Type": "application/json",
-				access_token: sessionStorage.getItem("access_token"),
+				user_token: sessionStorage.getItem("user_token"),
 			},
 		})
 			.then((res) => {
-				return res.arrayBuffer()
+				if (res.ok) {
+					return res.arrayBuffer()
+				} else {
+					return res.json()
+					// window.location.href = window.location.origin + "/verify/" + parameter.userData.id
+				}
 			})
 			.then((data) => {
+				if (data?.name == "JsonWebTokenError") {
+					throw data
+				}
 				window.pdfjsLib.getDocument(data).promise.then((pdf) => {
+					if (parameter.pdfDocuments[pdfDocument].doc){
+						parameter.pdfDocuments[pdfDocument].doc.destroy()
+					}
 					parameter.pdfDocuments[pdfDocument].doc = pdf
 					document.getElementById("total-page").textContent = pdf.numPages
 					parameter.pdfDocuments[pdfDocument].numPages = pdf.numPages
 					renderPage({ parameter, num: parameter.pdfDocuments[pdfDocument].currentPage, pdfDocument })
 				})
+			})
+			.catch((error) => {
+				console.log("- Error Getting PDF : ", error)
+				if (error?.name == "JsonWebTokenError") {
+					window.location.href = window.location.origin + "/verify/" + parameter.userData._id
+				}
 			})
 	} catch (error) {
 		console.log("- Error Getting PDF : ", error)
@@ -452,17 +488,17 @@ const resetButton = () => {
 
 const signDocument = async ({ parameter, socket, data }) => {
 	try {
-		let response = await fetch(url, {
+		let response = await fetch(`${window.location.origin}/documents`, {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
-				access_token: sessionStorage.getItem("access_token"),
+				user_token: sessionStorage.getItem("user_token"),
 			},
 			body: JSON.stringify(data),
 		})
 
 		if (response.ok) {
-			console.log(await response.json())
+			getPdf({ parameter, pdfDocument: "aktaDocument" })
 		} else {
 			console.error("File upload failed")
 		}
@@ -474,7 +510,7 @@ const signDocument = async ({ parameter, socket, data }) => {
 const verifyUser = async ({ id }) => {
 	try {
 		console.log("Id V", id) // Log the id to the console
-		let url = `https://192.168.18.68:3001/verify/${id}` // Laptop Jaringan 5G
+		let url = `${window.location.origin}/verify/${id}` // Laptop Jaringan 5G
 
 		let response = await fetch(url, {
 			method: "get",
@@ -517,4 +553,5 @@ module.exports = {
 	goHome,
 	signDocument,
 	verifyUser,
+	updateDocuments,
 }

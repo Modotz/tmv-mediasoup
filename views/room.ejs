@@ -11,6 +11,7 @@
         integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <link rel="icon" type="image/png" href="/favicon.png">
     <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@2.7.570/build/pdf.min.js"></script>
+    <!-- <script src="https://www.jsdelivr.com/package/npm/pdfjs-dist"></script> -->
     <title>Telepati</title>
     <style>
         * {
@@ -998,6 +999,27 @@
 <body>
     <!-- <%- include('partials/provider2.ejs') %> -->
     <div id="full-container">
+        <div class="modal fade" id="sign-password" tabindex="-1" role="dialog" aria-labelledby="sign-password-label"
+            aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="sign-password-label">Sign Document</h5>
+                    </div>
+                    <div class="modal-body">
+                        <!-- <form id="sign-document">
+                            <div class="form-group">
+                                <label for="recipient-name" class="col-form-label">Password</label>
+                                <input type="password" class="form-control" id="recipient-name">
+                                <br />
+                                <button type="submit" class="btn btn-primary">Sign Documents</button>
+                            </div>
+                        </form> -->
+                        <button id="confirm-sign-button" class="btn btn-primary">Sign Document</button>
+                    </div>
+                </div>
+            </div>
+        </div>
         <span id="alert-error"></span>
         <section id="upper-container">
             <div id="audio-collection"></div>
@@ -1040,7 +1062,6 @@
                         <p>Page : <span id="current-page"></span> / <span id="total-page"></span></p>
                     </div>
                     <div id="pdf-container">
-                        <canvas id="pdf-canvas"></canvas>
                     </div>
                 </section>
             </div>

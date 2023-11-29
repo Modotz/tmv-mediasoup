@@ -2,7 +2,6 @@ const joinForm = document.getElementById("join-form")
 const url = window.location
 const roomTable = document.getElementById("rooms-table")
 const roomTableBody = document.getElementById("rooms-table-body")
-const baseUrl = "https://192.168.18.68:3001/"
 
 joinForm.addEventListener("submit", (e) => {
 	e.preventDefault()
@@ -35,8 +34,7 @@ createMeeting.addEventListener("click", () => {
 
 const getRooms = async () => {
 	try {
-		const api = baseUrl + "api/rooms"
-		const response = await fetch(api, {
+		const response = await fetch(`${window.location.origin}/api/rooms`, {
 			method: "get",
 			headers: {
 				"Content-Type": "application/json",
@@ -45,14 +43,14 @@ const getRooms = async () => {
 		})
 
 		const rooms = await response.json()
+		const roomTitle = document.getElementById("rooms-title")
 		if (rooms.length == 0) {
-			const roomTitle = document.getElementById("rooms-title")
 			roomTitle.innerHTML = "You Dont Have Any Scheduled Meeting"
 		} else {
 			roomTable.removeAttribute("style")
+			roomTitle.innerHTML = "Meeting Schedule"
 			rooms.map(async (data, index) => {
-				const apiParticipants = baseUrl + "api/participants/" + data.roomId
-				const responseParticipants = await fetch(apiParticipants, {
+				const responseParticipants = await fetch(`${window.location.origin}/api/participants/${data.roomId}`, {
 					method: "get",
 					headers: {
 						"Content-Type": "application/json",
@@ -63,15 +61,22 @@ const getRooms = async () => {
 					const participants = await responseParticipants.json()
 					let list = ""
 					participants.map((data) => {
-						list += `<p>${data.email}      <span id="cp-${data._id}" style="cursor: pointer;">copy</span></p>`
+						list += `<div class="participants-list"><span>${data.email}</span><button id="cp-${data._id}" class="btn btn-link" style="cursor: pointer;">copy</button></div>`
 					})
 					let rowTable = document.createElement("tr")
-					rowTable.innerHTML = `<th>${index + 1}</th><td>${data.name}</td><td><details><summary>List</summary>${list}</details></td>`
+					rowTable.innerHTML = `<th>${index + 1}</th><td>${
+						data.name
+					}</td><td><details><summary>List</summary>${list}</details></td><td><button class="btn btn-primary" id="detail-${
+						data._id
+					}">Detail</button></td>`
 					roomTableBody.appendChild(rowTable)
 					participants.map((data) => {
 						document.getElementById(`cp-${data._id}`).addEventListener("click", () => {
-							navigator.clipboard.writeText(`${baseUrl}user/${data._id}`)
+							navigator.clipboard.writeText(`${window.location.origin}/user/${data._id}`)
 						})
+					})
+					document.getElementById(`detail-${data._id}`).addEventListener("click", () => {
+						window.location.href = `${window.location.origin}/detail/${data._id}`
 					})
 				}
 			})

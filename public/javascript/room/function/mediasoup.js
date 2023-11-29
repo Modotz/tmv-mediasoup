@@ -72,21 +72,21 @@ const createSendTransport = async ({ socket, parameter }) => {
 						async ({ id, producersExist, kind }) => {
 							await callback({ id })
 							if (producersExist && kind == "audio") await getProducers({ parameter, socket })
-							if (!producersExist) {
-								parameter.isHost = true
-								let pdfController = document.getElementById("pdf-controller")
-								if (pdfController.childElementCount == 1) {
-									addPdfController()
-									unlockOverflow({ element: "side-bar-container", socket, parameter })
-									firstPdfControl({ parameter, socket, pdfDocument: "aktaDocument" })
-									addMuteAllButton({ parameter, socket })
-									addEndButton({ parameter, socket })
-									addStartButton({ parameter, socket })
-									addRulesButton({ parameter, socket })
-									addAktaButton({ parameter, socket })
-									addPPATSignButton({ parameter, socket })
-								}
-							}
+							// if (!producersExist) {
+							// 	parameter.isHost = true
+							// 	let pdfController = document.getElementById("pdf-controller")
+							// 	if (pdfController.childElementCount == 1) {
+							// 		addPdfController()
+							// 		unlockOverflow({ element: "side-bar-container", socket, parameter })
+							// 		firstPdfControl({ parameter, socket, pdfDocument: "aktaDocument" })
+							// 		addMuteAllButton({ parameter, socket })
+							// 		addEndButton({ parameter, socket })
+							// 		addStartButton({ parameter, socket })
+							// 		addRulesButton({ parameter, socket })
+							// 		addAktaButton({ parameter, socket })
+							// 		addPPATSignButton({ parameter, socket })
+							// 	}
+							// }
 						}
 					)
 				} catch (error) {

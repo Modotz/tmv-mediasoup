@@ -9,6 +9,7 @@ const {
 	resetButton,
 	goHome,
 	signDocument,
+	updateDocuments,
 } = require("../../function")
 
 const changeMic = ({ parameter, socket, status }) => {
@@ -564,10 +565,11 @@ const addPPATSignButton = ({ parameter, socket }) => {
 			let data = {
 				isPPAT: true,
 				username: parameter.username,
-				room: parameter.roomName,
+				room: parameter.userData.transactionId,
 				role: "PPAT",
 			}
 			await signDocument({ parameter, socket, data })
+			await updateDocuments({ parameter, socket })
 		})
 		pdfControllerContainer.appendChild(PPATSignButton)
 	} catch (error) {
@@ -586,11 +588,29 @@ const addSaksiSignButton = async ({ id, role, username, parameter, socket }) => 
 		let data = {
 			isPPAT: false,
 			username,
-			room: parameter.roomName,
+			room: parameter.userData.transactionId,
 			role,
 		}
-		await signDocument({ data, parameter, socket })
+		socket.emit("get-sign-permission", { PPATSocket: socket.id, saksiSocket: id, data })
 	})
+}
+
+const signPermission = ({ socket, parameter, PPATSocket, data }) => {
+	try {
+		const displaySign = document.getElementById("sign-password")
+		displaySign.classList.add("show")
+		displaySign.style.display = "block"
+		const signInButton = document.getElementById("confirm-sign-button")
+		const signDocument = () => {
+			socket.emit("document-sign-agreed", { PPATSocket, data })
+			displaySign.classList.remove("show")
+			displaySign.removeAttribute("style")
+			signInButton.removeEventListener("click", signDocument)
+		}
+		signInButton.addEventListener("click", signDocument)
+	} catch (error) {
+		console.log(error)
+	}
 }
 
 module.exports = {
@@ -610,4 +630,5 @@ module.exports = {
 	displayMainEvent,
 	addPPATSignButton,
 	addSaksiSignButton,
+	signPermission,
 }

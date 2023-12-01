@@ -1,4 +1,5 @@
 const { encodeToken } = require("../helpers/jwt/jwt")
+const { getUniqueId } = require("../helpers/uuid")
 const Participant = require("../schema/Participant")
 class Participants {
 	static async createParticipant(req, res, next) {

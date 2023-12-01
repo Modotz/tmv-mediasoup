@@ -20,8 +20,9 @@
         .full-container {
             width: 100vw;
             height: 100vh;
-            /* display: flex;
-            flex-wrap: wrap;
+            display: flex;
+            padding: 20px;
+            /* flex-wrap: wrap;
             position: relative;
             justify-content: center; */
         }
@@ -76,7 +77,7 @@
         }
 
         .table-meeting {
-            width: 50%;
+            width: 100%;
             height: fit-content;
             margin-left: auto;
             margin-right: auto;
@@ -92,6 +93,61 @@
             align-items: baseline;
             margin: 2px;
         }
+
+        #side-bar {
+            width: 30%;
+            height: 100%;
+            background-color: #161A30;
+            border-radius: 20px;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #main-content {
+            width: 70%;
+            height: 100%;
+        }
+
+        #side-bar-menu {
+            border-radius: 10px;
+            background-color: #31304D;
+            padding: 20px;
+        }
+
+        .menus {
+            background-color: #B6BBC4;
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        #main-content>div {
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            padding: 20px;
+        }
+
+        #side-bar-menu>p {
+            cursor: pointer;
+        }
+
+
+        #side-bar-menu>p:hover {
+            cursor: pointer;
+            background-color: green;
+        }
+
+        .detail-meeting {
+            background-color: #3081D0;
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .participant-tables {
+            background-color: #fff;
+        }
     </style>
 </head>
 
@@ -99,22 +155,34 @@
     <%- include('partials/provider2.ejs') %>
         <div class="full-container">
             <img class="icons-meet" src="/assets/pictures/icons-meeting.png" />
-            <p class="text-title" id="rooms-title"></p>
-            <table class="table table-striped table-meeting" id="rooms-table" style="display: none;">
-                <thead>
-                    <tr>
-                        <th scope="col">No</th>
-                        <th scope="col">Name</th>
-                        <th scope="col">Participants</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody id="rooms-table-body">
-                </tbody>
-            </table>
-            <form id="join-form" class="join-form-container">
-                <button id="create-meeting" type="button" class="btn btn-primary">Create Meeting</button>
-            </form>
+            <section id="side-bar">
+                <section id="side-bar-menu">
+                    <p id="available-meetings-option" class="menus">Available Meetings</p>
+                    <p id="detail-meetings-option" class="menus">Detail Meetings</p>
+                </section>
+            </section>
+            <section id="main-content">
+                <div id="available-meetings">
+                    <p class="text-title" id="rooms-title"></p>
+                    <table class="table table-striped table-meeting" id="rooms-table" style="display: none;">
+                        <thead>
+                            <tr>
+                                <th scope="col" style="width: 20%;">No</th>
+                                <th scope="col" style="width: 20%;">Name</th>
+                                <th scope="col" style="width: 60%;">Participants</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rooms-table-body">
+                        </tbody>
+                    </table>
+                    <form id="join-form" class="join-form-container">
+                        <button id="create-meeting" type="button" class="btn btn-primary">Create Meeting</button>
+                    </form>
+                </div>
+                <div id="detail-meetings" style="display: none;">
+                    <p>Detail Meetings</p>
+                </div>
+            </section>
         </div>
         <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
         <script src="/javascript/home/home.js"></script>

@@ -13,8 +13,8 @@ const fs = require("fs")
 
 const storage = multer.diskStorage({
 	destination: async function (req, file, cb) {
-		const { roomid } = req.params
-		const directoryPath = path.join(__dirname, "..", "documents", "pdf", roomid)
+		const { transactionid } = req.params
+		const directoryPath = path.join(__dirname, "..", "documents", "pdf", transactionid)
 
 		try {
 			await fs.promises.access(directoryPath)
@@ -31,20 +31,12 @@ const storage = multer.diskStorage({
 	},
 	filename: function (req, file, cb) {
 		// Use the original name of the file
-		cb(null, file.originalname)
+		cb(null, "AJB.pdf")
 	},
 })
 
 let upload = multer({ storage })
 // let upload = multer({ dest: 'documents/pdf' });
-
-router.post("/filedummy/:roomid", upload.single("pdf"), async (req, res, next) => {
-	try {
-		await res.status(201).json({ message: "Success Uploading File" })
-	} catch (error) {
-		next(error)
-	}
-})
 
 // const upload = multer({ storage })
 
@@ -65,10 +57,12 @@ router.post("/verify", Participants.isParticipantValid)
 router.get("/verified/:id", Participants.verifiedParticipant)
 router.get("/user/:id", Participants.getParticipant)
 
-router.get("/documents/:roomid", authentication, Controller.getDocuments)
+router.get("/documents/:transactionid", authentication, Controller.getDocuments)
 router.post("/documents", authentication, Controller.createDocuments)
 
 router.use(authorization)
+router.post("/ajb-file/:transactionid", upload.single("pdf"), Controller.uploadAJBDocument)
+router.get("/ajb-file/:transactionid", Controller.getDocuments)
 
 // Api
 router.get("/api/user", Users.getUser)

@@ -138,13 +138,16 @@ templateFilePDFUpload.addEventListener("submit", async (e) => {
 		const formData = new FormData()
 		formData.append("pdf", file)
 
-		const response = await fetch(`${window.location.origin}/filedummy/${transactionGlobalId}`, {
+		const response = await fetch(`${window.location.origin}/ajb-file/${transactionGlobalId}`, {
 			method: "post",
+			headers: {
+				"access_token": sessionStorage.getItem("access_token")
+			},
 			body: formData,
 		})
 
 		if (response.ok) {
-			console.log(response)
+			console.log(await response.json())
 		}
 	} catch (error) {
 		console.log(error)

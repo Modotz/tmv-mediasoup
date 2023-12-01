@@ -59,7 +59,15 @@ class Controller {
 		try {
 			res.render("register-meeting")
 		} catch (error) {
-			next(err)
+			next(error)
+		}
+	}
+
+	static uploadAJBDocument(req, res, next) {
+		try {
+			res.status(201).json({ message: "Success Uploading File" })
+		} catch (error) {
+			next(error)
 		}
 	}
 
@@ -78,8 +86,8 @@ class Controller {
 
 	static async getDocuments(req, res, next) {
 		try {
-			const { roomid } = req.params
-			const originalPDFPath = path.join(__dirname, "..", "documents", "pdf", roomid, "AJB.pdf")
+			const { transactionid } = req.params
+			const originalPDFPath = path.join(__dirname, "..", "documents", "pdf", transactionid, "AJB.pdf")
 			await res.sendFile(originalPDFPath, (err) => {
 				if (err) {
 					next(err)

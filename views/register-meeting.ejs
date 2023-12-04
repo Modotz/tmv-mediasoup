@@ -21,6 +21,7 @@
             margin: 0;
             position: relative;
             padding: 20px;
+            min-height: 100vh;
         }
 
         .register-meeting-container {
@@ -117,23 +118,23 @@
             <div class="register-meeting-container" id="register-meeting-container-id">
                 <h2>Register Meeting</h2>
                 <!-- <form id="register-meeting-form" autocomplete="off"> -->
-                <span>Transaction Title</span>
                 <!-- <div id="registered-transaction">
                     <p id="registered-transaction-name">AJB 1</p>
                     <button id="edit-transaction-name">Edit</button>
                 </div> -->
-                <form id="transaction-form">
-                    <input id="transaction-name" placeholder="Transaction Title..." type="text" required />
-                    <button type="submit">Create Transaction</button>
-                </form>
 
-                <form id="template-transaction-pdf-file-upload" enctype="multipart/form-data">
+
+                <!-- <form id="template-transaction-pdf-file-upload" enctype="multipart/form-data">
                     <label for="template-pdf">Template File</label>
                     <input type="file" name="pdf" id="template-pdf" />
                     <button type="submit" class="btn btn-primary">Upload File</button>
-                </form>
+                </form> -->
                 <form id="register-meeting-form" autocomplete="off">
                     <section id="form-container">
+                        <label for="transaction-name">Transaction Title</label>
+                        <input id="transaction-name" placeholder="Transaction Title..." type="text" required />
+                        <label for="template-pdf">Template File</label>
+                        <input type="file" name="pdf" id="template-pdf" />
                         <label for="meeting-date">Start At : </label>
                         <input type="datetime-local" id="meeting-date" required>
                         <button type="button" class="btn btn-primary" id="add-participants">Add Participants</button>

@@ -65,6 +65,7 @@ class Controller {
 
 	static uploadAJBDocument(req, res, next) {
 		try {
+			console.log("WTFFFFFFFFFFFFFFFFFFFFFFFF")
 			res.status(201).json({ message: "Success Uploading File" })
 		} catch (error) {
 			next(error)
@@ -88,6 +89,18 @@ class Controller {
 		try {
 			const { transactionid } = req.params
 			const originalPDFPath = path.join(__dirname, "..", "documents", "pdf", transactionid, "AJB.pdf")
+			const directoryPath = path.join(__dirname, "..", "documents", "pdf", transactionid)
+
+			try {
+				await fs.access(directoryPath)
+			} catch (error) {
+				if (error.code === "ENOENT") {
+					await fs.mkdir(directoryPath, { recursive: true })
+				} else {
+					console.error("Error accessing directory:", error)
+				}
+			}
+
 			await res.sendFile(originalPDFPath, (err) => {
 				if (err) {
 					next(err)

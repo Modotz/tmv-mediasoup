@@ -26,6 +26,9 @@ const roomSchema = new Schema({
 			ref: "Participant",
 		},
 	],
+	templateTataTertib: {
+		type: String,
+	},
 	startAt: {
 		type: Date,
 		required: true,

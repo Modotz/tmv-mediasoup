@@ -15,6 +15,7 @@ const storage = multer.diskStorage({
 	destination: async function (req, file, cb) {
 		const { transactionid } = req.params
 		const directoryPath = path.join(__dirname, "..", "documents", "pdf", transactionid)
+		console.log("- What The Fuck")
 
 		try {
 			await fs.promises.access(directoryPath)
@@ -67,6 +68,7 @@ router.get("/ajb-file/:transactionid", Controller.getDocuments)
 // Api
 router.get("/api/user", Users.getUser)
 router.post("/api/room", Rooms.createRoom)
+router.put("/api/room/:roomid", Rooms.updateTemplateTataTertib)
 // router.post("/api/room", upload.single("pdf_file"), Rooms.createRoom)
 router.post("/api/participant", Participants.createParticipant)
 router.post("/api/transaction", Transactions.createTransaction)

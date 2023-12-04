@@ -4,8 +4,11 @@ const roomTable = document.getElementById("rooms-table")
 const roomTableBody = document.getElementById("rooms-table-body")
 const availableMeetings = document.getElementById("available-meetings")
 const detailMeetings = document.getElementById("detail-meetings")
+const transactionHistory = document.getElementById("transaction-history")
 const availableOptionButton = document.getElementById("available-meetings-option")
 const detailOptionButton = document.getElementById("detail-meetings-option")
+const logoutOptionButton = document.getElementById("logout-option")
+const transactionHistoryOptionButton = document.getElementById("transaction-history-option")
 
 joinForm.addEventListener("submit", (e) => {
 	e.preventDefault()
@@ -32,8 +35,9 @@ function generateRandomId(length, separator = "-", separatorInterval = 4) {
 
 const createMeeting = document.getElementById("create-meeting")
 createMeeting.addEventListener("click", () => {
+	console.log("WHAT")
 	const goTo = url + "register-meeting"
-	window.location.href = goTo
+	window.location.href = window.location.origin + '/register-meeting'
 })
 
 const getPDFAJB = async (transactionId) => {
@@ -51,7 +55,7 @@ const getPDFAJB = async (transactionId) => {
 			return URL.createObjectURL(ajbFileBlob)
 		}
 	} catch (error) {
-		console.log(error)
+		console.log("- Error : ", error)
 	}
 }
 
@@ -82,15 +86,12 @@ const getRooms = async () => {
 				})
 				if (responseParticipants.ok) {
 					const participants = await responseParticipants.json()
-					console.log(participants)
 					let list = ""
 					participants.map((data) => {
 						list += `<div class="participants-list"><span>${data.email}</span><button id="cp-${data._id}" class="btn btn-link" style="cursor: pointer;">copy</button></div>`
 					})
 					let rowTable = document.createElement("tr")
-					rowTable.innerHTML = `<th>${index + 1}</th><td>${
-						data.name
-					}</td><td><details><summary>List</summary>${list}</details></td>`
+					rowTable.innerHTML = `<th>${index + 1}</th><td>${data.name}</td><td><details><summary>List</summary>${list}</details></td>`
 					roomTableBody.appendChild(rowTable)
 					participants.map((data) => {
 						document.getElementById(`cp-${data._id}`).addEventListener("click", () => {
@@ -98,29 +99,31 @@ const getRooms = async () => {
 						})
 					})
 
-					const detailMeetingsMenu = document.createElement("details")
 					let detailList = ""
 					participants.map((data, index) => {
 						detailList += `
 						<tr>
 						<th scope="row">${index + 1}</th>
 						<td>${data.email}</td>
-						<td>${data.isConfirmed ? "Yes" : "No"}</td>
+						<td>${data.isVerified ? "Yes" : "No"}</td>
 						<td>None</td>
 					</tr>`
 					})
 
-					detailMeetingsMenu.innerHTML = `<summary>${data.name}</summary>
+					const tableDetailMeetingMenu = document.createElement("tr")
+					tableDetailMeetingMenu.innerHTML = `
+					<td>${index + 1}</td>
+					<td>
+					<details>
+					<summary>${data.name}</summary>
 					<div class="detail-meeting">
 						<p>${data.name}</p>
 						<div class="document-ajb">
 							<p>Template AJB</p>
 							<embed id="template-file-ajb-${data.transactionId}" src="${await getPDFAJB(data.transactionId)}" type="application/pdf"
-								frameBorder="0" scrolling="auto" height="100%" width="100%"></embed>
-							<form id="edit-ajb-file-${data.transactionId}" enctype="multipart/form-data">
+								frameBorder="0" scrolling="auto" height="300px" width="100%"></embed>
 								<input type="file" id="ajb-file-input-${data.transactionId}" accept="application/pdf"/>
-								<button type="submit" class="btn btn-primary">Edit</button>
-							</form>
+								<button type="button" id="ajb-file-input-edit-button-${data.transactionId}" class="btn btn-primary">Update</button>
 						</div>
 						<div class="document-ajb">
 							<p>Participants Data</p>
@@ -138,11 +141,46 @@ const getRooms = async () => {
 								</tbody>
 							</table>
 						</div>
-					</div>`
-					detailMeetings.appendChild(detailMeetingsMenu)
+						<div class="document-ajb">
+							<p>Template Tata Tertib</p>
+							<div id="summernote-${data.transactionId}" class="summernote"></div>
+							<button id="summernote-submit-${data.transactionId}" class="btn btn-primary">Update Template</button>
+						</div>
+					</div>
+					</detail>
+					</td>
+					`
 
-					document.getElementById(`edit-ajb-file-${data.transactionId}`).addEventListener("submit", async (e) => {
-						e.preventDefault()
+					let tableDetail = document.getElementById("table-details")
+					tableDetail.appendChild(tableDetailMeetingMenu)
+					$(`#summernote-${data.transactionId}`).summernote({
+						placeholder: "Your Tata Tertib Template",
+						tabsize: 2,
+						height: 300,
+						callbacks: {
+							onInit: function () {
+								$(`#summernote-${data.transactionId}`).summernote("pasteHTML", `${data?.templateTataTertib ? data.templateTataTertib : "<p>Edit Your Template</p>"}`)
+							},
+						},
+					})
+
+					document.getElementById(`summernote-submit-${data.transactionId}`).addEventListener("click", async () => {
+						let content = $(`#summernote-${data.transactionId}`).summernote("code")
+						const response = await fetch(`${window.location.origin}/api/room/${data._id}`, {
+							method: "put",
+							headers: {
+								"Content-Type": "application/json",
+								access_token: sessionStorage.getItem("access_token"),
+							},
+							body: JSON.stringify({ content }),
+						})
+						if (response.ok) {
+							const templateTataTertibResponse = await response.json()
+							console.log(templateTataTertibResponse)
+						}
+					})
+
+					document.getElementById(`ajb-file-input-edit-button-${data.transactionId}`).addEventListener("click", async () => {
 						let templateFile = document.getElementById(`ajb-file-input-${data.transactionId}`)
 						const file = templateFile.files[0]
 						const formData = new FormData()
@@ -170,12 +208,34 @@ const getRooms = async () => {
 
 availableOptionButton.addEventListener("click", () => {
 	availableMeetings.removeAttribute("style")
+	detailOptionButton.removeAttribute("style")
+	transactionHistoryOptionButton.removeAttribute("style")
+	transactionHistory.style.display = "none"
 	detailMeetings.style.display = "none"
+	availableOptionButton.style.backgroundColor = "#9EB8D9"
 })
 
 detailOptionButton.addEventListener("click", () => {
 	detailMeetings.removeAttribute("style")
+	availableOptionButton.removeAttribute("style")
+	transactionHistoryOptionButton.removeAttribute("style")
+	transactionHistory.style.display = "none"
 	availableMeetings.style.display = "none"
+	detailOptionButton.style.backgroundColor = "#9EB8D9"
+})
+
+transactionHistoryOptionButton.addEventListener("click", () => {
+	transactionHistory.removeAttribute("style")
+	availableOptionButton.removeAttribute("style")
+	detailOptionButton.removeAttribute("style")
+	availableMeetings.style.display = "none"
+	detailMeetings.style.display = "none"
+	transactionHistoryOptionButton.style.backgroundColor = "#9EB8D9"
+})
+
+logoutOptionButton.addEventListener("click", () => {
+	sessionStorage.clear()
+	window.location.href = window.location.origin + "/login"
 })
 
 getRooms()

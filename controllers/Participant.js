@@ -1,6 +1,7 @@
 const { encodeToken } = require("../helpers/jwt/jwt")
 const { getUniqueId } = require("../helpers/uuid")
 const Participant = require("../schema/Participant")
+const Room = require("../schema/Room")
 class Participants {
 	static async createParticipant(req, res, next) {
 		try {
@@ -38,13 +39,14 @@ class Participants {
 	static async getParticipant(req, res, next) {
 		try {
 			const { id } = req.params
-			console.log("ID", id)
 			let participantData = await Participant.findById(id)
 			if (!participantData) {
 				await res.render("notfound")
 				return
 			}
-			await res.render("room", { participantData })
+			let userRoom = await Room.findOne({ roomId: participantData.roomId })
+			let templateTataTertib = userRoom.templateTataTertib ? userRoom.templateTataTertib : ""
+			await res.render("room", { participantData, templateTataTertib })
 		} catch (error) {
 			next(error)
 		}

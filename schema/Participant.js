@@ -18,7 +18,7 @@ const participantSchema = new Schema({
 		type: String,
 		required: true,
 	},
-	isConfirmed: {
+	isVerified: {
 		type: Boolean,
 		required: true,
 	},

@@ -151,7 +151,6 @@ const getMyStream = async (parameter) => {
 		parameter.allUsers = [...parameter.allUsers, user]
 		parameter.localStream = stream
 		parameter.audioParams.track = stream.getAudioTracks()[0]
-		console.log("- Error getting my stream")
 	} catch (error) {
 		console.log("- Error Getting My Stream : ", error)
 	}

@@ -15,6 +15,7 @@ const {
 	firstPdfControl,
 	signDocument,
 	updateDocuments,
+	addTataTertibTemplate,
 } = require("../room/function")
 const { getMyStream, getRoomId, joinRoom } = require("../room/function/initialization")
 const { signalNewConsumerTransport } = require("../room/function/mediasoup")
@@ -56,6 +57,7 @@ socket.on("connection-success", async ({ socketId }) => {
 		parameter.isVideo = true
 		parameter.isAudio = true
 		await getPdf({ parameter, pdfDocument: "aktaDocument" })
+		await addTataTertibTemplate({ templateTataTertib })
 		if (parameter.userData.authority == "PPAT") {
 			parameter.isHost = true
 			addPdfController()

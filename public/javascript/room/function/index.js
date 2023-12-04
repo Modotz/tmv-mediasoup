@@ -384,7 +384,7 @@ const getPdf = ({ parameter, pdfDocument }) => {
 					throw data
 				}
 				window.pdfjsLib.getDocument(data).promise.then((pdf) => {
-					if (parameter.pdfDocuments[pdfDocument].doc){
+					if (parameter.pdfDocuments[pdfDocument].doc) {
 						parameter.pdfDocuments[pdfDocument].doc.destroy()
 					}
 					parameter.pdfDocuments[pdfDocument].doc = pdf
@@ -530,6 +530,14 @@ const verifyUser = async ({ id }) => {
 	}
 }
 
+const addTataTertibTemplate = async ({ templateTataTertib }) => {
+	try {
+		document.getElementById("template-room").innerHTML = templateTataTertib
+	} catch (error) {
+		console.log(error)
+	}
+}
+
 module.exports = {
 	addPdfController,
 	startTimer,
@@ -554,4 +562,5 @@ module.exports = {
 	signDocument,
 	verifyUser,
 	updateDocuments,
+	addTataTertibTemplate,
 }

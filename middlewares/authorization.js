@@ -3,8 +3,9 @@ const User = require("../schema/User")
 
 const authorization = async (req, res, next) => {
 	const { access_token } = req.headers
-	if (!access_token){
+	if (!access_token) {
 		res.render("notfound")
+		return
 	}
 	try {
 		const payload = decodeToken(access_token)

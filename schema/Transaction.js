@@ -9,6 +9,11 @@ const transactionSchema = new Schema({
 	PPAT: {
 		type: Schema.Types.ObjectId,
 		ref: "User",
+		required: true,
+	},
+	roomId: {
+		type: String,
+		required: true,
 	},
 })
 

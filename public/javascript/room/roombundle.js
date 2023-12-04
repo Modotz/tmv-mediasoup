@@ -50758,7 +50758,7 @@ const getPdf = ({ parameter, pdfDocument }) => {
 					throw data
 				}
 				window.pdfjsLib.getDocument(data).promise.then((pdf) => {
-					if (parameter.pdfDocuments[pdfDocument].doc){
+					if (parameter.pdfDocuments[pdfDocument].doc) {
 						parameter.pdfDocuments[pdfDocument].doc.destroy()
 					}
 					parameter.pdfDocuments[pdfDocument].doc = pdf
@@ -50904,6 +50904,14 @@ const verifyUser = async ({ id }) => {
 	}
 }
 
+const addTataTertibTemplate = async ({ templateTataTertib }) => {
+	try {
+		document.getElementById("template-room").innerHTML = templateTataTertib
+	} catch (error) {
+		console.log(error)
+	}
+}
+
 module.exports = {
 	addPdfController,
 	startTimer,
@@ -50928,6 +50936,7 @@ module.exports = {
 	signDocument,
 	verifyUser,
 	updateDocuments,
+	addTataTertibTemplate,
 }
 
 },{"pdf-lib":206}],232:[function(require,module,exports){
@@ -51084,7 +51093,6 @@ const getMyStream = async (parameter) => {
 		parameter.allUsers = [...parameter.allUsers, user]
 		parameter.localStream = stream
 		parameter.audioParams.track = stream.getAudioTracks()[0]
-		console.log("- Error getting my stream")
 	} catch (error) {
 		console.log("- Error Getting My Stream : ", error)
 	}
@@ -52453,6 +52461,7 @@ const {
 	firstPdfControl,
 	signDocument,
 	updateDocuments,
+	addTataTertibTemplate,
 } = require("../room/function")
 const { getMyStream, getRoomId, joinRoom } = require("../room/function/initialization")
 const { signalNewConsumerTransport } = require("../room/function/mediasoup")
@@ -52494,6 +52503,7 @@ socket.on("connection-success", async ({ socketId }) => {
 		parameter.isVideo = true
 		parameter.isAudio = true
 		await getPdf({ parameter, pdfDocument: "aktaDocument" })
+		await addTataTertibTemplate({ templateTataTertib })
 		if (parameter.userData.authority == "PPAT") {
 			parameter.isHost = true
 			addPdfController()

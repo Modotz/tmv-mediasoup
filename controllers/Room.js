@@ -94,12 +94,22 @@ class Rooms {
 					await res.status(200).json({ message: "Already Joined" })
 				}
 			} else {
-				console.log("- QUIT : ", id)
 				const newParticipants = room[0].participants.filter((data) => data != id)
 				room[0].participants = newParticipants
 				room[0].save()
 				await res.status(204)
 			}
+		} catch (error) {
+			next(error)
+		}
+	}
+
+	static async updateTemplateTataTertib(req, res, next) {
+		try {
+			const { roomid } = req.params
+			const { content } = req.body
+			await Room.findOneAndUpdate({ _id: roomid }, { templateTataTertib: content })
+			await res.status(200).json({ content })
 		} catch (error) {
 			next(error)
 		}

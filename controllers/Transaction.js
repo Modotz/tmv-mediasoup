@@ -2,55 +2,60 @@ const Transaction = require("../schema/Transaction")
 const Room = require("../schema/Room")
 const Participant = require("../schema/Participant")
 const User = require("../schema/User")
+const mongoose = require("mongoose")
 
 class Transactions {
 	static async createTransaction(req, res, next) {
+		const session = await mongoose.startSession()
+		session.startTransaction()
 		try {
-			// const { transactionTitle } = req.body
-			// if (!transactionTitle) {
-			// 	throw { name: "Bad Request", message: "Transaction Name Is Required" }
-			// }
-			// const transaction = await Transaction.create({ name: transactionTitle, PPAT: req.user.id })
-			// await res.status(201).json({ transactionId: transaction._id })
 			const { participants, meetingName, meetingDate, roomId } = req.body
 			const { id } = req.user
 
 			const user = await User.findById(id)
 
-			const createTransaction = await Transaction.create({ name: meetingName, PPAT: id, roomId })
+			const createTransaction = await Transaction.create([{ name: meetingName, PPAT: id, roomId }], { session })
+			console.log("- Transaction : ",createTransaction[0].id)
 			const PPATData = {
 				email: user.email,
 				authority: "PPAT",
-				transactionId: createTransaction.id,
+				transactionId: createTransaction[0].id,
 				roomId,
 				isVerified: true,
 			}
 			let participantsData = participants.map((data) => {
-				return { email: data, authority: "Saksi", transactionId: createTransaction.id, roomId, isVerified: false }
+				return { email: data, authority: "Saksi", transactionId: createTransaction[0].id, roomId, isVerified: false }
 			})
 
 			participantsData.unshift(PPATData)
 
-			const createParticipants = await Participant.create(participantsData)
+			const createParticipants = await Participant.create(participantsData, { session })
 
 			let participantIds = []
 			createParticipants.forEach((data) => {
 				participantIds.push(data._id)
 			})
 
-			const createMeeting = await Room.create({
-				name: meetingName,
-				PPAT: id,
-				roomId,
-				transactionId: createTransaction.id,
-				participants: participantIds,
-				startAt: meetingDate,
-			})
+			const createMeeting = await Room.create(
+				[
+					{
+						name: meetingName,
+						PPAT: id,
+						roomId,
+						transactionId: createTransaction[0].id,
+						participants: participantIds,
+						startAt: meetingDate,
+					},
+				],
+				{ session }
+			)
 
-			console.log(createMeeting)
-
+			await session.commitTransaction()
+			session.endSession()
 			await res.status(201).json({ message: "Success Creating Transaction" })
 		} catch (error) {
+			await session.abortTransaction()
+			session.endSession()
 			next(error)
 		}
 	}

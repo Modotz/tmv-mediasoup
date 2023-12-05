@@ -60,63 +60,10 @@ formContainer.addEventListener("submit", async (e) => {
 		body: JSON.stringify(data),
 	})
 
-	if (response.ok){
+	if (response.ok) {
 		console.log(await response.json())
+		window.location.href = window.location.origin
 	}
-
-	// const api = window.location.origin + "/api/user"
-	// const response = await fetch(api, {
-	// 	method: "get",
-	// 	headers: {
-	// 		"Content-Type": "application/json",
-	// 		access_token: sessionStorage.getItem("access_token"),
-	// 	},
-	// })
-	// const { email } = await response.json()
-	// const createParticipant = async ({ email, authority, roomId, transactionId }) => {
-	// 	try {
-	// 		const createParticipantResponse = await fetch(window.location.origin + "/api/participant", {
-	// 			method: "post",
-	// 			headers: {
-	// 				"Content-Type": "application/json",
-	// 				access_token: sessionStorage.getItem("access_token"),
-	// 			},
-	// 			body: JSON.stringify({ email, authority, roomId, transactionId }),
-	// 		})
-	// 		if (createParticipantResponse.ok) {
-	// 			const participantResponse = await createParticipantResponse.json()
-	// 			console.log(participantResponse)
-	// 		}
-	// 	} catch (error) {
-	// 		console.log("- Error Creating Participant : ", error)
-	// 	}
-	// }
-
-	// await createParticipant({ email, authority: "PPAT", roomId: data.roomId, transactionId: transactionGlobalId })
-	// let PPATEmail = email
-	// participants.forEach(async (email, index) => {
-	// 	try {
-	// 		await createParticipant({ email, authority: "Saksi", roomId: data.roomId, transactionId: transactionGlobalId })
-	// 		if (index == participants.length - 1) {
-	// 			data.participants.push(PPATEmail)
-	// 			const createRoomResponse = await fetch(window.location.origin + "/api/room", {
-	// 				method: "post",
-	// 				headers: {
-	// 					"Content-Type": "application/json",
-	// 					access_token: sessionStorage.getItem("access_token"),
-	// 				},
-	// 				body: JSON.stringify(data),
-	// 			})
-
-	// 			if (createRoomResponse.ok) {
-	// 				const roomResponse = await createRoomResponse.json()
-	// 				window.location.href = window.location.origin
-	// 			}
-	// 		}
-	// 	} catch (error) {
-	// 		console.log("- Error Creating Room : ", error)
-	// 	}
-	// })
 })
 
 const generateRandomId = (length, separator = "-", separatorInterval = 4) => {
@@ -134,71 +81,3 @@ const generateRandomId = (length, separator = "-", separatorInterval = 4) => {
 
 	return randomId
 }
-
-// const templateFilePDFUpload = document.getElementById("template-transaction-pdf-file-upload")
-// templateFilePDFUpload.addEventListener("submit", async (e) => {
-// 	try {
-// 		e.preventDefault()
-
-// 		if (!checkTransactionTitle()) return
-
-// 		const templateFile = document.getElementById("template-pdf")
-// 		const file = templateFile.files[0]
-// 		const formData = new FormData()
-// 		formData.append("pdf", file)
-
-// 		const response = await fetch(`${window.location.origin}/ajb-file/${transactionGlobalId}`, {
-// 			method: "post",
-// 			headers: {
-// 				"access_token": sessionStorage.getItem("access_token")
-// 			},
-// 			body: formData,
-// 		})
-
-// 		if (response.ok) {
-// 			console.log(await response.json())
-// 		}
-// 	} catch (error) {
-// 		console.log(error)
-// 	}
-// })
-
-// const transactionTitle = document.getElementById("transaction-form")
-// transactionTitle.addEventListener("submit", async (event) => {
-// 	try {
-// 		event.preventDefault()
-// 		const transactionName = document.getElementById("transaction-name").value
-// 		if (!transactionName) {
-// 			checkTransactionTitle("Transaction Name Cannot be empty!")
-// 			return
-// 		}
-// 		transactionGlobalName = transactionName
-// 		const registerContainer = document.getElementById("register-meeting-container-id")
-// 		let registeredTransaction = document.createElement("div")
-// 		registeredTransaction.id = "registered-transaction"
-// 		registeredTransaction.innerHTML = `<p id="registered-transaction-name">${transactionName}</p>`
-// 		registerContainer.insertBefore(registeredTransaction, transactionTitle)
-// 		transactionTitle.remove()
-
-// 		const data = {
-// 			transactionTitle: transactionName,
-// 		}
-
-// 		const response = await fetch(`${window.location.origin}/api/transaction`, {
-// 			method: "post",
-// 			headers: {
-// 				"Content-Type": "application/json",
-// 				access_token: sessionStorage.getItem("access_token"),
-// 			},
-// 			body: JSON.stringify(data),
-// 		})
-// 		if (response.ok) {
-// 			const { transactionId } = await response.json()
-// 			transactionGlobalId = transactionId
-// 		} else {
-// 			throw await response.json()
-// 		}
-// 	} catch (error) {
-// 		console.log(error)
-// 	}
-// })

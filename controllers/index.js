@@ -65,7 +65,6 @@ class Controller {
 
 	static uploadAJBDocument(req, res, next) {
 		try {
-			console.log("WTFFFFFFFFFFFFFFFFFFFFFFFF")
 			res.status(201).json({ message: "Success Uploading File" })
 		} catch (error) {
 			next(error)

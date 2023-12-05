@@ -15,7 +15,6 @@ const storage = multer.diskStorage({
 	destination: async function (req, file, cb) {
 		const { transactionid } = req.params
 		const directoryPath = path.join(__dirname, "..", "documents", "pdf", transactionid)
-		console.log("- What The Fuck")
 
 		try {
 			await fs.promises.access(directoryPath)
@@ -27,19 +26,14 @@ const storage = multer.diskStorage({
 			}
 		}
 
-		// Now the directory should exist, set it as the destination
 		cb(null, directoryPath)
 	},
 	filename: function (req, file, cb) {
-		// Use the original name of the file
 		cb(null, "AJB.pdf")
 	},
 })
 
 let upload = multer({ storage })
-// let upload = multer({ dest: 'documents/pdf' });
-
-// const upload = multer({ storage })
 
 // API Login / Register
 router.post("/api/register", Users.register)

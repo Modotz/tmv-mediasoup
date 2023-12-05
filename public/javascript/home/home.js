@@ -153,16 +153,7 @@ const getRooms = async () => {
 
 					let tableDetail = document.getElementById("table-details")
 					tableDetail.appendChild(tableDetailMeetingMenu)
-					$(`#summernote-${data.transactionId}`).summernote({
-						placeholder: "Your Tata Tertib Template",
-						tabsize: 2,
-						height: 300,
-						callbacks: {
-							onInit: function () {
-								$(`#summernote-${data.transactionId}`).summernote("pasteHTML", `${data?.templateTataTertib ? data.templateTataTertib : "<p>Edit Your Template</p>"}`)
-							},
-						},
-					})
+					$(`#summernote-${data.transactionId}`).summernote(`code`, `${data?.templateTataTertib ? data.templateTataTertib : "<p>Edit Your Template</p>"}`)
 
 					document.getElementById(`summernote-submit-${data.transactionId}`).addEventListener("click", async () => {
 						let content = $(`#summernote-${data.transactionId}`).summernote("code")

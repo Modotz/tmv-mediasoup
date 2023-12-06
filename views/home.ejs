@@ -48,10 +48,6 @@
             width: 100vw;
             height: 100vh;
             display: flex;
-            padding: 20px;
-            /* flex-wrap: wrap;
-            position: relative;
-            justify-content: center; */
         }
 
         .left-bar {
@@ -122,18 +118,18 @@
         }
 
         #side-bar {
-            width: 30%;
+            width: 20%;
             height: 100%;
             background-color: #161A30;
-            border-radius: 20px;
             color: #fff;
             display: flex;
             justify-content: center;
-            align-items: center;
+            flex-direction: column;
+            padding: 10px;
         }
 
         #main-content {
-            width: 70%;
+            width: 80%;
             height: 100%;
             overflow-x: hidden;
         }
@@ -157,12 +153,12 @@
             padding: 20px;
         }
 
-        #side-bar-menu>p {
+        #side-bar>p {
             cursor: pointer;
         }
 
 
-        #side-bar-menu>p:hover {
+        #side-bar>p:hover {
             cursor: pointer;
             background-color: green;
         }
@@ -198,6 +194,19 @@
         table {
             text-align: left;
         }
+
+        #profile-picture {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        #my-profile {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
     </style>
 </head>
 
@@ -206,13 +215,17 @@
         <div class="full-container">
             <img class="icons-meet" src="/assets/pictures/icons-meeting.png" />
             <section id="side-bar">
-                <section id="side-bar-menu">
-                    <p id="available-meetings-option" style="background-color: #9EB8D9;" class="menus">Available
-                        Meetings</p>
-                    <p id="detail-meetings-option" class="menus">Detail Meetings</p>
-                    <p id="transaction-history-option" class="menus">Transaction History</p>
-                    <p id="logout-option" class="menus">Logout</p>
-                </section>
+                <div id="my-profile">
+                    <img src="https://images.rawpixel.com/image_png_800/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDIzLTAxL3JtNjA5LXNvbGlkaWNvbi13LTAwMi1wLnBuZw.png" alt="profile-picture" id="profile-picture">
+                    <span id="my-email">Hello, User</span>
+                </div>
+                <p id="available-meetings-option" style="background-color: #9EB8D9;" class="menus"><i
+                        class="far fa-circle"></i> Available
+                    Meetings</p>
+                <p id="detail-meetings-option" class="menus"><i class="far fa-circle"></i> Detail Meetings</p>
+                <p id="transaction-history-option" class="menus"><i class="far fa-circle"></i> Transaction History</p>
+                <p id="setting-option" class="menus"><i class="far fa-circle"></i> Setting</p>
+                <p id="logout-option" class="menus"><i class="far fa-circle"></i> Logout</p>
             </section>
             <section id="main-content">
                 <div id="available-meetings">

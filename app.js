@@ -33,21 +33,21 @@ app.use(express.json())
 app.use(express.static("public"))
 app.use(express.static(path.join(__dirname, "public")))
 
-// const httpsServer = https.createServer(options, app)
-// mongoose.connection.once("open", () => {
-// 	httpsServer.listen(port, () => {
-// 		console.log("App On : " + port)
-// 	})
-// })
-// const io = new Server(httpsServer)
-
-const httpServer = http.createServer(app)
-mongoose.connection.once('open', () => {
-    httpServer.listen(port, () => {
-        console.log('App On : ' + port)
-    })
+const httpsServer = https.createServer(options, app)
+mongoose.connection.once("open", () => {
+	httpsServer.listen(port, () => {
+		console.log("App On : " + port)
+	})
 })
-const io = new Server(httpServer)
+const io = new Server(httpsServer)
+
+// const httpServer = http.createServer(app)
+// mongoose.connection.once('open', () => {
+//     httpServer.listen(port, () => {
+//         console.log('App On : ' + port)
+//     })
+// })
+// const io = new Server(httpServer)
 
 let serverParameter = new Server_Parameter()
 let mediasoupParameter = new Mediasoup_Parameter()

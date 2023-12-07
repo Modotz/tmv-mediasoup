@@ -55,7 +55,6 @@ function generateRandomId(length, separator = "-", separatorInterval = 4) {
 
 const createMeeting = document.getElementById("create-meeting")
 createMeeting.addEventListener("click", () => {
-	console.log("WHAT")
 	const goTo = url + "register-meeting"
 	window.location.href = window.location.origin + "/register-meeting"
 })
@@ -133,44 +132,44 @@ const getRooms = async () => {
 
 						const tableDetailMeetingMenu = document.createElement("tr")
 						tableDetailMeetingMenu.innerHTML = `
-					<td>${index + 1}</td>
-					<td>
-					<details>
-					<summary>${data.name}</summary>
-					<div class="detail-meeting">
-						<p>${data.name}</p>
-						<div class="document-ajb">
-							<p>Template AJB</p>
-							<embed id="template-file-ajb-${data.transactionId}" src="${await getPDFAJB(data.transactionId)}" type="application/pdf"
-								frameBorder="0" scrolling="auto" height="300px" width="100%"></embed>
-								<input type="file" id="ajb-file-input-${data.transactionId}" accept="application/pdf"/>
-								<button type="button" id="ajb-file-input-edit-button-${data.transactionId}" class="btn btn-primary">Update</button>
-						</div>
-						<div class="document-ajb">
-							<p>Participants Data</p>
-							<table class="table participant-tables">
-								<thead>
-									<tr>
-										<th scope="col">No</th>
-										<th scope="col">Name</th>
-										<th scope="col">Verified</th>
-										<th scope="col">Data</th>
-									</tr>
-								</thead>
-								<tbody>
-								${detailList}
-								</tbody>
-							</table>
-						</div>
-						<div class="document-ajb">
-							<p>Template Tata Tertib</p>
-							<div id="summernote-${data.transactionId}" class="summernote"></div>
-							<button id="summernote-submit-${data.transactionId}" class="btn btn-primary">Update Template</button>
-						</div>
-					</div>
-					</detail>
-					</td>
-					`
+							<td>${index + 1}</td>
+							<td>
+							<details>
+							<summary>${data.name}</summary>
+							<div class="detail-meeting">
+								<p>${data.name}</p>
+								<div class="document-ajb">
+									<p>Template AJB</p>
+									<embed id="template-file-ajb-${data.transactionId}" src="${await getPDFAJB(data.transactionId)}" type="application/pdf"
+										frameBorder="0" scrolling="auto" height="300px" width="100%"></embed>
+										<input type="file" id="ajb-file-input-${data.transactionId}" accept="application/pdf"/>
+										<button type="button" id="ajb-file-input-edit-button-${data.transactionId}" class="btn btn-primary">Update</button>
+								</div>
+								<div class="document-ajb">
+									<p>Participants Data</p>
+									<table class="table participant-tables">
+										<thead>
+											<tr>
+												<th scope="col">No</th>
+												<th scope="col">Name</th>
+												<th scope="col">Verified</th>
+												<th scope="col">Data</th>
+											</tr>
+										</thead>
+										<tbody>
+										${detailList}
+										</tbody>
+									</table>
+								</div>
+								<div class="document-ajb">
+									<p>Template Tata Tertib</p>
+									<div id="summernote-${data.transactionId}" class="summernote"></div>
+									<button id="summernote-submit-${data.transactionId}" class="btn btn-primary">Update Template</button>
+								</div>
+							</div>
+							</detail>
+							</td>
+							`
 
 						let tableDetail = document.getElementById("table-details")
 						tableDetail.appendChild(tableDetailMeetingMenu)
@@ -180,18 +179,39 @@ const getRooms = async () => {
 						)
 
 						document.getElementById(`summernote-submit-${data.transactionId}`).addEventListener("click", async () => {
-							let content = $(`#summernote-${data.transactionId}`).summernote("code")
-							const response = await fetch(`${window.location.origin}/api/room/${data._id}`, {
-								method: "put",
-								headers: {
-									"Content-Type": "application/json",
-									access_token: sessionStorage.getItem("access_token"),
-								},
-								body: JSON.stringify({ content }),
-							})
-							if (response.ok) {
-								const templateTataTertibResponse = await response.json()
-								console.log(templateTataTertibResponse)
+							try {
+								let content = $(`#summernote-${data.transactionId}`).summernote("code")
+								// let divElement = document.createElement("div")
+								// divElement.innerHTML = content
+								// document.getElementById("dummy-canvas").appendChild(divElement)
+
+								// let canvasContainer = document.createElement("canvas")
+								// let htmlToCanvas = await window.html2canvas(divElement)
+								// canvasContainer.width = htmlToCanvas.width
+								// canvasContainer.height = htmlToCanvas.height
+								// let ctx = canvasContainer.getContext("2d")
+								// ctx.drawImage(htmlToCanvas, 0, 0)
+								// const base64Img = htmlToCanvas.toDataURL('image/png');
+								// const base64Img = canvasContainer.toDataURL('image/png');
+								// let newImageElement = document.createElement("img")
+								// newImageElement.src = base64Img
+								// divElement.remove()
+
+								const response = await fetch(`${window.location.origin}/api/room/${data._id}`, {
+									method: "put",
+									headers: {
+										"Content-Type": "application/json",
+										access_token: sessionStorage.getItem("access_token"),
+									},
+									// body: JSON.stringify({ content, contentBase64: base64Img }),
+									body: JSON.stringify({ content }),
+								})
+								if (response.ok) {
+									const templateTataTertibResponse = await response.json()
+									console.log(templateTataTertibResponse)
+								}
+							} catch (error) {
+								console.log(error)
 							}
 						})
 

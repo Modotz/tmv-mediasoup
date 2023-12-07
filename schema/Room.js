@@ -33,6 +33,9 @@ const roomSchema = new Schema({
 		type: Date,
 		required: true,
 	},
+	templateTataTertibImage: {
+		type: String,
+	}
 })
 
 module.exports = mongoose.model("Room", roomSchema)

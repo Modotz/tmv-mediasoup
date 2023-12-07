@@ -50727,6 +50727,7 @@ const getPdf = ({ parameter, pdfDocument }) => {
 		let isExist = document.getElementById("pdf-canvas")
 		if (isExist) isExist.remove()
 		let pdfCanvas = document.createElement("canvas")
+		pdfCanvas.style.width = `100%`
 		pdfCanvas.id = "pdf-canvas"
 		pdfContainer.appendChild(pdfCanvas)
 		parameter.pdfDocuments[pdfDocument].canvas = pdfCanvas
@@ -50817,6 +50818,7 @@ const firstPdfControl = async ({ parameter, socket, pdfDocument }) => {
 			parameter.scrollTimer = setTimeout(function () {
 				let totalScroll = pdfContainer.scrollHeight - pdfContainer.clientHeight
 				let scrolled = Math.floor((pdfContainer.scrollTop / Math.floor(totalScroll)) * 100)
+				console.log(scrolled)
 				parameter.allUsers.forEach((data) => {
 					if (data.socketId != socket.id) {
 						socket.emit("change-scroll", { socketId: data.socketId, value: scrolled, type: "transaksi" })
@@ -50907,6 +50909,42 @@ const verifyUser = async ({ id }) => {
 const addTataTertibTemplate = async ({ templateTataTertib }) => {
 	try {
 		document.getElementById("template-room").innerHTML = templateTataTertib
+		// const pdf = new window.jspdf.jsPDF()
+		// await pdf.html(templateTataTertib, {
+		// 	callback: function (pdf) {
+		// 		const dataUri = pdf.output("datauristring");
+
+        //         // Create a new <embed> element
+        //         const newEmbedElement = document.createElement("iframe");
+		// 		newEmbedElement.style.width = "100%"
+		// 		newEmbedElement.style.height = "100%"
+
+        //         // Set the data URI as the source of the <embed> element
+        //         newEmbedElement.src = dataUri;
+
+        //         // Append the <embed> element to the target container (tata-tertib)
+        //         document.getElementById("tata-tertib").appendChild(newEmbedElement);
+		// 	},
+		// })
+	} catch (error) {
+		console.log(error)
+	}
+}
+
+const htmlToCanvas = async ({ templateTataTertibImage }) => {
+	try {
+		// const htmlMaterial = document.getElementById("template-room")
+		// const htmlConvertToCanvas = await window.html2canvas(htmlMaterial)
+		// const templateCanvas = document.getElementById("template-room-canvas")
+		// templateCanvas.width = htmlConvertToCanvas.width
+		// templateCanvas.height = htmlConvertToCanvas.height
+		// const ctx = await templateCanvas.getContext("2d")
+		// await ctx.drawImage(htmlConvertToCanvas, 0, 0)
+		await document.getElementById("template-room").remove()
+		const newImage = document.createElement("img")
+		newImage.src = templateTataTertibImage
+		newImage.style.width = "100%"
+		document.getElementById("tata-tertib").appendChild(newImage)
 	} catch (error) {
 		console.log(error)
 	}
@@ -50937,6 +50975,7 @@ module.exports = {
 	verifyUser,
 	updateDocuments,
 	addTataTertibTemplate,
+	htmlToCanvas,
 }
 
 },{"pdf-lib":206}],232:[function(require,module,exports){
@@ -52462,6 +52501,7 @@ const {
 	signDocument,
 	updateDocuments,
 	addTataTertibTemplate,
+	htmlToCanvas,
 } = require("../room/function")
 const { getMyStream, getRoomId, joinRoom } = require("../room/function/initialization")
 const { signalNewConsumerTransport } = require("../room/function/mediasoup")
@@ -52504,6 +52544,7 @@ socket.on("connection-success", async ({ socketId }) => {
 		parameter.isAudio = true
 		await getPdf({ parameter, pdfDocument: "aktaDocument" })
 		await addTataTertibTemplate({ templateTataTertib })
+		// await htmlToCanvas({ templateTataTertibImage })
 		if (parameter.userData.authority == "PPAT") {
 			parameter.isHost = true
 			addPdfController()
@@ -52633,8 +52674,10 @@ socket.on("change-scroll", ({ socketId, value, type }) => {
 		switch (type) {
 			case "transaksi":
 				let pdfContainer = document.getElementById("pdf-container")
+				console.log(value)
 				let totalScroll = pdfContainer.scrollHeight - pdfContainer.clientHeight
-				let scrolled = (value / 100) * totalScroll
+				// let scrolled = (value / 100) * totalScroll
+				let scrolled = Math.floor((totalScroll * value) / 100)
 				pdfContainer.scrollTop = scrolled
 				break
 			case "tata-tertib":

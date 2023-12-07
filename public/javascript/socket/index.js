@@ -16,6 +16,7 @@ const {
 	signDocument,
 	updateDocuments,
 	addTataTertibTemplate,
+	htmlToCanvas,
 } = require("../room/function")
 const { getMyStream, getRoomId, joinRoom } = require("../room/function/initialization")
 const { signalNewConsumerTransport } = require("../room/function/mediasoup")
@@ -58,6 +59,7 @@ socket.on("connection-success", async ({ socketId }) => {
 		parameter.isAudio = true
 		await getPdf({ parameter, pdfDocument: "aktaDocument" })
 		await addTataTertibTemplate({ templateTataTertib })
+		// await htmlToCanvas({ templateTataTertibImage })
 		if (parameter.userData.authority == "PPAT") {
 			parameter.isHost = true
 			addPdfController()
@@ -187,8 +189,10 @@ socket.on("change-scroll", ({ socketId, value, type }) => {
 		switch (type) {
 			case "transaksi":
 				let pdfContainer = document.getElementById("pdf-container")
+				console.log(value)
 				let totalScroll = pdfContainer.scrollHeight - pdfContainer.clientHeight
-				let scrolled = (value / 100) * totalScroll
+				// let scrolled = (value / 100) * totalScroll
+				let scrolled = Math.floor((totalScroll * value) / 100)
 				pdfContainer.scrollTop = scrolled
 				break
 			case "tata-tertib":

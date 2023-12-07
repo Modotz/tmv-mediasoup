@@ -46,7 +46,8 @@ class Participants {
 			}
 			let userRoom = await Room.findOne({ roomId: participantData.roomId })
 			let templateTataTertib = userRoom.templateTataTertib ? userRoom.templateTataTertib : ""
-			await res.render("room", { participantData, templateTataTertib })
+			let templateTataTertibImage = userRoom.templateTataTertibImage ? userRoom.templateTataTertibImage : ""
+			await res.render("room", { participantData, templateTataTertib, templateTataTertibImage })
 		} catch (error) {
 			next(error)
 		}

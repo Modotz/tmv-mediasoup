@@ -353,7 +353,7 @@ const getPdf = ({ parameter, pdfDocument }) => {
 		let isExist = document.getElementById("pdf-canvas")
 		if (isExist) isExist.remove()
 		let pdfCanvas = document.createElement("canvas")
-		pdfCanvas.style.width = `100%`
+		// pdfCanvas.style.width = `100%`
 		pdfCanvas.id = "pdf-canvas"
 		pdfContainer.appendChild(pdfCanvas)
 		parameter.pdfDocuments[pdfDocument].canvas = pdfCanvas
@@ -540,16 +540,16 @@ const addTataTertibTemplate = async ({ templateTataTertib }) => {
 		// 	callback: function (pdf) {
 		// 		const dataUri = pdf.output("datauristring");
 
-        //         // Create a new <embed> element
-        //         const newEmbedElement = document.createElement("iframe");
+		//         // Create a new <embed> element
+		//         const newEmbedElement = document.createElement("iframe");
 		// 		newEmbedElement.style.width = "100%"
 		// 		newEmbedElement.style.height = "100%"
 
-        //         // Set the data URI as the source of the <embed> element
-        //         newEmbedElement.src = dataUri;
+		//         // Set the data URI as the source of the <embed> element
+		//         newEmbedElement.src = dataUri;
 
-        //         // Append the <embed> element to the target container (tata-tertib)
-        //         document.getElementById("tata-tertib").appendChild(newEmbedElement);
+		//         // Append the <embed> element to the target container (tata-tertib)
+		//         document.getElementById("tata-tertib").appendChild(newEmbedElement);
 		// 	},
 		// })
 	} catch (error) {
@@ -573,6 +573,23 @@ const htmlToCanvas = async ({ templateTataTertibImage }) => {
 		document.getElementById("tata-tertib").appendChild(newImage)
 	} catch (error) {
 		console.log(error)
+	}
+}
+
+const addZoomInOutEventListener = ({ parameter, pdfDocument }) => {
+	try {
+		const zoomInButton = document.getElementById("zoom-in-pdf")
+		const zoomOutButton = document.getElementById("zoom-out-pdf")
+		zoomInButton.addEventListener("click", () => {
+			parameter.pdfDocuments.aktaDocument.scale += 0.1
+			renderPage({ parameter, num: parameter.pdfDocuments.aktaDocument.currentPage, pdfDocument})
+		})
+		zoomOutButton.addEventListener("click", () => {
+			parameter.pdfDocuments.aktaDocument.scale -= 0.1
+			renderPage({ parameter, num: parameter.pdfDocuments.aktaDocument.currentPage, pdfDocument})
+		})
+	} catch (error) {
+		console.log("- Error Adding Zoom In / Zoom Out Event Listener : ", error)
 	}
 }
 
@@ -602,4 +619,5 @@ module.exports = {
 	updateDocuments,
 	addTataTertibTemplate,
 	htmlToCanvas,
+	addZoomInOutEventListener,
 }

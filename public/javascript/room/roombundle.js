@@ -50727,7 +50727,7 @@ const getPdf = ({ parameter, pdfDocument }) => {
 		let isExist = document.getElementById("pdf-canvas")
 		if (isExist) isExist.remove()
 		let pdfCanvas = document.createElement("canvas")
-		pdfCanvas.style.width = `100%`
+		// pdfCanvas.style.width = `100%`
 		pdfCanvas.id = "pdf-canvas"
 		pdfContainer.appendChild(pdfCanvas)
 		parameter.pdfDocuments[pdfDocument].canvas = pdfCanvas
@@ -50914,16 +50914,16 @@ const addTataTertibTemplate = async ({ templateTataTertib }) => {
 		// 	callback: function (pdf) {
 		// 		const dataUri = pdf.output("datauristring");
 
-        //         // Create a new <embed> element
-        //         const newEmbedElement = document.createElement("iframe");
+		//         // Create a new <embed> element
+		//         const newEmbedElement = document.createElement("iframe");
 		// 		newEmbedElement.style.width = "100%"
 		// 		newEmbedElement.style.height = "100%"
 
-        //         // Set the data URI as the source of the <embed> element
-        //         newEmbedElement.src = dataUri;
+		//         // Set the data URI as the source of the <embed> element
+		//         newEmbedElement.src = dataUri;
 
-        //         // Append the <embed> element to the target container (tata-tertib)
-        //         document.getElementById("tata-tertib").appendChild(newEmbedElement);
+		//         // Append the <embed> element to the target container (tata-tertib)
+		//         document.getElementById("tata-tertib").appendChild(newEmbedElement);
 		// 	},
 		// })
 	} catch (error) {
@@ -50947,6 +50947,23 @@ const htmlToCanvas = async ({ templateTataTertibImage }) => {
 		document.getElementById("tata-tertib").appendChild(newImage)
 	} catch (error) {
 		console.log(error)
+	}
+}
+
+const addZoomInOutEventListener = ({ parameter, pdfDocument }) => {
+	try {
+		const zoomInButton = document.getElementById("zoom-in-pdf")
+		const zoomOutButton = document.getElementById("zoom-out-pdf")
+		zoomInButton.addEventListener("click", () => {
+			parameter.pdfDocuments.aktaDocument.scale += 0.1
+			renderPage({ parameter, num: parameter.pdfDocuments.aktaDocument.currentPage, pdfDocument})
+		})
+		zoomOutButton.addEventListener("click", () => {
+			parameter.pdfDocuments.aktaDocument.scale -= 0.1
+			renderPage({ parameter, num: parameter.pdfDocuments.aktaDocument.currentPage, pdfDocument})
+		})
+	} catch (error) {
+		console.log("- Error Adding Zoom In / Zoom Out Event Listener : ", error)
 	}
 }
 
@@ -50976,6 +50993,7 @@ module.exports = {
 	updateDocuments,
 	addTataTertibTemplate,
 	htmlToCanvas,
+	addZoomInOutEventListener,
 }
 
 },{"pdf-lib":206}],232:[function(require,module,exports){
@@ -51451,7 +51469,7 @@ const connectRecvTransport = async ({ parameter, consumerTransport, socket, remo
 							transportId: consumerTransport.id,
 						}
 						parameter.allUsers = [...parameter.allUsers, data]
-						updatingLayout({ parameter })
+						// updatingLayout({ parameter })
 						// changeLayout({ parameter })
 						createVideo({
 							parameter,
@@ -52502,6 +52520,7 @@ const {
 	updateDocuments,
 	addTataTertibTemplate,
 	htmlToCanvas,
+	addZoomInOutEventListener,
 } = require("../room/function")
 const { getMyStream, getRoomId, joinRoom } = require("../room/function/initialization")
 const { signalNewConsumerTransport } = require("../room/function/mediasoup")
@@ -52544,19 +52563,24 @@ socket.on("connection-success", async ({ socketId }) => {
 		parameter.isAudio = true
 		await getPdf({ parameter, pdfDocument: "aktaDocument" })
 		await addTataTertibTemplate({ templateTataTertib })
+		// await addZoomInOutEventListener({ parameter, pdfDocument: "aktaDocument" })
 		// await htmlToCanvas({ templateTataTertibImage })
+		const windowWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth
+		const windowHeight = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight
+		console.log(`Window Width: ${windowWidth}px`)
+		console.log(`Window Height: ${windowHeight}px`)
 		if (parameter.userData.authority == "PPAT") {
 			parameter.isHost = true
-			addPdfController()
-			unlockOverflow({ element: "side-bar-container", socket, parameter })
-			firstPdfControl({ parameter, socket, pdfDocument: "aktaDocument" })
-			addMuteAllButton({ parameter, socket })
-			addEndButton({ parameter, socket })
-			addStartButton({ parameter, socket })
-			addRulesButton({ parameter, socket })
-			addAktaButton({ parameter, socket })
-			addPPATSignButton({ parameter, socket })
-			addReloadButton({ parameter, socket })
+			await addPdfController()
+			await unlockOverflow({ element: "side-bar-container", socket, parameter })
+			await firstPdfControl({ parameter, socket, pdfDocument: "aktaDocument" })
+			await addMuteAllButton({ parameter, socket })
+			await addEndButton({ parameter, socket })
+			await addStartButton({ parameter, socket })
+			await addRulesButton({ parameter, socket })
+			await addAktaButton({ parameter, socket })
+			await addPPATSignButton({ parameter, socket })
+			await addReloadButton({ parameter, socket })
 		}
 		// await getRoomId(parameter)
 		// await checkLocalStorage({ parameter })
@@ -52615,10 +52639,10 @@ socket.on("producer-closed", ({ remoteProducerId, socketId }) => {
 		if (checkData && !checkData.audio && !checkData.video) {
 			parameter.allUsers = parameter.allUsers.filter((data) => data.socketId !== socketId)
 			parameter.totalUsers--
-			updatingLayout({ parameter })
+			// updatingLayout({ parameter })
 			// changeLayout({ parameter })
 			removeVideoAndAudio({ socketId })
-			removeUserList({ id: socketId })
+			// removeUserList({ id: socketId })
 			if (checkData.screensharing) {
 				changeLayoutScreenSharingClient({ track: null, id: checkData.socketId, parameter, status: false })
 			}

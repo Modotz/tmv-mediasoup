@@ -281,7 +281,7 @@ const connectRecvTransport = async ({ parameter, consumerTransport, socket, remo
 							transportId: consumerTransport.id,
 						}
 						parameter.allUsers = [...parameter.allUsers, data]
-						updatingLayout({ parameter })
+						// updatingLayout({ parameter })
 						// changeLayout({ parameter })
 						createVideo({
 							parameter,

@@ -9,7 +9,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css"
         integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="icon" type="image/png" href="/favicon.pnghttps://192.168.18.68:3001/user/656e908441280681a8a7cb4a">
     <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@2.7.570/build/pdf.min.js"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
@@ -29,15 +29,27 @@
             font-size: 1vw;
         }
 
-        #tata-tertib > ol > li > p {
+        #tata-tertib>ol>li>p {
             font-size: 1rem;
         }
 
-        #tata-tertib > h3 {
+        #tata-tertib>h1 {
+            font-size: 2.4rem;
+        }
+
+        #tata-tertib>h2 {
+            font-size: 2.2rem;
+        }
+
+        #tata-tertib>h3 {
             font-size: 2rem;
         }
 
-        #tata-tertib > #template-room > p {
+        #tata-tertib>h4 {
+            font-size: 1.8rem;
+        }
+
+        #tata-tertib>#template-room>p {
             font-size: 1rem;
         }
 
@@ -47,7 +59,7 @@
         }
 
         ::-webkit-scrollbar {
-            width: 0.5rem;
+            width: 0px;
             background-color: #F5F5F5;
         }
 
@@ -141,11 +153,12 @@
             background-color: #fff;
             overflow-y: hidden;
             overflow-x: hidden;
-            padding: 0.8rem;
+            padding: 1vw;
         }
 
         #pdf-container {
-            height: 95%;
+            height: 90%;
+            width: 100%;
             display: flex;
             justify-content: center;
             overflow-y: hidden;
@@ -155,21 +168,33 @@
         #pdf-document {
             width: 100%;
             height: 100%;
-            padding: 1rem;
+            /* padding: 1em; */
+            /* aspect-ratio: 7/8; */
         }
 
         #pdf-controller {
-            margin: 1.5rem;
             width: 100%;
+            height: 10%;
             text-align: center;
             display: flex;
             justify-content: center;
             align-items: baseline;
             flex-wrap: wrap;
+            overflow-y: auto;
+            box-sizing: content-box;
+        }
+
+        #pdf-canvas {
+            /* max-width: 100% !important;
+            max-height: 100% !important; */
+            /* background-color: red; */
+            width: 100%;
+            height: 150%;
         }
 
         #tata-tertib {
-            padding: 1rem;
+            font-size: 1rem;
+            padding: 1em;
             width: 100%;
             height: 100%;
         }
@@ -1105,11 +1130,12 @@
                         dengan lancar dan produktif.</p>
                     <br>
                     <div id="template-room"></div>
-                    <!-- <canvas id="template-room-canvas"></canvas> -->
                 </section>
                 <section id="pdf-document" class="hide-event">
                     <div id="pdf-controller">
+                        <!-- <button id="zoom-out-pdf" class="btn btn-info">--</button> -->
                         <p>Page : <span id="current-page"></span> / <span id="total-page"></span></p>
+                        <!-- <button id="zoom-in-pdf" class="btn btn-info">++</button> -->
                     </div>
                     <div id="pdf-container">
                     </div>

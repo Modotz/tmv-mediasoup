@@ -17,6 +17,7 @@ const {
 	updateDocuments,
 	addTataTertibTemplate,
 	htmlToCanvas,
+	addZoomInOutEventListener,
 } = require("../room/function")
 const { getMyStream, getRoomId, joinRoom } = require("../room/function/initialization")
 const { signalNewConsumerTransport } = require("../room/function/mediasoup")
@@ -59,19 +60,24 @@ socket.on("connection-success", async ({ socketId }) => {
 		parameter.isAudio = true
 		await getPdf({ parameter, pdfDocument: "aktaDocument" })
 		await addTataTertibTemplate({ templateTataTertib })
+		// await addZoomInOutEventListener({ parameter, pdfDocument: "aktaDocument" })
 		// await htmlToCanvas({ templateTataTertibImage })
+		const windowWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth
+		const windowHeight = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight
+		console.log(`Window Width: ${windowWidth}px`)
+		console.log(`Window Height: ${windowHeight}px`)
 		if (parameter.userData.authority == "PPAT") {
 			parameter.isHost = true
-			addPdfController()
-			unlockOverflow({ element: "side-bar-container", socket, parameter })
-			firstPdfControl({ parameter, socket, pdfDocument: "aktaDocument" })
-			addMuteAllButton({ parameter, socket })
-			addEndButton({ parameter, socket })
-			addStartButton({ parameter, socket })
-			addRulesButton({ parameter, socket })
-			addAktaButton({ parameter, socket })
-			addPPATSignButton({ parameter, socket })
-			addReloadButton({ parameter, socket })
+			await addPdfController()
+			await unlockOverflow({ element: "side-bar-container", socket, parameter })
+			await firstPdfControl({ parameter, socket, pdfDocument: "aktaDocument" })
+			await addMuteAllButton({ parameter, socket })
+			await addEndButton({ parameter, socket })
+			await addStartButton({ parameter, socket })
+			await addRulesButton({ parameter, socket })
+			await addAktaButton({ parameter, socket })
+			await addPPATSignButton({ parameter, socket })
+			await addReloadButton({ parameter, socket })
 		}
 		// await getRoomId(parameter)
 		// await checkLocalStorage({ parameter })
@@ -130,10 +136,10 @@ socket.on("producer-closed", ({ remoteProducerId, socketId }) => {
 		if (checkData && !checkData.audio && !checkData.video) {
 			parameter.allUsers = parameter.allUsers.filter((data) => data.socketId !== socketId)
 			parameter.totalUsers--
-			updatingLayout({ parameter })
+			// updatingLayout({ parameter })
 			// changeLayout({ parameter })
 			removeVideoAndAudio({ socketId })
-			removeUserList({ id: socketId })
+			// removeUserList({ id: socketId })
 			if (checkData.screensharing) {
 				changeLayoutScreenSharingClient({ track: null, id: checkData.socketId, parameter, status: false })
 			}

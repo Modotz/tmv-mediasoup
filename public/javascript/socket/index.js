@@ -1,35 +1,20 @@
 const {
-	changeUserListMicIcon,
-	sendMessage,
-	receiveMessage,
-	hideOptionMenu,
-	showOptionMenu,
-	scrollToBottom,
-	checkLocalStorage,
 	changeAppData,
 	getPdf,
 	renderPage,
 	goHome,
-	verifyUser,
 	addPdfController,
 	firstPdfControl,
 	signDocument,
 	updateDocuments,
 	addTataTertibTemplate,
-	htmlToCanvas,
-	addZoomInOutEventListener,
 } = require("../room/function")
-const { getMyStream, getRoomId, joinRoom } = require("../room/function/initialization")
+const { getMyStream, joinRoom } = require("../room/function/initialization")
 const { signalNewConsumerTransport } = require("../room/function/mediasoup")
 const { Parameters } = require("../room/function/parameter")
 const {
 	changeMic,
 	turnOffOnCamera,
-	switchCamera,
-	getScreenSharing,
-	changeLayoutScreenSharing,
-	changeLayoutScreenSharingClient,
-	recordVideo,
 	displayMainEvent,
 	unlockOverflow,
 	addMuteAllButton,
@@ -41,7 +26,7 @@ const {
 	signPermission,
 	addReloadButton,
 } = require("../room/ui/button")
-const { createMyVideo, removeVideoAndAudio, updatingLayout, changeLayout, changeUserMic, removeUserList } = require("../room/ui/video")
+const { createMyVideo, removeVideoAndAudio, changeUserMic } = require("../room/ui/video")
 
 let parameter
 
@@ -60,8 +45,6 @@ socket.on("connection-success", async ({ socketId }) => {
 		parameter.isAudio = true
 		await getPdf({ parameter, pdfDocument: "aktaDocument" })
 		await addTataTertibTemplate({ templateTataTertib })
-		// await addZoomInOutEventListener({ parameter, pdfDocument: "aktaDocument" })
-		// await htmlToCanvas({ templateTataTertibImage })
 		const windowWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth
 		const windowHeight = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight
 		console.log(`Window Width: ${windowWidth}px`)
@@ -79,8 +62,6 @@ socket.on("connection-success", async ({ socketId }) => {
 			await addPPATSignButton({ parameter, socket })
 			await addReloadButton({ parameter, socket })
 		}
-		// await getRoomId(parameter)
-		// await checkLocalStorage({ parameter })
 		await getMyStream(parameter)
 		await createMyVideo(parameter)
 		await joinRoom({ socket, parameter })
@@ -120,10 +101,6 @@ socket.on("producer-closed", ({ remoteProducerId, socketId }) => {
 			turnOffOnCamera({ id: socketId, status: false })
 		}
 
-		if (kind == "screensharing") {
-			changeLayoutScreenSharingClient({ track: null, id: checkData.socketId, parameter, status: false })
-		}
-
 		if (kind == "screensharingaudio") {
 			let screensharingAudio = document.getElementById(`${socketId}screensharingaudio`)
 			if (screensharingAudio) screensharingAudio.remove()
@@ -136,13 +113,7 @@ socket.on("producer-closed", ({ remoteProducerId, socketId }) => {
 		if (checkData && !checkData.audio && !checkData.video) {
 			parameter.allUsers = parameter.allUsers.filter((data) => data.socketId !== socketId)
 			parameter.totalUsers--
-			// updatingLayout({ parameter })
-			// changeLayout({ parameter })
 			removeVideoAndAudio({ socketId })
-			// removeUserList({ id: socketId })
-			if (checkData.screensharing) {
-				changeLayoutScreenSharingClient({ track: null, id: checkData.socketId, parameter, status: false })
-			}
 		}
 	} catch (error) {
 		console.log("- Error Closing Producer : ", error)
@@ -153,29 +124,21 @@ socket.on("mic-config", ({ id, isMicActive }) => {
 	changeUserMic({ parameter, isMicActive, id })
 })
 
-socket.on("receive-message", ({ message, sender, messageDate }) => {
-	try {
-		receiveMessage({ message, sender, date: messageDate })
-	} catch (error) {
-		console.log("- Error Receving Message Socker : ", error)
-	}
-})
-
 // Mute All
 socket.on("mute-all", ({ hostSocketId }) => {
 	try {
 		let micButton = document.getElementById("user-mic-button")
 		let myIconMic = document.getElementById(`user-mic-${socket.id}`)
+		const myIconMicButton = document.getElementById("turn-on-off-mic-icons")
 		if (myIconMic) myIconMic.src = "/assets/pictures/micOff.png"
 		parameter.micCondition.isLocked = true
 		parameter.micCondition.socketId = hostSocketId
-		micButton.classList.replace("btn-success", "btn-danger")
-		micButton.firstElementChild.innerHTML = "Muted"
+		myIconMicButton.classList.replace("fa-microphone", "fa-microphone-slash")
+		micButton.style.backgroundColor = "red"
 		let user = parameter.allUsers.find((data) => data.socketId == socket.id)
 		user.audio.track.enabled = false
 		user.audio.isActive = false
 		changeMic({ parameter, status: false, socket })
-		changeUserListMicIcon({ status: true, id: socket.id })
 	} catch (error) {
 		console.log("- Error Muting All Participants : ", error)
 	}
@@ -197,7 +160,6 @@ socket.on("change-scroll", ({ socketId, value, type }) => {
 				let pdfContainer = document.getElementById("pdf-container")
 				console.log(value)
 				let totalScroll = pdfContainer.scrollHeight - pdfContainer.clientHeight
-				// let scrolled = (value / 100) * totalScroll
 				let scrolled = Math.floor((totalScroll * value) / 100)
 				pdfContainer.scrollTop = scrolled
 				break
@@ -246,31 +208,6 @@ socket.on("reload-document", ({ message }) => {
 
 /**  EVENT LISTENER  **/
 
-// let dummyButton = document.getElementById("dummy-button")
-// dummyButton.addEventListener("click", async () => {
-// 	let url = "https://192.168.18.68:3001/documents"
-
-// 	let data = {
-// 		isPPAT: true,
-// 		username: parameter.username,
-// 		room: parameter.roomName,
-// 		role: "PPAT",
-// 	}
-// 	let response = await fetch(url, {
-// 		method: "POST",
-// 		headers: {
-// 			"Content-Type": "application/json",
-// 		},
-// 		body: JSON.stringify(data),
-// 	})
-
-// 	if (response.ok) {
-// 		console.log("File uploaded successfully")
-// 	} else {
-// 		console.error("File upload failed")
-// 	}
-// })
-
 let micButton = document.getElementById("user-mic-button")
 micButton.addEventListener("click", () => {
 	if (parameter.micCondition.isLocked && !parameter.isHost) {
@@ -287,8 +224,8 @@ micButton.addEventListener("click", () => {
 	let isActive = micButton.firstElementChild.innerHTML
 	let myIconMic = document.getElementById(`user-mic-${socket.id}`)
 	let user = parameter.allUsers.find((data) => data.socketId == socket.id)
-	console.log(isActive)
-	if (isActive == "Mute") {
+	const myMicIcons = document.getElementById("turn-on-off-mic-icons")
+	if (myMicIcons.classList.contains("fa-microphone")) {
 		parameter.isAudio = false
 		changeAppData({
 			socket,
@@ -300,7 +237,9 @@ micButton.addEventListener("click", () => {
 		user.audio.isActive = false
 		myIconMic.src = "/assets/pictures/micOff.png"
 		changeMic({ parameter, status: false, socket })
-		micButton.firstElementChild.innerHTML = "Muted"
+		// micButton.firstElementChild.innerHTML = "Muted"
+		myMicIcons.classList.replace("fa-microphone", "fa-microphone-slash")
+		micButton.style.backgroundColor = "red"
 	} else {
 		parameter.isAudio = false
 		changeAppData({
@@ -313,7 +252,47 @@ micButton.addEventListener("click", () => {
 		user.audio.isActive = true
 		myIconMic.src = "/assets/pictures/micOn.png"
 		changeMic({ parameter, status: true, socket })
-		micButton.firstElementChild.innerHTML = "Mute"
+		// micButton.firstElementChild.innerHTML = "Mute"
+		myMicIcons.classList.replace("fa-microphone-slash", "fa-microphone")
+		micButton.removeAttribute("style")
+	}
+})
+
+const userVideoButton = document.getElementById("display-video-button")
+userVideoButton.addEventListener("click", () => {
+	try {
+		const phoneMaxWidth = 850
+
+		const videoContainer = document.getElementById("video-container")
+		const displayUserIcon = document.getElementById("display-users-icons")
+		if (window.innerWidth <= phoneMaxWidth) {
+			if (!userVideoButton.hasAttribute("style")) {
+				videoContainer.style.right = "0"
+				userVideoButton.style.backgroundColor = "red"
+			} else {
+				videoContainer.style.right = "-100%"
+				userVideoButton.removeAttribute("style")
+			}
+		} else {
+			videoContainer.removeAttribute("style")
+			displayUserIcon.classList.replace("fa-users-slash", "fa-users")
+			userVideoButton.removeAttribute("style")
+		}
+	} catch (error) {
+		console.log("- Error Displaying User : ", error)
+	}
+})
+
+const raiseHandButton = document.getElementById("raise-hand-button")
+raiseHandButton.addEventListener("click", () => {
+	try {
+		if (!raiseHandButton.hasAttribute("style")){
+			raiseHandButton.style.backgroundColor = "red"
+		} else {
+			raiseHandButton.removeAttribute("style")
+		}
+	} catch (error) {
+		console.log("- Error Raising Hand : ", error)
 	}
 })
 

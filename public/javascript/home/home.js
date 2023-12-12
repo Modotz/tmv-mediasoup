@@ -181,22 +181,6 @@ const getRooms = async () => {
 						document.getElementById(`summernote-submit-${data.transactionId}`).addEventListener("click", async () => {
 							try {
 								let content = $(`#summernote-${data.transactionId}`).summernote("code")
-								// let divElement = document.createElement("div")
-								// divElement.innerHTML = content
-								// document.getElementById("dummy-canvas").appendChild(divElement)
-
-								// let canvasContainer = document.createElement("canvas")
-								// let htmlToCanvas = await window.html2canvas(divElement)
-								// canvasContainer.width = htmlToCanvas.width
-								// canvasContainer.height = htmlToCanvas.height
-								// let ctx = canvasContainer.getContext("2d")
-								// ctx.drawImage(htmlToCanvas, 0, 0)
-								// const base64Img = htmlToCanvas.toDataURL('image/png');
-								// const base64Img = canvasContainer.toDataURL('image/png');
-								// let newImageElement = document.createElement("img")
-								// newImageElement.src = base64Img
-								// divElement.remove()
-
 								const response = await fetch(`${window.location.origin}/api/room/${data._id}`, {
 									method: "put",
 									headers: {

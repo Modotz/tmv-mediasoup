@@ -50426,185 +50426,6 @@ const timerLayout = ({ status }) => {
 	}
 }
 
-// Create User Online List
-const createUserList = ({ username, socketId, cameraTrigger, picture, micTrigger }) => {
-	try {
-		let userList = document.getElementById("user-list")
-		let isExist = document.getElementById("user-" + socketId)
-		let cameraInitSetting = ""
-		if (cameraTrigger) {
-			cameraInitSetting = "fas fa-video"
-		} else {
-			cameraInitSetting = "fas fa-video-slash"
-		}
-		if (!isExist) {
-			let elementUser = document.createElement("div")
-			elementUser.id = "user-" + socketId
-			elementUser.className = "user-list-container"
-			userList.appendChild(elementUser)
-			let myUsername = document.createElement("div")
-			myUsername.innerHTML = `<img src="${picture}" class="mini-picture"/><span>${username}</span>`
-			myUsername.id = "ulu-" + socketId
-			myUsername.className = "profile-list"
-			elementUser.appendChild(myUsername)
-			let icons = document.createElement("div")
-			icons.className = "user-list-icons-container"
-			icons.id = "uli-" + socketId
-			icons.innerHTML = `<section class="user-list-microphone"><img src="/assets/pictures/mic${
-				micTrigger ? "On" : "Off"
-			}.png" id="ulim-${socketId}"/></section><section class="user-list-camera"><i class="${cameraInitSetting}" id="ulic-${socketId}" style="color: #ffffff;"></i></section>`
-			elementUser.appendChild(icons)
-		}
-	} catch (error) {
-		console.log("- Error Creating User List : ", error)
-	}
-}
-
-const changeUserListMicIcon = ({ status, id }) => {
-	let userMicIconUserList = document.getElementById("ulim-" + id)
-	if (status) {
-		userMicIconUserList.src = "/assets/pictures/micOff.png"
-	} else {
-		userMicIconUserList.src = "/assets/pictures/micOn.png"
-	}
-}
-
-const scrollToBottom = () => {
-	try {
-		let chatMessages = document.getElementById("chat-container-id")
-		chatMessages.scrollTop = chatMessages.scrollHeight
-	} catch (error) {
-		console.log("- Error Scrolling To Bottom : ", error)
-	}
-}
-
-const compareMessageDate = (messageDate) => {
-	try {
-		const currentDate = new Date()
-		const messageDateObj = new Date(messageDate)
-
-		const currentYear = currentDate.getFullYear()
-		const currentMonth = currentDate.getMonth()
-		const currentDay = currentDate.getDate()
-
-		const messageYear = messageDateObj.getFullYear()
-		const messageMonth = messageDateObj.getMonth()
-		const messageDay = messageDateObj.getDate()
-		let messageHour = messageDateObj.getHours()
-		let messageMinute = messageDateObj.getMinutes()
-		if (messageMinute < 10) {
-			messageMinute = `0${messageMinute}`
-		}
-		if (messageHour < 10) {
-			messageHour = `0${messageHour}`
-		}
-
-		if (currentYear === messageYear && currentMonth === messageMonth && currentDay === messageDay) return `${messageHour}:${messageMinute}`
-		else {
-			const timeDiff = currentDate - messageDateObj
-			const oneDay = 24 * 60 * 60 * 1000
-			const oneYear = 365
-			if (timeDiff < oneDay) return `Yesterday ${messageHour}:${messageMinute}`
-			else if (timeDiff < oneYear) return `${messageMonth}:${messageDay} - ${messageHour}:${messageMinute}`
-			else return `${messageYear}:${messageMonth}:${messageDay} - ${messageHour}:${messageMinute}`
-		}
-	} catch (error) {
-		console.log("- Error Comparing Message Data : ", error)
-	}
-}
-
-const messageNotification = () => {
-	try {
-		const chatContainer = document.getElementById("chat-bar-box-id")
-		let iconsNotification = document.getElementById("notification-element-id")
-		if (chatContainer.className == "hide-side-bar") {
-			let isLineNewMessageExist = document.getElementById("new-message-notification")
-			if (!isLineNewMessageExist) {
-				let chatMessagesContainer = document.getElementById("chat-messages-id")
-				let notificationElement = document.createElement("div")
-				notificationElement.id = "new-message-notification"
-				let newMessageTemplate = `<p class="new-message-text">New Message</p><div class="new-message-line"></div>`
-				notificationElement.innerHTML = newMessageTemplate
-				chatMessagesContainer.appendChild(notificationElement)
-			}
-			iconsNotification.className = "fas fa-envelope notification visible"
-		}
-	} catch (error) {
-		console.log("- Error At Notificarion Message : ", error)
-	}
-}
-
-const receiveMessage = ({ message, sender, date }) => {
-	try {
-		messageNotification()
-		const newDate = compareMessageDate(date)
-		let chatMessagesContainer = document.getElementById("chat-messages-id")
-		let messageElement = document.createElement("div")
-		let chatContainer = document.getElementById("chat-messages-id")
-
-		let allChat = chatContainer.querySelectorAll(".message-container")
-		let lastChat = allChat[allChat.length - 1]
-		let lastChatDetail = lastChat?.firstElementChild
-		let lastChatDetailName = lastChatDetail?.firstElementChild?.innerHTML
-		let lastChatDetailDate = lastChatDetail?.lastElementChild?.innerHTML
-		let customDate = `<span class="message-time">${newDate}</span>`
-		let customName = `<p class="sender">${sender}</p>`
-		if (lastChatDetailDate == newDate && lastChatDetailName == sender && lastChatDetail) {
-			customName = `<p class="sender hide-username">${sender}</p>`
-			lastChatDetail.lastElementChild.remove()
-		}
-
-		messageElement.className = "message-container"
-		messageElement.innerHTML = `<div class="received-messages">${customName}<div class="received-message"><div class="inside-message"><span>${message}</span></div></div>${customDate}</div>`
-		chatMessagesContainer.appendChild(messageElement)
-	} catch (error) {
-		console.log("- Error Receiving Message : ", error)
-	}
-}
-
-const sendMessage = ({ message, sender, date }) => {
-	try {
-		let chatContainer = document.getElementById("chat-messages-id")
-		let allChat = chatContainer.querySelectorAll(".message-container")
-		let lastChat = allChat[allChat.length - 1]
-		let lastChatDetail = lastChat?.firstElementChild
-		let lastChatDetailDate = lastChatDetail?.lastElementChild?.innerHTML
-		const newDate = compareMessageDate(date)
-		let customDate = `<span class="message-time">${newDate}</span>`
-		if (lastChatDetailDate == newDate && lastChatDetail) {
-			lastChatDetail.lastElementChild.remove()
-		}
-		let chatMessagesContainer = document.getElementById("chat-messages-id")
-		let messageElement = document.createElement("div")
-		messageElement.className = "message-container"
-		messageElement.innerHTML = `<div class="your-messages"><p class="sender">${sender}</p><div class="your-message"><div class="inside-message"><span>${message}</span></div></div>${customDate}</div>`
-		chatMessagesContainer.appendChild(messageElement)
-		scrollToBottom()
-	} catch (error) {
-		console.log("- Error Sending Message : ", error)
-	}
-}
-
-// Function to show the option menu
-function showOptionMenu() {
-	try {
-		let optionMenu = document.getElementById("option-menu")
-		optionMenu.className = "visible"
-	} catch (error) {
-		console.log("- Error Showing Option Menu : ", error)
-	}
-}
-
-// Function to hide the option menu
-function hideOptionMenu() {
-	try {
-		let optionMenu = document.getElementById("option-menu")
-		optionMenu.className = "invisible"
-	} catch (error) {
-		console.log("- Error Hiding Option Menu : ", error)
-	}
-}
-
 const muteAllParticipants = ({ parameter, socket }) => {
 	parameter.allUsers.forEach((data) => {
 		if (data.socketId != socket.id) {
@@ -50632,27 +50453,6 @@ const unlockAllMic = ({ parameter, socket }) => {
 			socket.emit("unmute-all", { socketId: data.socketId })
 		}
 	})
-}
-
-// Check Initial Configuration
-const checkLocalStorage = ({ parameter }) => {
-	try {
-		// Set Room Id
-		localStorage.setItem("room_id", parameter.roomName)
-		// Check Config For Audio Devices, Selected Audio Device, Video Devices, Selected Video Devices, Room Id, Username
-		if (
-			!localStorage.getItem("audioDevices") ||
-			!localStorage.getItem("room_id") ||
-			!localStorage.getItem("selectedVideoDevices") ||
-			!localStorage.getItem("videoDevices") ||
-			!localStorage.getItem("username") ||
-			!localStorage.getItem("selectedAudioDevices")
-		) {
-			goToLobby()
-		}
-	} catch (error) {
-		console.log("- Error Checking Local Storage : ", error)
-	}
 }
 
 const goToLobby = () => {
@@ -50684,9 +50484,6 @@ const changeAppData = ({ socket, data, remoteProducerId }) => {
 
 const renderPage = ({ parameter, num, pdfDocument }) => {
 	try {
-		// if (parameter.pdfDocuments[pdfDocument].pageRendering){
-		// 	parameter.pdfDocuments[pdfDocument].pageNumPending = num
-		// } else {}
 		parameter.pdfDocuments[pdfDocument].pageRendering = true
 		parameter.pdfDocuments[pdfDocument].doc.getPage(num).then((page) => {
 			let viewport = page.getViewport({ scale: parameter.pdfDocuments[pdfDocument].scale, rotation: 0 })
@@ -50883,29 +50680,6 @@ const signDocument = async ({ parameter, socket, data }) => {
 	}
 }
 
-const verifyUser = async ({ id }) => {
-	try {
-		console.log("Id V", id) // Log the id to the console
-		let url = `${window.location.origin}/verify/${id}` // Laptop Jaringan 5G
-
-		let response = await fetch(url, {
-			method: "get",
-			headers: {
-				"Content-Type": "application/json",
-			},
-		})
-
-		if (response.ok) {
-			const { access_token } = await response.json()
-			sessionStorage.setItem("access_token", access_token)
-		} else {
-			console.error("File upload failed")
-		}
-	} catch (error) {
-		console.log("- Error Verifying User : ", error)
-	}
-}
-
 const addTataTertibTemplate = async ({ templateTataTertib }) => {
 	try {
 		document.getElementById("template-room").innerHTML = templateTataTertib
@@ -50931,56 +50705,12 @@ const addTataTertibTemplate = async ({ templateTataTertib }) => {
 	}
 }
 
-const htmlToCanvas = async ({ templateTataTertibImage }) => {
-	try {
-		// const htmlMaterial = document.getElementById("template-room")
-		// const htmlConvertToCanvas = await window.html2canvas(htmlMaterial)
-		// const templateCanvas = document.getElementById("template-room-canvas")
-		// templateCanvas.width = htmlConvertToCanvas.width
-		// templateCanvas.height = htmlConvertToCanvas.height
-		// const ctx = await templateCanvas.getContext("2d")
-		// await ctx.drawImage(htmlConvertToCanvas, 0, 0)
-		await document.getElementById("template-room").remove()
-		const newImage = document.createElement("img")
-		newImage.src = templateTataTertibImage
-		newImage.style.width = "100%"
-		document.getElementById("tata-tertib").appendChild(newImage)
-	} catch (error) {
-		console.log(error)
-	}
-}
-
-const addZoomInOutEventListener = ({ parameter, pdfDocument }) => {
-	try {
-		const zoomInButton = document.getElementById("zoom-in-pdf")
-		const zoomOutButton = document.getElementById("zoom-out-pdf")
-		zoomInButton.addEventListener("click", () => {
-			parameter.pdfDocuments.aktaDocument.scale += 0.1
-			renderPage({ parameter, num: parameter.pdfDocuments.aktaDocument.currentPage, pdfDocument})
-		})
-		zoomOutButton.addEventListener("click", () => {
-			parameter.pdfDocuments.aktaDocument.scale -= 0.1
-			renderPage({ parameter, num: parameter.pdfDocuments.aktaDocument.currentPage, pdfDocument})
-		})
-	} catch (error) {
-		console.log("- Error Adding Zoom In / Zoom Out Event Listener : ", error)
-	}
-}
-
 module.exports = {
 	addPdfController,
 	startTimer,
 	timerLayout,
-	createUserList,
-	changeUserListMicIcon,
-	sendMessage,
-	receiveMessage,
-	showOptionMenu,
-	hideOptionMenu,
-	scrollToBottom,
 	muteAllParticipants,
 	unlockAllMic,
-	checkLocalStorage,
 	changeAppData,
 	goToLobby,
 	getPdf,
@@ -50989,106 +50719,13 @@ module.exports = {
 	resetButton,
 	goHome,
 	signDocument,
-	verifyUser,
 	updateDocuments,
 	addTataTertibTemplate,
-	htmlToCanvas,
-	addZoomInOutEventListener,
 }
 
 },{"pdf-lib":206}],232:[function(require,module,exports){
-const { createUserList } = require(".")
 const { socket } = require("../../socket")
 const { createDevice } = require("./mediasoup")
-
-// const getMyStream = async (parameter) => {
-// 	try {
-// 		let config = {
-// 			video: localStorage.getItem("is_video_active") == "true" ? { deviceId: { exact: localStorage.getItem("selectedVideoDevices") }, frameRate: { ideal: 30, max: 35 } } : false,
-// 			audio: localStorage.getItem("selectedVideoDevices")
-// 				? {
-// 						deviceId: { exact: localStorage.getItem("selectedAudioDevices") },
-// 						autoGainControl: false,
-// 						noiseSuppression: true,
-// 						echoCancellation: true,
-// 				  }
-// 				: {
-// 						autoGainControl: false,
-// 						noiseSuppression: true,
-// 						echoCancellation: true,
-// 				  },
-// 		}
-
-// 		let username = localStorage.getItem("username")
-// 		parameter.username = username
-
-// 		let stream = await navigator.mediaDevices.getUserMedia(config)
-// 		let picture = localStorage.getItem("picture") ? localStorage.getItem("picture") : "/assets/pictures/unknown.jpg"
-
-// 		let audioCondition
-// 		let videoCondition
-// 		parameter.initialVideo = true
-// 		parameter.initialAudio = true
-// 		if (localStorage.getItem("is_mic_active") == "false") {
-// 			document.getElementById("mic-image").src = "/assets/pictures/micOff.png"
-// 			document.getElementById("user-mic-button").className = "button-small-custom-clicked"
-// 			parameter.initialAudio = false
-// 			audioCondition = false
-// 		} else audioCondition = true
-// 		if (localStorage.getItem("is_video_active") == "false") {
-// 			document.getElementById("turn-on-off-camera-icons").className = "fas fa-video-slash"
-// 			document.getElementById("user-turn-on-off-camera-button").className = "button-small-custom-clicked"
-// 			videoCondition = false
-// 			parameter.initialVideo = false
-// 		} else {
-// 			videoCondition = true
-// 			parameter.videoParams.track = stream.getVideoTracks()[0]
-// 		}
-// 		stream.getAudioTracks()[0].enabled = audioCondition
-// 		let user = {
-// 			username,
-// 			socketId: parameter.socketId,
-// 			picture,
-// 			audio: {
-// 				isActive: audioCondition,
-// 				track: stream.getAudioTracks()[0],
-// 				producerId: undefined,
-// 				transportId: undefined,
-// 				consumerId: undefined,
-// 			},
-// 		}
-
-// 		if (videoCondition) {
-// 			user.video = {
-// 				isActive: videoCondition,
-// 				track: stream.getVideoTracks()[0],
-// 				producerId: undefined,
-// 				transportId: undefined,
-// 				consumerId: undefined,
-// 			}
-// 		}
-
-// 		parameter.picture = picture
-
-// 		parameter.audioParams.appData.isMicActive = audioCondition
-// 		parameter.audioParams.appData.isVideoActive = videoCondition
-// 		parameter.videoParams.appData.isMicActive = audioCondition
-// 		parameter.videoParams.appData.isVideoActive = videoCondition
-
-// 		parameter.audioParams.appData.isActive = audioCondition
-// 		parameter.videoParams.appData.isActive = videoCondition
-
-// 		parameter.videoParams.appData.picture = picture
-// 		parameter.audioParams.appData.picture = picture
-
-// 		parameter.allUsers = [...parameter.allUsers, user]
-// 		parameter.localStream = stream
-// 		parameter.audioParams.track = stream.getAudioTracks()[0]
-// 		// createUserList({ username: "Diky", socketId: parameter.socketId, cameraTrigger: videoCondition, picture, micTrigger: audioCondition })
-// 	} catch (error) {
-// 		console.log("- Error Getting My Stream : ", error)
-// 	}
-// }
 
 const getMyStream = async (parameter) => {
 	try {
@@ -51155,17 +50792,6 @@ const getMyStream = async (parameter) => {
 	}
 }
 
-const getRoomId = async (parameter) => {
-	try {
-		const url = window.location.pathname
-		const parts = url.split("/")
-		const roomName = parts[2]
-		parameter.roomName = roomName
-	} catch (error) {
-		console.log("- Error Getting Room Id : ", error)
-	}
-}
-
 const joinRoom = async ({ parameter, socket }) => {
 	try {
 		parameter.totalUsers++
@@ -51183,23 +50809,15 @@ const joinRoom = async ({ parameter, socket }) => {
 	}
 }
 
-module.exports = { getMyStream, getRoomId, joinRoom }
+module.exports = { getMyStream, joinRoom }
 
-},{".":231,"../../socket":238,"./mediasoup":233}],233:[function(require,module,exports){
+},{"../../socket":238,"./mediasoup":233}],233:[function(require,module,exports){
 const mediasoupClient = require("mediasoup-client")
-const { createVideo, createAudio, insertVideo, updatingLayout, changeLayout, createAudioVisualizer } = require("../ui/video")
+const { createVideo, createAudio, insertVideo, changeLayout, createAudioVisualizer } = require("../ui/video")
 const {
 	turnOffOnCamera,
-	changeLayoutScreenSharingClient,
-	addMuteAllButton,
-	addEndButton,
-	addStartButton,
-	addRulesButton,
-	addAktaButton,
-	unlockOverflow,
-	addPPATSignButton,
 } = require("../ui/button")
-const { muteAllParticipants, goToLobby, addPdfController, firstPdfControl } = require(".")
+const { muteAllParticipants, goToLobby } = require(".")
 const { encodingVP8, encodingsVP9 } = require("../config/mediasoup")
 
 const getEncoding = ({ parameter }) => {
@@ -51260,21 +50878,6 @@ const createSendTransport = async ({ socket, parameter }) => {
 						async ({ id, producersExist, kind }) => {
 							await callback({ id })
 							if (producersExist && kind == "audio") await getProducers({ parameter, socket })
-							// if (!producersExist) {
-							// 	parameter.isHost = true
-							// 	let pdfController = document.getElementById("pdf-controller")
-							// 	if (pdfController.childElementCount == 1) {
-							// 		addPdfController()
-							// 		unlockOverflow({ element: "side-bar-container", socket, parameter })
-							// 		firstPdfControl({ parameter, socket, pdfDocument: "aktaDocument" })
-							// 		addMuteAllButton({ parameter, socket })
-							// 		addEndButton({ parameter, socket })
-							// 		addStartButton({ parameter, socket })
-							// 		addRulesButton({ parameter, socket })
-							// 		addAktaButton({ parameter, socket })
-							// 		addPPATSignButton({ parameter, socket })
-							// 	}
-							// }
 						}
 					)
 				} catch (error) {
@@ -51306,10 +50909,8 @@ const connectSendTransport = async (parameter) => {
 		if (parameter.initialVideo) {
 			parameter.videoProducer = await parameter.producerTransport.produce(parameter.videoParams)
 			await parameter.videoProducer.setMaxSpatialLayer(1)
-			// console.log("- Producer : ", parameter.videoProducer)
 			myData.video.producerId = parameter.videoProducer.id
 			myData.video.transportId = parameter.producerTransport.id
-			// parameter.videoProducer.setMaxIncomingBitrate(900000)
 			parameter.videoProducer.on("trackended", () => {
 				console.log("video track ended")
 			})
@@ -51424,21 +51025,6 @@ const connectRecvTransport = async ({ parameter, consumerTransport, socket, remo
 						streamId,
 					})
 
-					// if (params.kind == "video") {
-					// 	let withCodec,
-					// 		withoutCodec = 0
-					// 	const stat = setInterval(async () => {
-					// 		const report = await parameter.consumerTransport.getStats()
-					// 		for (const value of report.values()) {
-					// 			if (value.kind == "video" && value.codecId) {
-					// 				console.log("- With Codec : ", value.bytesReceived - withCodec)
-					// 				withCodec = value.bytesReceived
-					// 				// break
-					// 			}
-					// 		}
-					// 	}, 1000)
-					// }
-
 					let isUserExist = parameter.allUsers.find((data) => data.socketId == params.producerSocketOwner)
 					const { track } = consumer
 
@@ -51469,8 +51055,6 @@ const connectRecvTransport = async ({ parameter, consumerTransport, socket, remo
 							transportId: consumerTransport.id,
 						}
 						parameter.allUsers = [...parameter.allUsers, data]
-						// updatingLayout({ parameter })
-						// changeLayout({ parameter })
 						createVideo({
 							parameter,
 							id: params.producerSocketOwner,
@@ -51489,9 +51073,6 @@ const connectRecvTransport = async ({ parameter, consumerTransport, socket, remo
 					if (params.kind == "video" && params.appData.label == "video") {
 						insertVideo({ id: params.producerSocketOwner, track, pictures: "/assets/pictures/unknown.jpg" })
 						turnOffOnCamera({ id: params.producerSocketOwner, status: true })
-					}
-					if (params.appData.label == "screensharing") {
-						changeLayoutScreenSharingClient({ track, id: params.producerSocketOwner, parameter, status: true })
 					}
 					if (params.kind == "audio" && params.appData.label == "screensharingaudio") {
 						createAudio({ id: params.producerSocketOwner + "screensharingaudio", track })
@@ -51605,9 +51186,6 @@ const {
 	muteAllParticipants,
 	unlockAllMic,
 	getPdf,
-	firstPdfControl,
-	addPdfController,
-	resetButton,
 	goHome,
 	signDocument,
 	updateDocuments,
@@ -51630,204 +51208,9 @@ const turnOffOnCamera = ({ id, status }) => {
 	if (cameraIconsUserList) cameraIconsUserList.className = `${status ? "fas fa-video" : "fas fa-video-slash"}`
 }
 
-const switchCamera = async ({ parameter }) => {
-	try {
-		let myData = parameter.allUsers.find((data) => data.socketId == parameter.socketId)
-		let videoDevices = (await navigator.mediaDevices.enumerateDevices()).filter((device) => device.kind === "videoinput")
-		console.log("- Parameter : ", parameter.devices)
-		parameter.devices.video.iteration++
-		if (parameter.devices.video.iteration >= videoDevices?.length) parameter.devices.video.iteration = 0
-		parameter.devices.video.id = videoDevices[parameter.devices.video.iteration].deviceId
-
-		let config = {
-			video: {
-				deviceId: { exact: parameter.devices.video.id },
-				video: { facingMode: "environment" },
-			},
-		}
-
-		let newStream = await navigator.mediaDevices.getUserMedia(config)
-		parameter.localStream.getVideoTracks()[0].stop()
-		parameter.localStream.removeTrack(parameter.localStream.getVideoTracks()[0])
-		parameter.localStream.addTrack(newStream.getVideoTracks()[0])
-
-		if (!parameter.videoProducer) {
-			parameter.videoParams.appData.isActive = true
-			parameter.videoParams.appData.isVideoActive = true
-			parameter.videoParams.track = newStream.getVideoTracks()[0]
-			parameter.videoProducer = await parameter.producerTransport.produce(parameter.videoParams)
-			myData.video.producerId = parameter.videoProducer.id
-			myData.video.isActive = true
-		} else {
-			parameter.videoProducer.replaceTrack({ track: newStream.getVideoTracks()[0] })
-		}
-	} catch (error) {
-		console.log("- Error Switching Camera : ", error)
-	}
-}
-
-const getScreenSharing = async ({ parameter, socket }) => {
-	try {
-		let config = {
-			video: {
-				cursor: "always",
-				displaySurface: "window",
-				chromeMediaSource: "desktop",
-			},
-			audio: true,
-		}
-		let myData = parameter.allUsers.find((data) => data.socketId == parameter.socketId)
-		parameter.screensharing.stream = await navigator.mediaDevices.getDisplayMedia(config)
-		parameter.screensharing.isActive = true
-
-		parameter.screensharingVideoParams.track = parameter.screensharing.stream.getVideoTracks()[0]
-
-		parameter.isScreenSharing.isScreenSharing = true
-		parameter.isScreenSharing.socketId = parameter.socketId
-
-		parameter.screensharing.stream.getVideoTracks()[0].onended = () => {
-			parameter.screensharing.videoProducer.close()
-			socket.emit("close-producer-from-client", { id: parameter.screensharing.videoProducerId })
-			if (parameter.screensharing.audioProducerId) {
-				parameter.screensharing.audioProducer.close()
-				socket.emit("close-producer-from-client", { id: parameter.screensharing.audioProducerId })
-				delete myData.screensharingaudio
-			}
-			delete myData.screensharing
-
-			let screenSharingButton = document.getElementById("user-screen-share-button")
-			screenSharingButton.className = "btn button-small-custom"
-			changeLayoutScreenSharing({ parameter, status: false })
-		}
-
-		changeLayoutScreenSharing({ parameter, status: true })
-		if (parameter.screensharing.stream.getAudioTracks()[0]) {
-			parameter.screensharingAudioParams.track = parameter.screensharing.stream.getAudioTracks()[0]
-			parameter.screensharing.audioProducer = await parameter.producerTransport.produce(parameter.screensharingAudioParams)
-			parameter.screensharing.audioProducerId = parameter.screensharing.audioProducer.id
-			myData.screensharingaudio = {
-				isActive: true,
-				track: parameter.screensharingAudioParams.track,
-				producerId: parameter.screensharing.audioProducer.id,
-				transportId: parameter.producerTransport.id,
-				consumerId: undefined,
-			}
-		}
-
-		parameter.screensharing.videoProducer = await parameter.producerTransport.produce(parameter.screensharingVideoParams)
-		parameter.screensharing.videoProducerId = parameter.screensharing.videoProducer.id
-		myData.screensharing = {
-			isActive: true,
-			track: parameter.screensharingVideoParams.track,
-			producerId: parameter.screensharing.videoProducer.id,
-			transportId: parameter.producerTransport.id,
-			consumerId: undefined,
-		}
-	} catch (error) {
-		changeLayoutScreenSharing({ parameter, status: false })
-		let screenSharingButton = document.getElementById("user-screen-share-button")
-		screenSharingButton.className = "btn button-small-custom"
-		console.log("- Error Getting Screen Sharing : ", error)
-	}
-}
-
-const changeLayoutScreenSharingClient = ({ track, status, parameter, id }) => {
-	let upperContainer = document.getElementById("upper-container")
-	let videoContainer = document.getElementById("video-container")
-
-	if (status) {
-		let userListButton = document.getElementById("user-list-button")
-
-		let screenSharingContainer = document.createElement("div")
-		screenSharingContainer.id = "screen-sharing-container"
-		screenSharingContainer.innerHTML = `<div id="screen-sharing-video-container"><video id="screen-sharing-video" autoplay></video></div>`
-		upperContainer.insertBefore(screenSharingContainer, upperContainer.firstChild)
-		videoContainer.className = "video-container-screen-sharing-mode"
-		document.getElementById("screen-sharing-video").srcObject = new MediaStream([track])
-		slideUserVideoButton({ status: true })
-		parameter.isScreenSharing.isScreenSharing = true
-		parameter.isScreenSharing.socketId = id
-		let chatButton = document.getElementById("user-chat-button")
-		if (userListButton.classList[1] == "button-small-custom-clicked" || chatButton.classList[1] == "button-small-custom-clicked") {
-			screenSharingContainer.style.minWidth = "75%"
-			screenSharingContainer.style.maxWidth = "75%"
-		}
-	} else {
-		let screenSharingContainer = document.getElementById("screen-sharing-container")
-		if (screenSharingContainer) screenSharingContainer.remove()
-		parameter.isScreenSharing.isScreenSharing = false
-		parameter.isScreenSharing.socketId = undefined
-		videoContainer.removeAttribute("class")
-		slideUserVideoButton({ status: false })
-	}
-}
-
-const changeLayoutScreenSharing = ({ parameter, status }) => {
-	let upperContainer = document.getElementById("upper-container")
-	let videoContainer = document.getElementById("video-container")
-
-	if (status) {
-		let userListButton = document.getElementById("user-list-button")
-		let screenSharingContainer = document.createElement("div")
-
-		screenSharingContainer.id = "screen-sharing-container"
-		screenSharingContainer.innerHTML = `<div id="screen-sharing-video-container"><video id="screen-sharing-video" muted autoplay></video></div>`
-		upperContainer.insertBefore(screenSharingContainer, upperContainer.firstChild)
-		videoContainer.className = "video-container-screen-sharing-mode"
-		document.getElementById("screen-sharing-video").srcObject = parameter.screensharing.stream
-		slideUserVideoButton({ status: true })
-		let chatButton = document.getElementById("user-chat-button")
-		if (userListButton.classList[1] == "button-small-custom-clicked" || chatButton.classList[1] == "button-small-custom-clicked") {
-			screenSharingContainer.style.minWidth = "75%"
-			screenSharingContainer.style.maxWidth = "75%"
-		}
-	} else {
-		if (parameter.screensharing.stream) {
-			parameter.screensharing.stream.getTracks().forEach((track) => track.stop())
-		}
-		let screenSharingContainer = document.getElementById("screen-sharing-container")
-		if (screenSharingContainer) screenSharingContainer.remove()
-		parameter.screensharing.stream = null
-		parameter.isScreenSharing.isScreenSharing = false
-		parameter.isScreenSharing.socketId = undefined
-		videoContainer.removeAttribute("class")
-		slideUserVideoButton({ status: false })
-	}
-}
-
-const slideUserVideoButton = ({ status }) => {
-	let bottomContainer = document.getElementById("bottom-container")
-	if (status) {
-		if (document.getElementById("user-video-display-button")) return
-		let userVideoButton = document.createElement("button")
-		userVideoButton.className = "btn button-small-custom"
-		userVideoButton.id = "user-video-display-button"
-		userVideoButton.innerHTML = `<span id="user-video-display-button-tooltip">Display Video</span><i class="fas fa-tv" style="color: #ffffff;"></i>`
-		bottomContainer.insertBefore(userVideoButton, bottomContainer.firstChild)
-
-		userVideoButton.addEventListener("click", () => {
-			let videoContainer = document.getElementById("video-container")
-			if (userVideoButton.classList[1] == "button-small-custom") {
-				userVideoButton.classList.remove("button-small-custom")
-				userVideoButton.classList.add("button-small-custom-clicked")
-				videoContainer.style.left = "0"
-			} else {
-				userVideoButton.classList.remove("button-small-custom-clicked")
-				userVideoButton.classList.add("button-small-custom")
-				videoContainer.style.left = "100%"
-			}
-		})
-	} else {
-		let userVideoButton = document.getElementById("user-video-display-button")
-		if (userVideoButton) userVideoButton.remove()
-	}
-}
-
 const recordVideo = async ({ parameter, socket }) => {
 	try {
 		let recordButton = document.getElementById("user-record-button")
-		console.log(recordButton.firstChild)
-
 		if (recordButton.firstChild.innerHTML == "Start") {
 			recordButton.firstChild.innerHTML = "Started"
 			recordButton.className = "btn btn-danger"
@@ -51993,21 +51376,19 @@ const addMuteAllButton = ({ parameter, socket }) => {
 		parameter.micCondition.socketId = parameter.socketId
 		if (!isExist) {
 			const newElement = document.createElement("button")
-			newElement.id = "mute-all"
-			newElement.className = "btn btn-success"
-			newElement.innerHTML = `<span id="mute-all-text">Mute All</span>`
+			newElement.id = "mute-all-button"
+			newElement.className = "btn button-small-custom"
+			newElement.innerHTML = `<span id="mute-all-button-tooltip">Mute All Users</span><i class="fas fa-user-times" style="color: #ffffff;"></i>`
 			rightSection.insertBefore(newElement, rightSection.firstChild)
 			newElement.addEventListener("click", () => {
-				if (newElement.firstChild.innerHTML == "Mute All") {
+				if (!newElement.hasAttribute("style")) {
 					muteAllParticipants({ parameter, socket })
+					newElement.style.backgroundColor = "red"
 					parameter.micCondition.isLocked = true
-					newElement.className = "btn btn-danger"
-					newElement.firstChild.innerHTML = "Unmute All"
-				} else if (newElement.firstChild.innerHTML == "Unmute All") {
+				} else if (newElement.hasAttribute("style")) {
 					parameter.micCondition.isLocked = false
 					unlockAllMic({ parameter, socket })
-					newElement.firstChild.innerHTML = "Mute All"
-					newElement.className = "btn btn-success"
+					newElement.removeAttribute("style")
 				} else {
 					let ae = document.getElementById("alert-error")
 					ae.className = "show"
@@ -52030,8 +51411,8 @@ const addEndButton = ({ parameter, socket }) => {
 		let rightSection = document.getElementById("right-section")
 		let endButton = document.createElement("button")
 		endButton.id = "end-button"
-		endButton.className = "btn btn-danger"
-		endButton.innerHTML = `<span>End</span>`
+		endButton.className = "btn button-small-custom"
+		endButton.innerHTML = `<span id="end-button-tooltip">End Meeting</span><i class="fas fa-hourglass-end" style="color: #ffffff;"></i>`
 		rightSection.appendChild(endButton)
 		endButton.addEventListener("click", () => {
 			parameter.allUsers.forEach((data) => {
@@ -52238,10 +51619,6 @@ const signPermission = ({ socket, parameter, PPATSocket, data }) => {
 module.exports = {
 	changeMic,
 	turnOffOnCamera,
-	switchCamera,
-	getScreenSharing,
-	changeLayoutScreenSharing,
-	changeLayoutScreenSharingClient,
 	recordVideo,
 	addMuteAllButton,
 	addStartButton,
@@ -52346,11 +51723,6 @@ const removeVideoAndAudio = ({ socketId }) => {
 	}
 }
 
-const removeUserList = ({ id }) => {
-	let removeList = document.getElementById(`user-${id}`)
-	removeList.remove()
-}
-
 const changeLayout = ({ parameter }) => {
 	try {
 		// parameter
@@ -52361,67 +51733,6 @@ const changeLayout = ({ parameter }) => {
 		})
 	} catch (error) {
 		console.log("- Error Changing Layout : ", error)
-	}
-}
-
-const updatingLayout = ({ parameter }) => {
-	try {
-		switch (parameter.totalUsers) {
-			case 1:
-				parameter.previousVideoLayout = parameter.videoLayout
-				parameter.videoLayout = "user-video-container-1"
-				break
-			case 2:
-				parameter.previousVideoLayout = parameter.videoLayout
-				parameter.videoLayout = "user-video-container-2"
-				break
-			case 3:
-				parameter.previousVideoLayout = parameter.videoLayout
-				parameter.videoLayout = "user-video-container-3"
-				break
-			case 4:
-				parameter.previousVideoLayout = parameter.videoLayout
-				parameter.videoLayout = "user-video-container-4"
-				break
-			case 5:
-				parameter.previousVideoLayout = parameter.videoLayout
-				parameter.videoLayout = "user-video-container-5"
-				break
-			case 6:
-				parameter.previousVideoLayout = parameter.videoLayout
-				parameter.videoLayout = "user-video-container-6"
-				break
-			case 7:
-				parameter.previousVideoLayout = parameter.videoLayout
-				parameter.videoLayout = "user-video-container-7"
-				break
-			case 8:
-				parameter.previousVideoLayout = parameter.videoLayout
-				parameter.videoLayout = "user-video-container-8"
-				break
-			case 9:
-				parameter.previousVideoLayout = parameter.videoLayout
-				parameter.videoLayout = "user-video-container-9"
-				break
-			case 10:
-				parameter.previousVideoLayout = parameter.videoLayout
-				parameter.videoLayout = "user-video-container-10"
-				break
-			case 11:
-				parameter.previousVideoLayout = parameter.videoLayout
-				parameter.videoLayout = "user-video-container-11"
-				break
-			case 12:
-				parameter.previousVideoLayout = parameter.videoLayout
-				parameter.videoLayout = "user-video-container-12"
-				break
-			default:
-				parameter.previousVideoLayout = parameter.videoLayout
-				parameter.videoLayout = "user-video-container-12"
-				break
-		}
-	} catch (error) {
-		console.log("- Failed Updating Layout : ", error)
 	}
 }
 
@@ -52494,45 +51805,28 @@ module.exports = {
 	insertVideo,
 	removeVideoAndAudio,
 	changeLayout,
-	updatingLayout,
 	createAudioVisualizer,
 	changeUserMic,
-	removeUserList,
 }
 
 },{"../button":236}],238:[function(require,module,exports){
 const {
-	changeUserListMicIcon,
-	sendMessage,
-	receiveMessage,
-	hideOptionMenu,
-	showOptionMenu,
-	scrollToBottom,
-	checkLocalStorage,
 	changeAppData,
 	getPdf,
 	renderPage,
 	goHome,
-	verifyUser,
 	addPdfController,
 	firstPdfControl,
 	signDocument,
 	updateDocuments,
 	addTataTertibTemplate,
-	htmlToCanvas,
-	addZoomInOutEventListener,
 } = require("../room/function")
-const { getMyStream, getRoomId, joinRoom } = require("../room/function/initialization")
+const { getMyStream, joinRoom } = require("../room/function/initialization")
 const { signalNewConsumerTransport } = require("../room/function/mediasoup")
 const { Parameters } = require("../room/function/parameter")
 const {
 	changeMic,
 	turnOffOnCamera,
-	switchCamera,
-	getScreenSharing,
-	changeLayoutScreenSharing,
-	changeLayoutScreenSharingClient,
-	recordVideo,
 	displayMainEvent,
 	unlockOverflow,
 	addMuteAllButton,
@@ -52544,7 +51838,7 @@ const {
 	signPermission,
 	addReloadButton,
 } = require("../room/ui/button")
-const { createMyVideo, removeVideoAndAudio, updatingLayout, changeLayout, changeUserMic, removeUserList } = require("../room/ui/video")
+const { createMyVideo, removeVideoAndAudio, changeUserMic } = require("../room/ui/video")
 
 let parameter
 
@@ -52563,8 +51857,6 @@ socket.on("connection-success", async ({ socketId }) => {
 		parameter.isAudio = true
 		await getPdf({ parameter, pdfDocument: "aktaDocument" })
 		await addTataTertibTemplate({ templateTataTertib })
-		// await addZoomInOutEventListener({ parameter, pdfDocument: "aktaDocument" })
-		// await htmlToCanvas({ templateTataTertibImage })
 		const windowWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth
 		const windowHeight = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight
 		console.log(`Window Width: ${windowWidth}px`)
@@ -52582,8 +51874,6 @@ socket.on("connection-success", async ({ socketId }) => {
 			await addPPATSignButton({ parameter, socket })
 			await addReloadButton({ parameter, socket })
 		}
-		// await getRoomId(parameter)
-		// await checkLocalStorage({ parameter })
 		await getMyStream(parameter)
 		await createMyVideo(parameter)
 		await joinRoom({ socket, parameter })
@@ -52623,10 +51913,6 @@ socket.on("producer-closed", ({ remoteProducerId, socketId }) => {
 			turnOffOnCamera({ id: socketId, status: false })
 		}
 
-		if (kind == "screensharing") {
-			changeLayoutScreenSharingClient({ track: null, id: checkData.socketId, parameter, status: false })
-		}
-
 		if (kind == "screensharingaudio") {
 			let screensharingAudio = document.getElementById(`${socketId}screensharingaudio`)
 			if (screensharingAudio) screensharingAudio.remove()
@@ -52639,13 +51925,7 @@ socket.on("producer-closed", ({ remoteProducerId, socketId }) => {
 		if (checkData && !checkData.audio && !checkData.video) {
 			parameter.allUsers = parameter.allUsers.filter((data) => data.socketId !== socketId)
 			parameter.totalUsers--
-			// updatingLayout({ parameter })
-			// changeLayout({ parameter })
 			removeVideoAndAudio({ socketId })
-			// removeUserList({ id: socketId })
-			if (checkData.screensharing) {
-				changeLayoutScreenSharingClient({ track: null, id: checkData.socketId, parameter, status: false })
-			}
 		}
 	} catch (error) {
 		console.log("- Error Closing Producer : ", error)
@@ -52656,29 +51936,21 @@ socket.on("mic-config", ({ id, isMicActive }) => {
 	changeUserMic({ parameter, isMicActive, id })
 })
 
-socket.on("receive-message", ({ message, sender, messageDate }) => {
-	try {
-		receiveMessage({ message, sender, date: messageDate })
-	} catch (error) {
-		console.log("- Error Receving Message Socker : ", error)
-	}
-})
-
 // Mute All
 socket.on("mute-all", ({ hostSocketId }) => {
 	try {
 		let micButton = document.getElementById("user-mic-button")
 		let myIconMic = document.getElementById(`user-mic-${socket.id}`)
+		const myIconMicButton = document.getElementById("turn-on-off-mic-icons")
 		if (myIconMic) myIconMic.src = "/assets/pictures/micOff.png"
 		parameter.micCondition.isLocked = true
 		parameter.micCondition.socketId = hostSocketId
-		micButton.classList.replace("btn-success", "btn-danger")
-		micButton.firstElementChild.innerHTML = "Muted"
+		myIconMicButton.classList.replace("fa-microphone", "fa-microphone-slash")
+		micButton.style.backgroundColor = "red"
 		let user = parameter.allUsers.find((data) => data.socketId == socket.id)
 		user.audio.track.enabled = false
 		user.audio.isActive = false
 		changeMic({ parameter, status: false, socket })
-		changeUserListMicIcon({ status: true, id: socket.id })
 	} catch (error) {
 		console.log("- Error Muting All Participants : ", error)
 	}
@@ -52700,7 +51972,6 @@ socket.on("change-scroll", ({ socketId, value, type }) => {
 				let pdfContainer = document.getElementById("pdf-container")
 				console.log(value)
 				let totalScroll = pdfContainer.scrollHeight - pdfContainer.clientHeight
-				// let scrolled = (value / 100) * totalScroll
 				let scrolled = Math.floor((totalScroll * value) / 100)
 				pdfContainer.scrollTop = scrolled
 				break
@@ -52749,31 +52020,6 @@ socket.on("reload-document", ({ message }) => {
 
 /**  EVENT LISTENER  **/
 
-// let dummyButton = document.getElementById("dummy-button")
-// dummyButton.addEventListener("click", async () => {
-// 	let url = "https://192.168.18.68:3001/documents"
-
-// 	let data = {
-// 		isPPAT: true,
-// 		username: parameter.username,
-// 		room: parameter.roomName,
-// 		role: "PPAT",
-// 	}
-// 	let response = await fetch(url, {
-// 		method: "POST",
-// 		headers: {
-// 			"Content-Type": "application/json",
-// 		},
-// 		body: JSON.stringify(data),
-// 	})
-
-// 	if (response.ok) {
-// 		console.log("File uploaded successfully")
-// 	} else {
-// 		console.error("File upload failed")
-// 	}
-// })
-
 let micButton = document.getElementById("user-mic-button")
 micButton.addEventListener("click", () => {
 	if (parameter.micCondition.isLocked && !parameter.isHost) {
@@ -52790,8 +52036,8 @@ micButton.addEventListener("click", () => {
 	let isActive = micButton.firstElementChild.innerHTML
 	let myIconMic = document.getElementById(`user-mic-${socket.id}`)
 	let user = parameter.allUsers.find((data) => data.socketId == socket.id)
-	console.log(isActive)
-	if (isActive == "Mute") {
+	const myMicIcons = document.getElementById("turn-on-off-mic-icons")
+	if (myMicIcons.classList.contains("fa-microphone")) {
 		parameter.isAudio = false
 		changeAppData({
 			socket,
@@ -52803,7 +52049,9 @@ micButton.addEventListener("click", () => {
 		user.audio.isActive = false
 		myIconMic.src = "/assets/pictures/micOff.png"
 		changeMic({ parameter, status: false, socket })
-		micButton.firstElementChild.innerHTML = "Muted"
+		// micButton.firstElementChild.innerHTML = "Muted"
+		myMicIcons.classList.replace("fa-microphone", "fa-microphone-slash")
+		micButton.style.backgroundColor = "red"
 	} else {
 		parameter.isAudio = false
 		changeAppData({
@@ -52816,7 +52064,47 @@ micButton.addEventListener("click", () => {
 		user.audio.isActive = true
 		myIconMic.src = "/assets/pictures/micOn.png"
 		changeMic({ parameter, status: true, socket })
-		micButton.firstElementChild.innerHTML = "Mute"
+		// micButton.firstElementChild.innerHTML = "Mute"
+		myMicIcons.classList.replace("fa-microphone-slash", "fa-microphone")
+		micButton.removeAttribute("style")
+	}
+})
+
+const userVideoButton = document.getElementById("display-video-button")
+userVideoButton.addEventListener("click", () => {
+	try {
+		const phoneMaxWidth = 850
+
+		const videoContainer = document.getElementById("video-container")
+		const displayUserIcon = document.getElementById("display-users-icons")
+		if (window.innerWidth <= phoneMaxWidth) {
+			if (!userVideoButton.hasAttribute("style")) {
+				videoContainer.style.right = "0"
+				userVideoButton.style.backgroundColor = "red"
+			} else {
+				videoContainer.style.right = "-100%"
+				userVideoButton.removeAttribute("style")
+			}
+		} else {
+			videoContainer.removeAttribute("style")
+			displayUserIcon.classList.replace("fa-users-slash", "fa-users")
+			userVideoButton.removeAttribute("style")
+		}
+	} catch (error) {
+		console.log("- Error Displaying User : ", error)
+	}
+})
+
+const raiseHandButton = document.getElementById("raise-hand-button")
+raiseHandButton.addEventListener("click", () => {
+	try {
+		if (!raiseHandButton.hasAttribute("style")){
+			raiseHandButton.style.backgroundColor = "red"
+		} else {
+			raiseHandButton.removeAttribute("style")
+		}
+	} catch (error) {
+		console.log("- Error Raising Hand : ", error)
 	}
 })
 

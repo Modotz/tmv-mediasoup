@@ -20,6 +20,7 @@
     <!-- <script src="https://www.jsdelivr.com/package/npm/pdfjs-dist"></script> -->
     <title>Telepati</title>
     <style>
+        /* Root Container */
         * {
             margin: 0;
             padding: 0;
@@ -27,30 +28,6 @@
 
         html {
             font-size: 1vw;
-        }
-
-        #tata-tertib>ol>li>p {
-            font-size: 1rem;
-        }
-
-        #tata-tertib>h1 {
-            font-size: 2.4rem;
-        }
-
-        #tata-tertib>h2 {
-            font-size: 2.2rem;
-        }
-
-        #tata-tertib>h3 {
-            font-size: 2rem;
-        }
-
-        #tata-tertib>h4 {
-            font-size: 1.8rem;
-        }
-
-        #tata-tertib>#template-room>p {
-            font-size: 1rem;
         }
 
         ::-webkit-scrollbar-track {
@@ -79,6 +56,8 @@
             position: relative;
         }
 
+        /* Upper Container */
+
         #upper-container {
             width: 100%;
             height: 90%;
@@ -87,30 +66,13 @@
             display: flex;
         }
 
-        #bottom-container {
-            width: 100%;
-            height: 10%;
-            display: flex;
-            justify-content: space-evenly;
-            align-items: center;
-            position: relative;
-        }
-
-        #left-section,
-        #right-section {
-            display: flex;
-        }
-
-        #right-section>button,
-        #left-section>button {
-            margin: 3px;
-        }
-
+        /* Video Container */
 
         #video-container {
             padding: 10px;
-            min-width: 40%;
-            max-width: 40%;
+            /* min-width: 40%;
+            max-width: 40%; */
+            width: 40%;
             height: 100%;
             display: flex;
             justify-content: center;
@@ -121,106 +83,6 @@
             z-index: 1;
             transition: 1s;
             /* background-color: red; */
-        }
-
-        .unlock-scroll {
-            overflow-y: auto !important;
-        }
-
-        .hide-side-bar {
-            display: none;
-        }
-
-        .show-side-bar {
-            display: block;
-        }
-
-        .hide-username {
-            visibility: hidden;
-            height: 0;
-            padding: 0;
-            margin: 0;
-        }
-
-        #side-bar-container {
-            width: 60%;
-            height: 100%;
-            top: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-wrap: wrap;
-            background-color: #fff;
-            overflow-y: hidden;
-            overflow-x: hidden;
-            padding: 1vw;
-        }
-
-        #pdf-container {
-            height: 90%;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            overflow-y: hidden;
-            flex-wrap: wrap;
-        }
-
-        #pdf-document {
-            width: 100%;
-            height: 100%;
-            /* padding: 1em; */
-            /* aspect-ratio: 7/8; */
-        }
-
-        #pdf-controller {
-            width: 100%;
-            height: 10%;
-            text-align: center;
-            display: flex;
-            justify-content: center;
-            align-items: baseline;
-            flex-wrap: wrap;
-            overflow-y: auto;
-            box-sizing: content-box;
-        }
-
-        #pdf-canvas {
-            /* max-width: 100% !important;
-            max-height: 100% !important; */
-            /* background-color: red; */
-            width: 100%;
-            height: 150%;
-        }
-
-        #tata-tertib {
-            font-size: 1rem;
-            padding: 1em;
-            width: 100%;
-            height: 100%;
-        }
-
-        #user-bar {
-            border-radius: 10px;
-            background-color: #f1f1f1;
-            border: 1px solid #d3d3d3;
-            min-width: 100%;
-            height: 100%;
-            text-align: center;
-        }
-
-        #user-bar-header {
-            background: #2196f3;
-            color: #fff;
-            cursor: move;
-            width: 100%;
-            padding: 10px;
-            z-index: 6 !important;
-            border-top-left-radius: 10px;
-            border-top-right-radius: 10px;
-        }
-
-        .hide-event {
-            display: none !important;
         }
 
         .user-video {
@@ -241,42 +103,6 @@
             position: relative;
             transition: 1s;
             margin: 10px;
-        }
-
-        .button-small-custom {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            transition: 0.3s;
-            background: #44474A;
-            margin-left: 10px;
-            margin-right: 10px;
-        }
-
-        .button-small-custom:hover {
-            background-color: #959ca3;
-        }
-
-        .button-big-custom {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #fc5d5b;
-            transition: 0.3s;
-            margin-left: 10px;
-            margin-right: 10px;
-        }
-
-        .button-big-custom:hover {
-            background-color: #ff0000;
         }
 
         .icons-mic {
@@ -310,6 +136,171 @@
             z-index: 4;
         }
 
+        .username {
+            border-radius: 4px;
+            position: absolute;
+            bottom: 0px;
+            left: 0px;
+            color: white;
+            font-size: 11px;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 4px;
+            z-index: 4;
+        }
+
+        .signature {
+            position: absolute;
+            top: 0;
+            left: 0;
+            padding: 5px;
+            font-size: 7px;
+        }
+
+        /* Main Content */
+
+        #side-bar-container {
+            width: 60%;
+            height: 100%;
+            top: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            background-color: #fff;
+            overflow-y: hidden;
+            overflow-x: hidden;
+            padding: 1vw;
+            position: relative;
+        }
+
+        /* Main Content -> Tata Tertib Section*/
+
+        #tata-tertib {
+            /* font-size: 1rem; */
+            padding: 1em;
+            width: 100%;
+            height: 100%;
+        }
+
+        #template-room {
+            width: 100%;
+            padding: 10px;
+            /* Optional: Add padding to the content */
+        }
+
+        #template-room>p>img {
+            max-width: 100%;
+        }
+
+        /* Main Content -> PDF Section*/
+
+        #pdf-container {
+            height: 90%;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            overflow-y: hidden;
+            flex-wrap: wrap;
+        }
+
+        #pdf-document {
+            width: 100%;
+            height: 100%;
+        }
+
+        #pdf-controller {
+            width: 100%;
+            height: 10%;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: baseline;
+            flex-wrap: wrap;
+            overflow-y: auto;
+            box-sizing: content-box;
+        }
+
+        #pdf-canvas {
+            width: 100%;
+            height: 150%;
+        }
+
+        /* Bottom Container */
+
+        #bottom-container {
+            width: 100%;
+            height: 10%;
+            display: flex;
+            justify-content: space-evenly;
+            align-items: center;
+            position: relative;
+        }
+
+        #left-section,
+        #right-section {
+            display: flex;
+            align-items: center;
+        }
+
+        #right-section>button,
+        #left-section>button {
+            margin: 3px;
+        }
+
+        .button-small-custom {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            /* width: 40px; */
+            height: 40px;
+            border-radius: 50%;
+            transition: 0.3s;
+            background: #44474A;
+            margin-left: 10px;
+            margin-right: 10px;
+        }
+
+        .button-small-custom:hover {
+            background-color: #959ca3;
+        }
+
+        #bottom-container>div {
+            height: 100%;
+        }
+
+        /* Bottom Container -> Left Section */
+
+        #bottom-container>#left-section>button {
+            height: 50%;
+        }
+
+        #user-record-button {
+            position: relative;
+        }
+
+        #user-record-button:hover>#user-record-button-tooltip {
+            visibility: visible;
+            z-index: 3;
+        }
+
+        #user-record-button-tooltip {
+            background-color: #bbbbbba1;
+            white-space: nowrap;
+            border-radius: 10px;
+            padding: 10px;
+            position: absolute;
+            visibility: hidden;
+            top: -100%;
+        }
+
+        /* Bottom Container -> Right Section */
+
+        #bottom-container>#right-section>button {
+            height: 50%;
+            aspect-ratio: 1/1;
+        }
+
         #user-mic-button {
             position: relative;
         }
@@ -329,16 +320,16 @@
             top: -100%;
         }
 
-        #user-turn-on-off-camera-button {
+        #mute-all-button {
             position: relative;
         }
 
-        #user-turn-on-off-camera-button:hover>#user-turn-on-off-camera-button-tooltip {
+        #mute-all-button:hover>#mute-all-button-tooltip {
             visibility: visible;
             z-index: 3;
         }
 
-        #user-turn-on-off-camera-button-tooltip {
+        #mute-all-button-tooltip {
             background-color: #bbbbbba1;
             white-space: nowrap;
             border-radius: 10px;
@@ -346,6 +337,75 @@
             position: absolute;
             visibility: hidden;
             top: -100%;
+        }
+
+        #raise-hand-button {
+            position: relative;
+        }
+
+        #raise-hand-button:hover>#raise-hand-button-tooltip {
+            visibility: visible;
+            z-index: 3;
+        }
+
+        #raise-hand-button-tooltip {
+            background-color: #bbbbbba1;
+            white-space: nowrap;
+            border-radius: 10px;
+            padding: 10px;
+            position: absolute;
+            visibility: hidden;
+            top: -100%;
+        }
+
+        #end-button {
+            position: relative;
+        }
+
+        #end-button:hover>#end-button-tooltip {
+            visibility: visible;
+            z-index: 3;
+        }
+
+        #end-button-tooltip {
+            background-color: #bbbbbba1;
+            white-space: nowrap;
+            border-radius: 10px;
+            padding: 10px;
+            position: absolute;
+            visibility: hidden;
+            top: -100%;
+        }
+
+        #display-video-button {
+            display: none;
+            position: relative;
+        }
+
+        #display-video-button:hover>#display-video-button-tooltip {
+            visibility: visible;
+            z-index: 3;
+        }
+
+        #display-video-button-tooltip {
+            background-color: #bbbbbba1;
+            white-space: nowrap;
+            border-radius: 10px;
+            padding: 10px;
+            position: absolute;
+            visibility: hidden;
+            top: -100%;
+            left: -100%;
+        }
+
+        /* Miscellaneous Section */
+
+        .unlock-scroll {
+            overflow-y: auto !important;
+        }
+
+        .hide-event {
+            display: none !important;
         }
 
         .video-off {
@@ -373,341 +433,6 @@
             border-radius: 50%;
         }
 
-        #user-hang-up-button {
-            position: relative;
-        }
-
-        #user-hang-up-button:hover>#user-hang-up-button-tooltip {
-            visibility: visible;
-            z-index: 3;
-        }
-
-        #user-hang-up-button-tooltip {
-            background-color: #bbbbbba1;
-            white-space: nowrap;
-            border-radius: 10px;
-            padding: 10px;
-            position: absolute;
-            visibility: hidden;
-            top: -100%;
-        }
-
-        #optional-button-trigger {
-            display: none;
-        }
-
-        @media (max-width: 950px) {
-            #optional-button-trigger {
-                display: block !important;
-            }
-
-            .optional-button-menu {
-                position: absolute;
-                display: flex !important;
-                padding: 10px;
-                height: 200%;
-                z-index: 5;
-                flex-wrap: wrap;
-                width: 100%;
-                background-color: rgba(0, 0, 0, 0.717);
-                border-top-right-radius: 20px;
-                border-top-left-radius: 20px;
-                bottom: -200%;
-                justify-content: center;
-                align-items: center;
-                animation-name: slide-out;
-                animation-duration: 2s;
-            }
-
-            @keyframes slide-out {
-                0% {
-                    bottom: 100%;
-                }
-
-                100% {
-                    bottom: -200%;
-                }
-            }
-
-            .optional-button-menu-show {
-                position: absolute;
-                display: flex;
-                padding: 10px;
-                height: 200%;
-                z-index: 5;
-                flex-wrap: wrap;
-                width: 100%;
-                background-color: rgba(0, 0, 0, 0.717);
-                border-top-right-radius: 20px;
-                border-top-left-radius: 20px;
-                bottom: 100%;
-                justify-content: center;
-                align-items: center;
-                animation-name: slide-in;
-                animation-duration: 2s;
-            }
-
-            @keyframes slide-in {
-                0% {
-                    bottom: -100%;
-                }
-
-                100% {
-                    bottom: 100%;
-                }
-            }
-
-            .optional-button-menu-show>.button-small-custom {
-                width: 25%;
-                height: 25%;
-                margin: 5px;
-                border-radius: 0;
-            }
-
-            .optional-button-menu-show>.button-small-custom-clicked {
-                width: 25%;
-                height: 25%;
-                margin: 5px;
-                border-radius: 0;
-                transition: 0.3s;
-                background: #fc5d5b;
-            }
-
-            .optional-button-menu>.button-small-custom {
-                width: 25%;
-                height: 25%;
-                margin: 5px;
-                border-radius: 0;
-            }
-
-            .optional-button-menu>.button-small-custom-clicked {
-                width: 25%;
-                height: 25%;
-                margin: 5px;
-                border-radius: 0;
-                transition: 0.3s;
-                background: #fc5d5b;
-            }
-
-
-            .hide {
-                display: none !important;
-            }
-        }
-
-        .optional-button-menu {
-            display: flex;
-        }
-
-        #user-switch-camera-button {
-            position: relative;
-        }
-
-        #user-switch-camera-button:hover>#user-switch-camera-button-tooltip {
-            visibility: visible;
-            z-index: 3;
-        }
-
-        #user-switch-camera-button-tooltip {
-            background-color: #bbbbbba1;
-            white-space: nowrap;
-            border-radius: 10px;
-            padding: 10px;
-            position: absolute;
-            visibility: hidden;
-            top: -100%;
-        }
-
-        #user-screen-share-button {
-            position: relative;
-        }
-
-        #user-screen-share-button:hover>#user-screen-share-button-tooltip {
-            visibility: visible;
-            z-index: 3;
-        }
-
-        #user-screen-share-button-tooltip {
-            background-color: #bbbbbba1;
-            white-space: nowrap;
-            border-radius: 10px;
-            padding: 10px;
-            position: absolute;
-            visibility: hidden;
-            top: -100%;
-        }
-
-        #user-record-button {
-            position: relative;
-        }
-
-        #user-record-button:hover>#user-record-button-tooltip {
-            visibility: visible;
-            z-index: 3;
-        }
-
-        #user-record-button-tooltip {
-            background-color: #bbbbbba1;
-            white-space: nowrap;
-            border-radius: 10px;
-            padding: 10px;
-            position: absolute;
-            visibility: hidden;
-            top: -100%;
-        }
-
-        #user-list-button {
-            position: relative;
-        }
-
-        #user-list-button:hover>#user-list-button-tooltip {
-            visibility: visible;
-            z-index: 3;
-        }
-
-        #user-list-button-tooltip {
-            background-color: #bbbbbba1;
-            white-space: nowrap;
-            border-radius: 10px;
-            padding: 10px;
-            position: absolute;
-            visibility: hidden;
-            top: -100%;
-        }
-
-        #user-chat-button {
-            position: relative;
-        }
-
-        #user-chat-button:hover>#user-chat-button-tooltip {
-            visibility: visible;
-            z-index: 3;
-        }
-
-        #user-chat-button-tooltip {
-            background-color: #bbbbbba1;
-            white-space: nowrap;
-            border-radius: 10px;
-            padding: 10px;
-            position: absolute;
-            visibility: hidden;
-            top: -100%;
-        }
-
-        #share-link-button {
-            position: relative;
-        }
-
-        #share-link-button:hover>#share-link-button-tooltip {
-            visibility: visible;
-            z-index: 3;
-        }
-
-        #share-link-button-tooltip {
-            background-color: #bbbbbba1;
-            white-space: nowrap;
-            border-radius: 10px;
-            padding: 10px;
-            position: absolute;
-            visibility: hidden;
-            top: -100%;
-        }
-
-        #user-video-display-button {
-            position: relative;
-        }
-
-        #user-video-display-button:hover>#user-video-display-button-tooltip {
-            visibility: visible;
-            z-index: 3;
-        }
-
-        #user-video-display-button-tooltip {
-            background-color: #bbbbbba1;
-            white-space: nowrap;
-            border-radius: 10px;
-            padding: 10px;
-            position: absolute;
-            visibility: hidden;
-            top: -100%;
-        }
-
-        #snackbar {
-            visibility: hidden;
-            color: #fff;
-            background-color: #333;
-            margin-left: -125px;
-            border-radius: 10px;
-            padding: 10px;
-            text-align: center;
-            bottom: 30px;
-            right: -50px;
-            z-index: 4;
-            position: absolute;
-        }
-
-        #snackbar.show {
-            visibility: visible;
-            -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
-            animation: fadein 0.5s, fadeout 0.5s 2.5s;
-        }
-
-        .notification {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-        }
-
-        .screen-sharing-template {
-            position: absolute;
-        }
-
-        .button-small-custom-clicked {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            transition: 0.3s;
-            background: #fc5d5b;
-            margin-left: 10px;
-            margin-right: 10px;
-        }
-
-        .button-small-custom-clicked:hover {
-            background-color: #ff0000;
-        }
-
-        #screen-sharing-container {
-            min-width: 100%;
-            max-width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: 1s;
-        }
-
-        #screen-sharing-video-container {
-            width: 80%;
-            height: 80%;
-        }
-
-        #screen-sharing-video {
-            width: 100%;
-            max-height: 100%;
-            position: relative;
-        }
-
-        .video-container-screen-sharing-mode {
-            position: absolute !important;
-            left: 100%;
-            transition: 1s;
-            background-color: #1e1f20;
-        }
-
         .record-timer {
             position: absolute;
             display: flex;
@@ -719,284 +444,6 @@
             border-radius: 10px;
             font-size: 12px;
             padding: 10px;
-        }
-
-        #user-list {
-            text-align: left;
-            padding-left: 10px;
-        }
-
-        #user-list>p {
-            margin-bottom: 0px;
-        }
-
-        .user-list-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 10px;
-        }
-
-        .mini-picture {
-            height: 100%;
-            border-radius: 50%;
-            margin-right: 3px;
-        }
-
-        .profile-list {
-            height: 25px;
-            display: flex;
-            align-items: center;
-        }
-
-        .user-list-icons-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .user-list-microphone {
-            border-radius: 50%;
-            background-color: #44474A;
-            padding: 5px;
-            margin: 5px;
-        }
-
-        .user-list-camera {
-            border-radius: 50%;
-            background-color: #44474A;
-            padding: 5px;
-            margin: 5px;
-        }
-
-        #chat-bar-box-id {
-            min-width: 100%;
-            height: 100%;
-            border-radius: 10px;
-            background-color: white;
-        }
-
-        #chat-bar-header {
-            text-align: center;
-            position: relative;
-            border-top-right-radius: 5px;
-            border-top-left-radius: 5px;
-            background-color: #2196f3;
-            color: #fff;
-            width: 100%;
-            height: 5%;
-            padding: 10px;
-            z-index: 6;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .chat-container {
-            background-color: white;
-            font-size: 13px;
-            width: 100%;
-            height: 88%;
-            /* max-height: 200px;
-            max-width: 100%;
-            min-height: 200px; */
-            overflow-y: auto;
-            padding-bottom: 10px;
-            position: relative;
-        }
-
-        .chat-footer {
-            width: 100%;
-            background-color: white;
-            height: 7%;
-            border-bottom-left-radius: 10px;
-            border-bottom-right-radius: 10px;
-        }
-
-        .chat-send {
-            bottom: 0;
-            display: flex;
-            height: 100%;
-            justify-content: center;
-            padding: 5px;
-            position: -webkit-sticky;
-            position: sticky;
-            width: 100%;
-        }
-
-        #sending-message {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100%;
-            width: 100%;
-        }
-
-        .send-button {
-            margin-left: 0;
-            width: 15% !important;
-            height: 90%;
-            background-color: #2196f3;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border-radius: 0 !important;
-            border-top-right-radius: 5px !important;
-            border-bottom-right-radius: 5px !important;
-        }
-
-        .your-messages {
-            text-align: right;
-            width: 100%;
-        }
-
-        .sender {
-            margin: 0;
-        }
-
-        .your-messages>.sender {
-            display: none;
-        }
-
-        .your-message {
-            width: 100%;
-            margin: 0;
-            display: flex;
-            justify-content: right;
-        }
-
-        .received-message {
-            width: 100%;
-            margin: 0;
-            display: flex;
-            justify-content: left;
-        }
-
-        .received-message>.inside-message {
-            max-width: 50%;
-            background-color: #D2D6DE;
-            color: black;
-            border-radius: 10px;
-            border-top-left-radius: 5px !important;
-            padding: 5px;
-            overflow: hidden;
-            display: flex;
-            flex-wrap: wrap;
-            word-break: break-all;
-        }
-
-        .your-message>.inside-message {
-            max-width: 50%;
-            background-color: #D2D6DE;
-            color: black;
-            border-radius: 10px;
-            border-top-right-radius: 5px !important;
-            padding: 5px;
-            overflow: hidden;
-            display: flex;
-            flex-wrap: wrap;
-            word-break: break-all;
-        }
-
-        .received-messages {
-            text-align: left;
-            width: 100%;
-        }
-
-        .type-box {
-            height: 90%;
-            width: 70% !important;
-            color: black !important;
-            width: 75% !important;
-            background-color: white !important;
-            border-radius: 0 !important;
-            border-bottom-left-radius: 5px !important;
-            border-top-left-radius: 5px !important;
-            padding: 5px;
-            margin-right: 0;
-            font-size: 7px;
-        }
-
-        .button-v2 {
-            background-color: rgb(60, 64, 67);
-            border-radius: 20px;
-            width: 40px;
-        }
-
-        .message-container {
-            margin: 10px;
-        }
-
-        .message-time {
-            font-size: 10px;
-        }
-
-        .notification {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-        }
-
-        .new-message-text {
-            text-align: center;
-        }
-
-        .new-message-line {
-            height: 1px;
-            background-color: #ccc;
-            margin-top: 5px;
-            margin-bottom: 10px;
-        }
-
-        .send-text {
-            font-size: 13px;
-            color: white;
-            font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-        }
-
-        #option-button {
-            position: relative;
-        }
-
-        #option-button:hover>#option-button-tooltip {
-            visibility: visible;
-            z-index: 3;
-        }
-
-        #option-button-tooltip {
-            background-color: #bbbbbba1;
-            white-space: nowrap;
-            border-radius: 10px;
-            padding: 10px;
-            position: absolute;
-            visibility: hidden;
-            top: -100%;
-        }
-
-        #option-menu {
-            z-index: 5;
-            position: absolute;
-            background-color: rgba(68, 71, 74, 0.7);
-            padding: 10px;
-            bottom: 40px;
-            color: #fff;
-            border-radius: 10px;
-        }
-
-        #option-menu>ul {
-            list-style-type: none;
-            margin: 0;
-            padding: 0;
-        }
-
-        #option-menu>ul>li {
-            padding: 5px;
-            white-space: nowrap;
-            text-align: left;
-        }
-
-        #option-menu>ul>li:hover {
-            background-color: rgba(68, 71, 74, 1);
         }
 
         #alert-error {
@@ -1019,50 +466,83 @@
             animation: fadein-as 0.5s, fadeout-as 0.5s 2.5s;
         }
 
-        .username {
-            border-radius: 4px;
-            position: absolute;
-            bottom: 0px;
-            left: 0px;
-            color: white;
-            font-size: 11px;
-            background: rgba(0, 0, 0, 0.4);
-            padding: 4px;
-            z-index: 4;
-        }
-
-        .signature {
-            position: absolute;
-            top: 0;
-            left: 0;
-            padding: 5px;
-            font-size: 7px;
-        }
-
-        .square-button {
-            background-color: red;
-        }
-
-        #template-room {
+        .modal-custom-align,
+        #sign-password-label {
+            text-align: center !important;
             width: 100%;
-            padding: 10px;
-            /* Optional: Add padding to the content */
         }
 
-        #template-room-canvas {
-            width: 100% !important;
+        .modal-header-custom {
+            width: 100%;
+        }
+
+        /* Responsive Section */
+
+        @media (max-width: 850px) {
+            /* Main Content */
+
+            #side-bar-container {
+                width: 100%;
+                position: relative;
+            }
+
+            #pdf-controller,
+            #pdf-controller>button {
+                font-size: 3rem;
+            }
+
+            /* Main Content -> Tata Tertib Section */
+
+            #tata-tertib {
+                font-size: 12px;
+            }
+
+            #tata-tertib>h3 {
+                font-size: 20px;
+            }
+
+            /* Video Container */
+
+            #video-container {
+                /* width: 0%;
+                transition: 1s; */
+                /* display: none; */
+                position: absolute;
+                right: -100%;
+                height: 100%;
+                width: 100%;
+                background-color: black;
+                transition: 1s;
+            }
+
+            /* Bottom Container */
+
+            #bottom-container>div>button {
+                font-size: 15px;
+            }
+
+            /* Bottom Container > Right Section*/
+
+            #display-video-button {
+                display: block !important;
+            }
+
+            /* Miscellaneous Section */
+
+            .modal-content {
+                height: 30%;
+            }
         }
     </style>
 </head>
 
 <body>
-    <!-- <%- include('partials/provider2.ejs') %> -->
     <div id="full-container">
         <div class="modal fade" id="sign-password" tabindex="-1" role="dialog" aria-labelledby="sign-password-label"
             aria-hidden="true">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content modal-custom-align">
+                    <div class="modal-header modal-header-custom">
                         <h5 class="modal-title" id="sign-password-label">Sign Document</h5>
                     </div>
                     <div class="modal-body">
@@ -1133,13 +613,12 @@
                 </section>
                 <section id="pdf-document" class="hide-event">
                     <div id="pdf-controller">
-                        <!-- <button id="zoom-out-pdf" class="btn btn-info">--</button> -->
                         <p>Page : <span id="current-page"></span> / <span id="total-page"></span></p>
-                        <!-- <button id="zoom-in-pdf" class="btn btn-info">++</button> -->
                     </div>
                     <div id="pdf-container">
                     </div>
                 </section>
+                <section id="raise-hand-queue"></section>
             </div>
             <div id="video-container">
             </div>
@@ -1148,8 +627,17 @@
             <div id="left-section">
             </div>
             <div id="right-section">
-                <button class="btn btn-success" id="user-mic-button">
-                    <span>Mute</span>
+                <button class="btn button-small-custom" id="user-mic-button">
+                    <span id="user-mic-button-tooltip">Microphone</span>
+                    <i class="fas fa-microphone" style="color: #ffffff;" id="turn-on-off-mic-icons"></i>
+                </button>
+                <button class="btn button-small-custom" id="display-video-button">
+                    <span id="display-video-button-tooltip">Participants</span>
+                    <i class="fas fa-users" style="color: #ffffff;" id="display-users-icons"></i>
+                </button>
+                <button class="btn button-small-custom" id="raise-hand-button">
+                    <span id="raise-hand-button-tooltip">Raise</span>
+                    <i class="fas fa-hand-paper" style="color: #ffffff;" id="display-users-icons"></i>
                 </button>
             </div>
         </section>

@@ -1,17 +1,9 @@
 const mediasoupClient = require("mediasoup-client")
-const { createVideo, createAudio, insertVideo, updatingLayout, changeLayout, createAudioVisualizer } = require("../ui/video")
+const { createVideo, createAudio, insertVideo, changeLayout, createAudioVisualizer } = require("../ui/video")
 const {
 	turnOffOnCamera,
-	changeLayoutScreenSharingClient,
-	addMuteAllButton,
-	addEndButton,
-	addStartButton,
-	addRulesButton,
-	addAktaButton,
-	unlockOverflow,
-	addPPATSignButton,
 } = require("../ui/button")
-const { muteAllParticipants, goToLobby, addPdfController, firstPdfControl } = require(".")
+const { muteAllParticipants, goToLobby } = require(".")
 const { encodingVP8, encodingsVP9 } = require("../config/mediasoup")
 
 const getEncoding = ({ parameter }) => {
@@ -72,21 +64,6 @@ const createSendTransport = async ({ socket, parameter }) => {
 						async ({ id, producersExist, kind }) => {
 							await callback({ id })
 							if (producersExist && kind == "audio") await getProducers({ parameter, socket })
-							// if (!producersExist) {
-							// 	parameter.isHost = true
-							// 	let pdfController = document.getElementById("pdf-controller")
-							// 	if (pdfController.childElementCount == 1) {
-							// 		addPdfController()
-							// 		unlockOverflow({ element: "side-bar-container", socket, parameter })
-							// 		firstPdfControl({ parameter, socket, pdfDocument: "aktaDocument" })
-							// 		addMuteAllButton({ parameter, socket })
-							// 		addEndButton({ parameter, socket })
-							// 		addStartButton({ parameter, socket })
-							// 		addRulesButton({ parameter, socket })
-							// 		addAktaButton({ parameter, socket })
-							// 		addPPATSignButton({ parameter, socket })
-							// 	}
-							// }
 						}
 					)
 				} catch (error) {
@@ -118,10 +95,8 @@ const connectSendTransport = async (parameter) => {
 		if (parameter.initialVideo) {
 			parameter.videoProducer = await parameter.producerTransport.produce(parameter.videoParams)
 			await parameter.videoProducer.setMaxSpatialLayer(1)
-			// console.log("- Producer : ", parameter.videoProducer)
 			myData.video.producerId = parameter.videoProducer.id
 			myData.video.transportId = parameter.producerTransport.id
-			// parameter.videoProducer.setMaxIncomingBitrate(900000)
 			parameter.videoProducer.on("trackended", () => {
 				console.log("video track ended")
 			})
@@ -236,21 +211,6 @@ const connectRecvTransport = async ({ parameter, consumerTransport, socket, remo
 						streamId,
 					})
 
-					// if (params.kind == "video") {
-					// 	let withCodec,
-					// 		withoutCodec = 0
-					// 	const stat = setInterval(async () => {
-					// 		const report = await parameter.consumerTransport.getStats()
-					// 		for (const value of report.values()) {
-					// 			if (value.kind == "video" && value.codecId) {
-					// 				console.log("- With Codec : ", value.bytesReceived - withCodec)
-					// 				withCodec = value.bytesReceived
-					// 				// break
-					// 			}
-					// 		}
-					// 	}, 1000)
-					// }
-
 					let isUserExist = parameter.allUsers.find((data) => data.socketId == params.producerSocketOwner)
 					const { track } = consumer
 
@@ -281,8 +241,6 @@ const connectRecvTransport = async ({ parameter, consumerTransport, socket, remo
 							transportId: consumerTransport.id,
 						}
 						parameter.allUsers = [...parameter.allUsers, data]
-						// updatingLayout({ parameter })
-						// changeLayout({ parameter })
 						createVideo({
 							parameter,
 							id: params.producerSocketOwner,
@@ -301,9 +259,6 @@ const connectRecvTransport = async ({ parameter, consumerTransport, socket, remo
 					if (params.kind == "video" && params.appData.label == "video") {
 						insertVideo({ id: params.producerSocketOwner, track, pictures: "/assets/pictures/unknown.jpg" })
 						turnOffOnCamera({ id: params.producerSocketOwner, status: true })
-					}
-					if (params.appData.label == "screensharing") {
-						changeLayoutScreenSharingClient({ track, id: params.producerSocketOwner, parameter, status: true })
 					}
 					if (params.kind == "audio" && params.appData.label == "screensharingaudio") {
 						createAudio({ id: params.producerSocketOwner + "screensharingaudio", track })

@@ -87,11 +87,6 @@ const removeVideoAndAudio = ({ socketId }) => {
 	}
 }
 
-const removeUserList = ({ id }) => {
-	let removeList = document.getElementById(`user-${id}`)
-	removeList.remove()
-}
-
 const changeLayout = ({ parameter }) => {
 	try {
 		// parameter
@@ -102,67 +97,6 @@ const changeLayout = ({ parameter }) => {
 		})
 	} catch (error) {
 		console.log("- Error Changing Layout : ", error)
-	}
-}
-
-const updatingLayout = ({ parameter }) => {
-	try {
-		switch (parameter.totalUsers) {
-			case 1:
-				parameter.previousVideoLayout = parameter.videoLayout
-				parameter.videoLayout = "user-video-container-1"
-				break
-			case 2:
-				parameter.previousVideoLayout = parameter.videoLayout
-				parameter.videoLayout = "user-video-container-2"
-				break
-			case 3:
-				parameter.previousVideoLayout = parameter.videoLayout
-				parameter.videoLayout = "user-video-container-3"
-				break
-			case 4:
-				parameter.previousVideoLayout = parameter.videoLayout
-				parameter.videoLayout = "user-video-container-4"
-				break
-			case 5:
-				parameter.previousVideoLayout = parameter.videoLayout
-				parameter.videoLayout = "user-video-container-5"
-				break
-			case 6:
-				parameter.previousVideoLayout = parameter.videoLayout
-				parameter.videoLayout = "user-video-container-6"
-				break
-			case 7:
-				parameter.previousVideoLayout = parameter.videoLayout
-				parameter.videoLayout = "user-video-container-7"
-				break
-			case 8:
-				parameter.previousVideoLayout = parameter.videoLayout
-				parameter.videoLayout = "user-video-container-8"
-				break
-			case 9:
-				parameter.previousVideoLayout = parameter.videoLayout
-				parameter.videoLayout = "user-video-container-9"
-				break
-			case 10:
-				parameter.previousVideoLayout = parameter.videoLayout
-				parameter.videoLayout = "user-video-container-10"
-				break
-			case 11:
-				parameter.previousVideoLayout = parameter.videoLayout
-				parameter.videoLayout = "user-video-container-11"
-				break
-			case 12:
-				parameter.previousVideoLayout = parameter.videoLayout
-				parameter.videoLayout = "user-video-container-12"
-				break
-			default:
-				parameter.previousVideoLayout = parameter.videoLayout
-				parameter.videoLayout = "user-video-container-12"
-				break
-		}
-	} catch (error) {
-		console.log("- Failed Updating Layout : ", error)
 	}
 }
 
@@ -235,8 +169,6 @@ module.exports = {
 	insertVideo,
 	removeVideoAndAudio,
 	changeLayout,
-	updatingLayout,
 	createAudioVisualizer,
 	changeUserMic,
-	removeUserList,
 }

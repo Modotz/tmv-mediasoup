@@ -8,6 +8,11 @@ const {
 	signDocument,
 	updateDocuments,
 	addTataTertibTemplate,
+	raiseAndUnraiseHand,
+	createUserList,
+	removeUserList,
+	editUserListRaiseHand,
+	queueRenderPage,
 } = require("../room/function")
 const { getMyStream, joinRoom } = require("../room/function/initialization")
 const { signalNewConsumerTransport } = require("../room/function/mediasoup")
@@ -25,6 +30,8 @@ const {
 	addPPATSignButton,
 	signPermission,
 	addReloadButton,
+	createQueueRaiseHand,
+	removeQueueRaiseHand,
 } = require("../room/ui/button")
 const { createMyVideo, removeVideoAndAudio, changeUserMic } = require("../room/ui/video")
 
@@ -45,10 +52,6 @@ socket.on("connection-success", async ({ socketId }) => {
 		parameter.isAudio = true
 		await getPdf({ parameter, pdfDocument: "aktaDocument" })
 		await addTataTertibTemplate({ templateTataTertib })
-		const windowWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth
-		const windowHeight = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight
-		console.log(`Window Width: ${windowWidth}px`)
-		console.log(`Window Height: ${windowHeight}px`)
 		if (parameter.userData.authority == "PPAT") {
 			parameter.isHost = true
 			await addPdfController()
@@ -64,6 +67,7 @@ socket.on("connection-success", async ({ socketId }) => {
 		}
 		await getMyStream(parameter)
 		await createMyVideo(parameter)
+		await createUserList({ username: parameter.username, id: parameter.socketId, micStatus: true })
 		await joinRoom({ socket, parameter })
 		// console.log("- Parameter : ", parameter)
 	} catch (error) {
@@ -114,6 +118,8 @@ socket.on("producer-closed", ({ remoteProducerId, socketId }) => {
 			parameter.allUsers = parameter.allUsers.filter((data) => data.socketId !== socketId)
 			parameter.totalUsers--
 			removeVideoAndAudio({ socketId })
+			removeUserList({ id: socketId })
+			removeQueueRaiseHand({ id: socketId })
 		}
 	} catch (error) {
 		console.log("- Error Closing Producer : ", error)
@@ -178,7 +184,7 @@ socket.on("change-scroll", ({ socketId, value, type }) => {
 })
 
 socket.on("change-page", ({ currentPage, pdfDocument }) => {
-	renderPage({ parameter, num: currentPage, pdfDocument })
+	queueRenderPage({ parameter, num: currentPage, pdfDocument })
 })
 
 socket.on("change-event", ({ event }) => {
@@ -206,6 +212,15 @@ socket.on("reload-document", ({ message }) => {
 	getPdf({ parameter, pdfDocument: "aktaDocument" })
 })
 
+socket.on("raise-hand", async ({ status, socketId, username }) => {
+	if (status === "raise") {
+		await createQueueRaiseHand({ id: socketId, username })
+	} else {
+		await removeQueueRaiseHand({ id: socketId })
+	}
+	await editUserListRaiseHand({ id: socketId, action: status })
+})
+
 /**  EVENT LISTENER  **/
 
 let micButton = document.getElementById("user-mic-button")
@@ -225,6 +240,7 @@ micButton.addEventListener("click", () => {
 	let myIconMic = document.getElementById(`user-mic-${socket.id}`)
 	let user = parameter.allUsers.find((data) => data.socketId == socket.id)
 	const myMicIcons = document.getElementById("turn-on-off-mic-icons")
+	const userListMicIcon = document.getElementById(`user-list-mic-icon-${parameter.socketId}`)
 	if (myMicIcons.classList.contains("fa-microphone")) {
 		parameter.isAudio = false
 		changeAppData({
@@ -238,6 +254,7 @@ micButton.addEventListener("click", () => {
 		myIconMic.src = "/assets/pictures/micOff.png"
 		changeMic({ parameter, status: false, socket })
 		// micButton.firstElementChild.innerHTML = "Muted"
+		userListMicIcon.classList.replace("fa-microphone", "fa-microphone-slash")
 		myMicIcons.classList.replace("fa-microphone", "fa-microphone-slash")
 		micButton.style.backgroundColor = "red"
 	} else {
@@ -253,18 +270,24 @@ micButton.addEventListener("click", () => {
 		myIconMic.src = "/assets/pictures/micOn.png"
 		changeMic({ parameter, status: true, socket })
 		// micButton.firstElementChild.innerHTML = "Mute"
+		userListMicIcon.classList.replace("fa-microphone-slash", "fa-microphone")
 		myMicIcons.classList.replace("fa-microphone-slash", "fa-microphone")
 		micButton.removeAttribute("style")
 	}
 })
 
+const usersListButton = document.getElementById("users-list-button")
 const userVideoButton = document.getElementById("display-video-button")
 userVideoButton.addEventListener("click", () => {
 	try {
 		const phoneMaxWidth = 850
-
 		const videoContainer = document.getElementById("video-container")
 		const displayUserIcon = document.getElementById("display-users-icons")
+		const usersListContainer = document.getElementById("users-list-container")
+		if (usersListButton.hasAttribute("style")) {
+			usersListContainer.style.right = "-100%"
+			usersListButton.removeAttribute("style")
+		}
 		if (window.innerWidth <= phoneMaxWidth) {
 			if (!userVideoButton.hasAttribute("style")) {
 				videoContainer.style.right = "0"
@@ -283,13 +306,35 @@ userVideoButton.addEventListener("click", () => {
 	}
 })
 
+usersListButton.addEventListener("click", () => {
+	const videoContainer = document.getElementById("video-container")
+	const usersListContainer = document.getElementById("users-list-container")
+	if (userVideoButton.hasAttribute("style")) {
+		videoContainer.style.right = "-100%"
+		userVideoButton.removeAttribute("style")
+	}
+	if (!usersListButton.hasAttribute("style")) {
+		usersListButton.style.backgroundColor = "green"
+		usersListContainer.style.right = "0%"
+	} else {
+		usersListContainer.style.right = "-100%"
+		usersListButton.removeAttribute("style")
+	}
+})
+
 const raiseHandButton = document.getElementById("raise-hand-button")
-raiseHandButton.addEventListener("click", () => {
+raiseHandButton.addEventListener("click", async () => {
 	try {
-		if (!raiseHandButton.hasAttribute("style")){
-			raiseHandButton.style.backgroundColor = "red"
+		if (!raiseHandButton.hasAttribute("style")) {
+			raiseHandButton.style.backgroundColor = "green"
+			await raiseAndUnraiseHand({ parameter, socket, status: "raise" })
+			await createQueueRaiseHand({ id: parameter.socketId, username: parameter.username })
+			await editUserListRaiseHand({ id: parameter.socketId, action: "raise" })
 		} else {
 			raiseHandButton.removeAttribute("style")
+			await raiseAndUnraiseHand({ parameter, socket, status: "unraise" })
+			await removeQueueRaiseHand({ id: parameter.socketId })
+			await editUserListRaiseHand({ id: parameter.socketId, action: "unraise" })
 		}
 	} catch (error) {
 		console.log("- Error Raising Hand : ", error)

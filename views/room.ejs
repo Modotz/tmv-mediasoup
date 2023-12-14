@@ -66,6 +66,52 @@
             display: flex;
         }
 
+        #users-list-container {
+            position: absolute;
+            padding: 10px;
+            width: 40%;
+            height: 100%;
+            top: 0%;
+            right: -100%;
+            background-color: white;
+            z-index: 2;
+            transition: 1s;
+        }
+
+        #users-list-container>.user-list {
+            width: 100%;
+            display: flex;
+            padding: 5px;
+            justify-content: space-between;
+        }
+
+        #users-list-container>.user-list>.user-list-left-section,
+        #users-list-container>.user-list>.user-list-right-section {
+            display: flex;
+            align-content: center;
+            height: 25px;
+            width: 50%;
+        }
+
+        .user-list-right-section {
+            flex-direction: row-reverse;
+        }
+
+        #users-list-container>.user-list>.user-list-left-section>.user-list-picture {
+            border-radius: 50%;
+            margin-right: 3px;
+        }
+
+        #users-list-container>.user-list>.user-list-right-section>div {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            background-color: #44474A;
+            border-radius: 50%;
+            aspect-ratio: 1/1;
+        }
+
         /* Video Container */
 
         #video-container {
@@ -167,10 +213,36 @@
             align-items: center;
             flex-wrap: wrap;
             background-color: #fff;
-            overflow-y: hidden;
-            overflow-x: hidden;
+            overflow: hidden;
             padding: 1vw;
             position: relative;
+        }
+
+        #raise-hand-queue {
+            position: absolute;
+            display: flex;
+            flex-direction: column-reverse;
+            left: 0;
+            bottom: 0;
+        }
+
+        #raise-hand-queue>div>* {
+            margin: 5px;
+        }
+
+        .raise-hand-queues {
+            display: flex;
+            align-items: center;
+            /* flex-direction: column; */
+            border-radius: 20px;
+            background: white;
+            margin: 5px;
+        }
+
+        .raise-hand-queue-username {
+            background-color: rgba(255, 255, 255, 0.4);
+            border-radius: 5px;
+            padding: 2px;
         }
 
         /* Main Content -> Tata Tertib Section*/
@@ -398,6 +470,25 @@
             left: -100%;
         }
 
+        #users-list-button {
+            position: relative;
+        }
+
+        #users-list-button:hover>#users-list-button-tooltip {
+            visibility: visible;
+            z-index: 3;
+        }
+
+        #users-list-button-tooltip {
+            background-color: #bbbbbba1;
+            white-space: nowrap;
+            border-radius: 10px;
+            padding: 10px;
+            position: absolute;
+            visibility: hidden;
+            top: -100%;
+        }
+
         /* Miscellaneous Section */
 
         .unlock-scroll {
@@ -479,6 +570,12 @@
         /* Responsive Section */
 
         @media (max-width: 850px) {
+            /* Upper Container */
+
+            #users-list-container {
+                width: 100%;
+            }
+
             /* Main Content */
 
             #side-bar-container {
@@ -489,6 +586,10 @@
             #pdf-controller,
             #pdf-controller>button {
                 font-size: 3rem;
+            }
+
+            #raise-hand-queue {
+                font-size: 15px;
             }
 
             /* Main Content -> Tata Tertib Section */
@@ -618,9 +719,12 @@
                     <div id="pdf-container">
                     </div>
                 </section>
-                <section id="raise-hand-queue"></section>
             </div>
+            <section id="raise-hand-queue">
+            </section>
             <div id="video-container">
+            </div>
+            <div id="users-list-container">
             </div>
         </section>
         <section id="bottom-container">
@@ -636,8 +740,12 @@
                     <i class="fas fa-users" style="color: #ffffff;" id="display-users-icons"></i>
                 </button>
                 <button class="btn button-small-custom" id="raise-hand-button">
-                    <span id="raise-hand-button-tooltip">Raise</span>
-                    <i class="fas fa-hand-paper" style="color: #ffffff;" id="display-users-icons"></i>
+                    <span id="raise-hand-button-tooltip">Raise Hand</span>
+                    <i class="fas fa-hand-paper" style="color: #ffc400;" id="display-users-icons"></i>
+                </button>
+                <button class="btn button-small-custom" id="users-list-button">
+                    <span id="users-list-button-tooltip">Users List</span>
+                    <i class="fas fa-users" style="color: #ffffff;"></i>
                 </button>
             </div>
         </section>

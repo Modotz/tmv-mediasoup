@@ -160,6 +160,13 @@ const changeUserMic = ({ parameter, isMicActive, id }) => {
 	if (userMicIconUserList) {
 		userMicIconUserList.src = `/assets/pictures/mic${isMicActive ? "On" : "Off"}.png`
 	}
+
+	const userListMicIcon = document.getElementById(`user-list-mic-icon-${id}`)
+	if (isMicActive){
+		userListMicIcon.classList.replace("fa-microphone-slash", "fa-microphone")
+	} else {
+		userListMicIcon.classList.replace("fa-microphone", "fa-microphone-slash")
+	}
 }
 
 module.exports = {

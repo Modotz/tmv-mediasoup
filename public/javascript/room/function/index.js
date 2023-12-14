@@ -1,9 +1,3 @@
-const pdfLib = require("pdf-lib")
-// let url = "https://modotz.net/documents" /`/ VPS Mr. Indra IP
-// let url = "https://meet.dikyardiyanto.site/documents" // My VPS
-// let url = 'https://192.168.3.135' // IP Kost
-// let url = "https://192.168.3.208"
-
 const startTimer = () => {
 	try {
 		let startTime = Date.now()
@@ -129,7 +123,8 @@ const renderPage = ({ parameter, num, pdfDocument }) => {
 			renderTask.promise.then(() => {
 				parameter.pdfDocuments[pdfDocument].pageRendering = false
 				if (parameter.pdfDocuments[pdfDocument].pageNumPending !== null) {
-					renderPage({ parameter, num: parameter.pdfDocuments[pdfDocument].pageNumPending })
+					renderPage({ parameter, num: parameter.pdfDocuments[pdfDocument].pageNumPending, pdfDocument })
+					parameter.pdfDocuments[pdfDocument].pageNumPending = null
 				}
 			})
 			document.getElementById("current-page").textContent = num
@@ -137,6 +132,14 @@ const renderPage = ({ parameter, num, pdfDocument }) => {
 		})
 	} catch (error) {
 		console.log("- Error Rendering Page : ", error)
+	}
+}
+
+const queueRenderPage = ({ parameter, num, pdfDocument }) => {
+	if (parameter.pdfDocuments[pdfDocument].pageRendering) {
+		parameter.pdfDocuments[pdfDocument].pageNumPending = num
+	} else {
+		renderPage({ parameter, num, pdfDocument })
 	}
 }
 
@@ -220,7 +223,8 @@ const firstPdfControl = async ({ parameter, socket, pdfDocument }) => {
 					socket.emit("change-page", { socketId: data.socketId, currentPage: parameter.pdfDocuments[pdfDocument].currentPage, pdfDocument })
 				}
 			})
-			renderPage({ parameter, num: parameter.pdfDocuments[pdfDocument].currentPage, pdfDocument })
+			queueRenderPage({ parameter, num: parameter.pdfDocuments[pdfDocument].currentPage, pdfDocument })
+			// renderPage({ parameter, num: parameter.pdfDocuments[pdfDocument].currentPage, pdfDocument })
 		})
 		prevButton.addEventListener("click", () => {
 			if (parameter.pdfDocuments[pdfDocument].currentPage <= 1) {
@@ -232,7 +236,8 @@ const firstPdfControl = async ({ parameter, socket, pdfDocument }) => {
 					socket.emit("change-page", { socketId: data.socketId, currentPage: parameter.pdfDocuments[pdfDocument].currentPage, pdfDocument })
 				}
 			})
-			renderPage({ parameter, num: parameter.pdfDocuments[pdfDocument].currentPage, pdfDocument })
+			queueRenderPage({ parameter, num: parameter.pdfDocuments[pdfDocument].currentPage, pdfDocument })
+			// renderPage({ parameter, num: parameter.pdfDocuments[pdfDocument].currentPage, pdfDocument })
 		})
 
 		pdfContainer.addEventListener("scroll", () => {
@@ -331,6 +336,86 @@ const addTataTertibTemplate = async ({ templateTataTertib }) => {
 	}
 }
 
+const raiseAndUnraiseHand = ({ parameter, socket, status }) => {
+	try {
+		parameter.allUsers.forEach((data) => {
+			if (data.socketId != socket.id) {
+				socket.emit("raise-hand", { socketId: data.socketId, status, username: parameter.username })
+			}
+		})
+	} catch (error) {
+		console.log(error)
+	}
+}
+
+const createUserList = async ({ username, id, micStatus }) => {
+	try {
+		const usersListContainer = document.getElementById("users-list-container")
+		const newUser = document.createElement("div")
+		newUser.id = `user-list-${id}`
+		newUser.className = "user-list"
+		newUser.innerHTML = `
+				<section class="user-list-left-section">
+					<img src="/assets/pictures/unknown.jpg" class="user-list-picture" alt="user-list-picture">
+					<span class="user-list-username">${username}</span>
+				</section>
+				<section class="user-list-right-section" id="user-list-right-section-${id}">
+					<div class="user-list-mic-icon">
+						<i class="fas ${micStatus ? "fa-microphone" : "fa-microphone-slash"}" style="color: #ffffff;" id="user-list-mic-icon-${id}"></i>
+					</div>
+				</section>`
+		usersListContainer.insertBefore(newUser, usersListContainer.firstChild)
+		// usersListContainer.appendChild(newUser)
+	} catch (error) {
+		console.log("- Error Creating User List : ", error)
+	}
+}
+
+const removeUserList = async ({ id }) => {
+	try {
+		document.getElementById(`user-list-${id}`).remove()
+	} catch (error) {
+		console.log("- Error Removing User List : ", error)
+	}
+}
+
+const editUserListRaiseHand = async ({ id, action }) => {
+	try {
+		const checkIfExist = document.getElementById(`user-list-${id}`)
+		if (checkIfExist) {
+			const userListRightSection = document.getElementById(`user-list-right-section-${id}`)
+			if (action === "raise") {
+				let raiseHandContainer = document.createElement("div")
+				raiseHandContainer.id = `user-list-raise-hand-${id}`
+				raiseHandContainer.innerHTML = `<i class="fas fa-hand-paper" style="color: #ffc400;" id="display-users-icons"></i>`
+				userListRightSection.insertBefore(raiseHandContainer, userListRightSection.firstChild)
+			} else {
+				document.getElementById(`user-list-raise-hand-${id}`).remove()
+			}
+		} else {
+			// Check again with 500ms with 20x attempt
+			let attempts = 20
+			const interval = setInterval(() => {
+				const checkIfExistAgain = document.getElementById(`user-list-${id}`)
+				if (checkIfExistAgain || attempts <= 0) {
+					clearInterval(interval)
+					editUserListRaiseHand({ id, action })
+				}
+				attempts--
+			}, 500)
+		}
+	} catch (error) {
+		console.log("- Error Editing Raise Hand In User List : ", error)
+	}
+}
+
+const newUserCheckOnRaiseHand = ({ id, socket, username }) => {
+	const raiseHandButton = document.getElementById("raise-hand-button")
+	if (raiseHandButton.hasAttribute("style")) {
+		socket.emit("raise-hand", { socketId: id, status: "raise", username })
+	}
+}
+
 module.exports = {
 	addPdfController,
 	startTimer,
@@ -347,4 +432,10 @@ module.exports = {
 	signDocument,
 	updateDocuments,
 	addTataTertibTemplate,
+	raiseAndUnraiseHand,
+	createUserList,
+	removeUserList,
+	editUserListRaiseHand,
+	newUserCheckOnRaiseHand,
+	queueRenderPage,
 }

@@ -1,9 +1,7 @@
 const mediasoupClient = require("mediasoup-client")
 const { createVideo, createAudio, insertVideo, changeLayout, createAudioVisualizer } = require("../ui/video")
-const {
-	turnOffOnCamera,
-} = require("../ui/button")
-const { muteAllParticipants, goToLobby } = require(".")
+const { turnOffOnCamera } = require("../ui/button")
+const { muteAllParticipants, goToLobby, createUserList, newUserCheckOnRaiseHand } = require(".")
 const { encodingVP8, encodingsVP9 } = require("../config/mediasoup")
 
 const getEncoding = ({ parameter }) => {
@@ -251,6 +249,8 @@ const connectRecvTransport = async ({ parameter, consumerTransport, socket, remo
 							socket,
 						})
 						turnOffOnCamera({ id: params.producerSocketOwner, status: false })
+						createUserList({ id: params.producerSocketOwner, username: params.username, micStatus: params.appData.isMicActive })
+						newUserCheckOnRaiseHand({ id: params.producerSocketOwner, username: parameter.username, socket })
 					}
 					if (params.kind == "audio" && params.appData.label == "audio") {
 						createAudio({ id: params.producerSocketOwner, track })

@@ -28,7 +28,7 @@ app.use(cors())
 app.set("view engine", "ejs")
 app.use(express.static(path.join(__dirname, "views")))
 app.use(express.urlencoded({ extended: true }))
-app.use(express.json({limit: '10mb'}))
+app.use(express.json({ limit: "10mb" }))
 
 app.use(express.static("public"))
 app.use(express.static(path.join(__dirname, "public")))
@@ -428,6 +428,10 @@ io.on("connection", async (socket) => {
 
 	socket.on("reload-document", ({ socketId }) => {
 		socket.to(socketId).emit("reload-document", { message: "Refresh Document" })
+	})
+
+	socket.on("raise-hand", ({ socketId, status, username }) => {
+		socket.to(socketId).emit("raise-hand", { socketId: socket.id, status, username })
 	})
 })
 app.use(router)

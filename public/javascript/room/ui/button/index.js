@@ -1,13 +1,5 @@
 const RecordRTC = require("recordrtc")
-const {
-	timerLayout,
-	muteAllParticipants,
-	unlockAllMic,
-	getPdf,
-	goHome,
-	signDocument,
-	updateDocuments,
-} = require("../../function")
+const { timerLayout, muteAllParticipants, unlockAllMic, getPdf, goHome, signDocument, updateDocuments } = require("../../function")
 
 const changeMic = ({ parameter, socket, status }) => {
 	parameter.allUsers.forEach((data) => {
@@ -434,6 +426,29 @@ const signPermission = ({ socket, parameter, PPATSocket, data }) => {
 	}
 }
 
+const createQueueRaiseHand = async ({ id, username }) => {
+	try {
+		if (document.getElementById(`raise-hand-queue-${id}`)) return
+		const queueContainer = document.getElementById("raise-hand-queue")
+		const raiseHandContainer = document.createElement("div")
+		raiseHandContainer.id = `raise-hand-queue-${id}`
+		raiseHandContainer.className = "raise-hand-queues"
+		raiseHandContainer.innerHTML = `<i class="fas fa-hand-paper" style="color: #ffc400;"></i>
+		<span class="raise-hand-queue-username">${username}</span>`
+		queueContainer.insertBefore(raiseHandContainer, queueContainer.lastChild)
+	} catch (error) {
+		console.log("- Error Creating Queue Raise Hand : ", error)
+	}
+}
+
+const removeQueueRaiseHand = async ({ id }) => {
+	try {
+		document.getElementById(`raise-hand-queue-${id}`).remove()
+	} catch (error) {
+		console.log("- Error Removing Queue Raise Hand : ", error)
+	}
+}
+
 module.exports = {
 	changeMic,
 	turnOffOnCamera,
@@ -449,4 +464,6 @@ module.exports = {
 	addSaksiSignButton,
 	signPermission,
 	addReloadButton,
+	createQueueRaiseHand,
+	removeQueueRaiseHand,
 }

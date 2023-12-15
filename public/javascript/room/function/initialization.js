@@ -1,3 +1,4 @@
+const { errorHandling } = require(".")
 const { socket } = require("../../socket")
 const { createDevice } = require("./mediasoup")
 
@@ -62,7 +63,12 @@ const getMyStream = async (parameter) => {
 		parameter.localStream = stream
 		parameter.audioParams.track = stream.getAudioTracks()[0]
 	} catch (error) {
-		console.log("- Error Getting My Stream : ", error)
+		errorHandling({
+			type: "major",
+			error: `- Error Getting Stream : ${error}`,
+			message: `Please make sure you're getting your camera or mic ready!\nThis page will reload after a few seconds!`,
+			title: "Error Getting Your Camera or Mic!",
+		})
 	}
 }
 
@@ -79,7 +85,12 @@ const joinRoom = async ({ parameter, socket }) => {
 			createDevice({ parameter, socket })
 		})
 	} catch (error) {
-		console.log("- Error Joining Room : ", error)
+		errorHandling({
+			type: "major",
+			error: `- Error When Joining Room : ${error}`,
+			message: `This Page will reload after a few seconds!\nIf errors still persist, please contact your admin!`,
+			title: "Something Went Wrong Went Joining Room!",
+		})
 	}
 }
 

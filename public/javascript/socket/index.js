@@ -1,7 +1,6 @@
 const {
 	changeAppData,
 	getPdf,
-	renderPage,
 	goHome,
 	addPdfController,
 	firstPdfControl,
@@ -13,6 +12,8 @@ const {
 	removeUserList,
 	editUserListRaiseHand,
 	queueRenderPage,
+	showWarningError,
+	errorHandling,
 } = require("../room/function")
 const { getMyStream, joinRoom } = require("../room/function/initialization")
 const { signalNewConsumerTransport } = require("../room/function/mediasoup")
@@ -67,11 +68,16 @@ socket.on("connection-success", async ({ socketId }) => {
 		}
 		await getMyStream(parameter)
 		await createMyVideo(parameter)
-		await createUserList({ username: parameter.username, id: parameter.socketId, micStatus: true })
+		await createUserList({ username: parameter.username, id: parameter.socketId, micStatus: true, parameter, socket })
 		await joinRoom({ socket, parameter })
 		// console.log("- Parameter : ", parameter)
 	} catch (error) {
-		console.log("- Error On Connecting : ", error)
+		errorHandling({
+			type: "intermediate",
+			error: `- Error On Connecting : ${error}`,
+			message: `Something wrong when connecting to meeting!`,
+			title: "Error!",
+		})
 	}
 })
 
@@ -145,6 +151,8 @@ socket.on("mute-all", ({ hostSocketId }) => {
 		user.audio.track.enabled = false
 		user.audio.isActive = false
 		changeMic({ parameter, status: false, socket })
+		const userListMicIcon = document.getElementById(`user-list-mic-icon-${socket.id}`)
+		userListMicIcon.classList.replace("fa-microphone", "fa-microphone-slash")
 	} catch (error) {
 		console.log("- Error Muting All Participants : ", error)
 	}
@@ -221,22 +229,21 @@ socket.on("raise-hand", async ({ status, socketId, username }) => {
 	await editUserListRaiseHand({ id: socketId, action: status })
 })
 
+socket.on("kick-user", ({ message }) => {
+	showWarningError({ message: "Please contact your admin for more details!\nThis page will be closed after a few seconds!", title: message })
+	setTimeout(() => {
+		window.location.href = window.location.origin + "/not-found"
+	}, 5000)
+})
+
 /**  EVENT LISTENER  **/
 
 let micButton = document.getElementById("user-mic-button")
 micButton.addEventListener("click", () => {
 	if (parameter.micCondition.isLocked && !parameter.isHost) {
-		let ae = document.getElementById("alert-error")
-		ae.className = "show"
-		ae.innerHTML = `Mic is Locked By Host`
-		// Show Warning
-		setTimeout(() => {
-			ae.className = ae.className.replace("show", "")
-			ae.innerHTML = ``
-		}, 3000)
+		errorHandling({ type: "intermediate", message: `Mic is Locked By Host`, error: "Permission Error", title: "Oops!" })
 		return
 	}
-	let isActive = micButton.firstElementChild.innerHTML
 	let myIconMic = document.getElementById(`user-mic-${socket.id}`)
 	let user = parameter.allUsers.find((data) => data.socketId == socket.id)
 	const myMicIcons = document.getElementById("turn-on-off-mic-icons")
@@ -291,7 +298,7 @@ userVideoButton.addEventListener("click", () => {
 		if (window.innerWidth <= phoneMaxWidth) {
 			if (!userVideoButton.hasAttribute("style")) {
 				videoContainer.style.right = "0"
-				userVideoButton.style.backgroundColor = "red"
+				userVideoButton.style.backgroundColor = "green"
 			} else {
 				videoContainer.style.right = "-100%"
 				userVideoButton.removeAttribute("style")

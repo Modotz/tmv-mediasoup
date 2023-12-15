@@ -1,5 +1,5 @@
 const RecordRTC = require("recordrtc")
-const { timerLayout, muteAllParticipants, unlockAllMic, getPdf, goHome, signDocument, updateDocuments } = require("../../function")
+const { timerLayout, muteAllParticipants, unlockAllMic, getPdf, goHome, signDocument, updateDocuments, showWarningError } = require("../../function")
 
 const changeMic = ({ parameter, socket, status }) => {
 	parameter.allUsers.forEach((data) => {
@@ -188,7 +188,7 @@ const addMuteAllButton = ({ parameter, socket }) => {
 			const newElement = document.createElement("button")
 			newElement.id = "mute-all-button"
 			newElement.className = "btn button-small-custom"
-			newElement.innerHTML = `<span id="mute-all-button-tooltip">Mute All Users</span><i class="fas fa-user-times" style="color: #ffffff;"></i>`
+			newElement.innerHTML = `<span id="mute-all-button-tooltip">Mute All Users</span><i class="fas fa-volume-mute" style="color: #ffffff;"></i>`
 			rightSection.insertBefore(newElement, rightSection.firstChild)
 			newElement.addEventListener("click", () => {
 				if (!newElement.hasAttribute("style")) {
@@ -200,19 +200,17 @@ const addMuteAllButton = ({ parameter, socket }) => {
 					unlockAllMic({ parameter, socket })
 					newElement.removeAttribute("style")
 				} else {
-					let ae = document.getElementById("alert-error")
-					ae.className = "show"
-					ae.innerHTML = `You're Not Host`
-					// Show Warning
-					setTimeout(() => {
-						ae.className = ae.className.replace("show", "")
-						ae.innerHTML = ``
-					}, 3000)
+					showWarningError({ message: `You're Not Host` })
 				}
 			})
 		}
 	} catch (error) {
-		console.log("- Error Adding Mute All Button : ", error)
+		errorHandling({
+			type: "intermediate",
+			error: `- Error Adding Mute All Users Feature For PPAT : ${error}`,
+			message: `Something wrong when adding mute all users feature for PPAT!`,
+			title: "Error!",
+		})
 	}
 }
 
@@ -221,8 +219,8 @@ const addEndButton = ({ parameter, socket }) => {
 		let rightSection = document.getElementById("right-section")
 		let endButton = document.createElement("button")
 		endButton.id = "end-button"
-		endButton.className = "btn button-small-custom"
-		endButton.innerHTML = `<span id="end-button-tooltip">End Meeting</span><i class="fas fa-hourglass-end" style="color: #ffffff;"></i>`
+		endButton.className = "btn button-small-custom-red"
+		endButton.innerHTML = `<span id="end-button-tooltip">End Meeting</span><i class="fas fa-phone" style="color: #ffffff;"></i>`
 		rightSection.appendChild(endButton)
 		endButton.addEventListener("click", () => {
 			parameter.allUsers.forEach((data) => {
@@ -233,7 +231,12 @@ const addEndButton = ({ parameter, socket }) => {
 			goHome()
 		})
 	} catch (error) {
-		console.log("- Error Adding End Button : ", error)
+		errorHandling({
+			type: "intermediate",
+			error: `- Error Adding End Meeting Feature For PPAT : ${error}`,
+			message: `Something wrong when adding end meeting feature for PPAT!`,
+			title: "Error!",
+		})
 	}
 }
 
@@ -249,7 +252,12 @@ const addStartButton = ({ parameter, socket }) => {
 			recordVideo({ parameter, socket })
 		})
 	} catch (error) {
-		console.log("- Error Adding Start Button : ", error)
+		errorHandling({
+			type: "intermediate",
+			error: `- Error Adding Start Meeting Feature For PPAT : ${error}`,
+			message: `Something wrong when adding start meeting feature for PPAT!`,
+			title: "Error!",
+		})
 	}
 }
 
@@ -273,7 +281,12 @@ const addRulesButton = ({ parameter, socket }) => {
 			})
 		})
 	} catch (error) {
-		console.log("- Error Adding Rules Button : ", error)
+		errorHandling({
+			type: "intermediate",
+			error: `- Error When Adding Tata Tertib Section Button : ${error}`,
+			message: `Something wrong when adding tata tertib section button!`,
+			title: "Error!",
+		})
 	}
 }
 
@@ -298,25 +311,39 @@ const addAktaButton = ({ parameter, socket }) => {
 			})
 		})
 	} catch (error) {
-		console.log("- Error Adding Rules Button : ", error)
+		errorHandling({
+			type: "intermediate",
+			error: `- Error When Adding Akta Section Button : ${error}`,
+			message: `Something wrong when adding akta section button!`,
+			title: "Error!",
+		})
 	}
 }
 
 const unlockOverflow = ({ element, socket, parameter }) => {
-	let elementToUnlock = document.getElementById(element)
-	elementToUnlock.classList.add("unlock-scroll")
-	elementToUnlock.addEventListener("scroll", () => {
-		clearTimeout(parameter.scrollTimer)
-		parameter.scrollTimer = setTimeout(function () {
-			let totalScroll = elementToUnlock.scrollHeight - elementToUnlock.clientHeight
-			let scrolled = Math.floor((elementToUnlock.scrollTop / Math.floor(totalScroll)) * 100)
-			parameter.allUsers.forEach((data) => {
-				if (data.socketId != socket.id) {
-					socket.emit("change-scroll", { socketId: data.socketId, value: scrolled, type: "tata-tertib" })
-				}
-			})
-		}, 500)
-	})
+	try {
+		let elementToUnlock = document.getElementById(element)
+		elementToUnlock.classList.add("unlock-scroll")
+		elementToUnlock.addEventListener("scroll", () => {
+			clearTimeout(parameter.scrollTimer)
+			parameter.scrollTimer = setTimeout(function () {
+				let totalScroll = elementToUnlock.scrollHeight - elementToUnlock.clientHeight
+				let scrolled = Math.floor((elementToUnlock.scrollTop / Math.floor(totalScroll)) * 100)
+				parameter.allUsers.forEach((data) => {
+					if (data.socketId != socket.id) {
+						socket.emit("change-scroll", { socketId: data.socketId, value: scrolled, type: "tata-tertib" })
+					}
+				})
+			}, 500)
+		})
+	} catch (error) {
+		errorHandling({
+			type: "intermediate",
+			error: `- Error When Unlocking Scroll Feature For PPAT : ${error}`,
+			message: `Something wrong when unlocking scroll feature for PPAT!`,
+			title: "Error!",
+		})
+	}
 }
 
 const displayMainEvent = ({ event, parameter }) => {
@@ -365,7 +392,12 @@ const addPPATSignButton = ({ parameter, socket }) => {
 		})
 		pdfControllerContainer.appendChild(PPATSignButton)
 	} catch (error) {
-		console.log("- Error Adding PPAT Sign Button : ", error)
+		errorHandling({
+			type: "intermediate",
+			error: `- Error When Adding Sign Document Button For PPAT : ${error}`,
+			message: `Something wrong when adding sign document button For PPAT!`,
+			title: "Error!",
+		})
 	}
 }
 
@@ -386,7 +418,12 @@ const addReloadButton = ({ parameter, socket }) => {
 			})
 		})
 	} catch (error) {
-		console.log(error)
+		errorHandling({
+			type: "intermediate",
+			error: `- Error When Adding Refresh Document Feature : ${error}`,
+			message: `Something wrong when adding refresh document feature!`,
+			title: "Error!",
+		})
 	}
 }
 

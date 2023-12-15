@@ -69,7 +69,7 @@
         #users-list-container {
             position: absolute;
             padding: 10px;
-            width: 40%;
+            width: 39%;
             height: 100%;
             top: 0%;
             right: -100%;
@@ -88,18 +88,20 @@
         #users-list-container>.user-list>.user-list-left-section,
         #users-list-container>.user-list>.user-list-right-section {
             display: flex;
-            align-content: center;
+            align-items: center;
             height: 25px;
             width: 50%;
         }
 
         .user-list-right-section {
-            flex-direction: row-reverse;
+            justify-content: end;
         }
 
         #users-list-container>.user-list>.user-list-left-section>.user-list-picture {
             border-radius: 50%;
             margin-right: 3px;
+            height: 100%;
+            aspect-ratio: 1/1;
         }
 
         #users-list-container>.user-list>.user-list-right-section>div {
@@ -110,6 +112,11 @@
             background-color: #44474A;
             border-radius: 50%;
             aspect-ratio: 1/1;
+        }
+
+        #users-list-container>.user-list>.user-list-right-section>.kick-icon {
+            background-color: #ffffff00;
+            cursor: pointer;
         }
 
         /* Video Container */
@@ -335,6 +342,24 @@
 
         .button-small-custom:hover {
             background-color: #959ca3;
+        }
+
+        .button-small-custom-red {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            /* width: 40px; */
+            height: 40px;
+            border-radius: 50%;
+            transition: 0.3s;
+            background: #c71010;
+            margin-left: 10px;
+            margin-right: 10px;
+        }
+
+        .button-small-custom-red:hover {
+            background-color: #ff0000;
         }
 
         #bottom-container>div {
@@ -574,6 +599,7 @@
 
             #users-list-container {
                 width: 100%;
+                font-size: 15px;
             }
 
             /* Main Content */
@@ -737,7 +763,7 @@
                 </button>
                 <button class="btn button-small-custom" id="display-video-button">
                     <span id="display-video-button-tooltip">Participants</span>
-                    <i class="fas fa-users" style="color: #ffffff;" id="display-users-icons"></i>
+                    <i class="fas fa-tv" style="color: #ffffff;" id="display-users-icons"></i>
                 </button>
                 <button class="btn button-small-custom" id="raise-hand-button">
                     <span id="raise-hand-button-tooltip">Raise Hand</span>

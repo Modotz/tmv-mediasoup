@@ -1,3 +1,5 @@
+const Swal = require("sweetalert2")
+
 const startTimer = () => {
 	try {
 		let startTime = Date.now()
@@ -153,7 +155,6 @@ const getPdf = ({ parameter, pdfDocument }) => {
 		let isExist = document.getElementById("pdf-canvas")
 		if (isExist) isExist.remove()
 		let pdfCanvas = document.createElement("canvas")
-		// pdfCanvas.style.width = `100%`
 		pdfCanvas.id = "pdf-canvas"
 		pdfContainer.appendChild(pdfCanvas)
 		parameter.pdfDocuments[pdfDocument].canvas = pdfCanvas
@@ -177,7 +178,6 @@ const getPdf = ({ parameter, pdfDocument }) => {
 					return res.arrayBuffer()
 				} else {
 					return res.json()
-					// window.location.href = window.location.origin + "/verify/" + parameter.userData.id
 				}
 			})
 			.then((data) => {
@@ -195,13 +195,24 @@ const getPdf = ({ parameter, pdfDocument }) => {
 				})
 			})
 			.catch((error) => {
-				console.log("- Error Getting PDF : ", error)
 				if (error?.name == "JsonWebTokenError") {
 					window.location.href = window.location.origin + "/verify/" + parameter.userData._id
+				} else {
+					errorHandling({
+						type: "intermediate",
+						error: `- Error When Fetching PDF : ${error}`,
+						message: `Something wrong when fetching PDF!`,
+						title: "Error!",
+					})
 				}
 			})
 	} catch (error) {
-		console.log("- Error Getting PDF : ", error)
+		errorHandling({
+			type: "intermediate",
+			error: `- Error When Fetching PDF : ${error}`,
+			message: `Something wrong when fetching PDF!`,
+			title: "Error!",
+		})
 	}
 }
 
@@ -224,7 +235,6 @@ const firstPdfControl = async ({ parameter, socket, pdfDocument }) => {
 				}
 			})
 			queueRenderPage({ parameter, num: parameter.pdfDocuments[pdfDocument].currentPage, pdfDocument })
-			// renderPage({ parameter, num: parameter.pdfDocuments[pdfDocument].currentPage, pdfDocument })
 		})
 		prevButton.addEventListener("click", () => {
 			if (parameter.pdfDocuments[pdfDocument].currentPage <= 1) {
@@ -237,7 +247,6 @@ const firstPdfControl = async ({ parameter, socket, pdfDocument }) => {
 				}
 			})
 			queueRenderPage({ parameter, num: parameter.pdfDocuments[pdfDocument].currentPage, pdfDocument })
-			// renderPage({ parameter, num: parameter.pdfDocuments[pdfDocument].currentPage, pdfDocument })
 		})
 
 		pdfContainer.addEventListener("scroll", () => {
@@ -255,7 +264,12 @@ const firstPdfControl = async ({ parameter, socket, pdfDocument }) => {
 			}, 500)
 		})
 	} catch (error) {
-		console.log("- Error Controlling First PDF : ", error)
+		errorHandling({
+			type: "intermediate",
+			error: `- Error Getting PDF Controller Feature For PPAT : ${error}`,
+			message: `Something wrong when getting PDF controller feature for PPAT!`,
+			title: "Error!",
+		})
 	}
 }
 
@@ -273,7 +287,12 @@ const addPdfController = async () => {
 		pdfController.append(nextButton)
 		pdfContainer.className = "unlock-scroll"
 	} catch (error) {
-		console.log("- Error Document First Control : ", error)
+		errorHandling({
+			type: "intermediate",
+			error: `- Error When Adding PDF Control Button : ${error}`,
+			message: `Something wrong when when adding PDF control button!`,
+			title: "Error!",
+		})
 	}
 }
 
@@ -314,25 +333,13 @@ const signDocument = async ({ parameter, socket, data }) => {
 const addTataTertibTemplate = async ({ templateTataTertib }) => {
 	try {
 		document.getElementById("template-room").innerHTML = templateTataTertib
-		// const pdf = new window.jspdf.jsPDF()
-		// await pdf.html(templateTataTertib, {
-		// 	callback: function (pdf) {
-		// 		const dataUri = pdf.output("datauristring");
-
-		//         // Create a new <embed> element
-		//         const newEmbedElement = document.createElement("iframe");
-		// 		newEmbedElement.style.width = "100%"
-		// 		newEmbedElement.style.height = "100%"
-
-		//         // Set the data URI as the source of the <embed> element
-		//         newEmbedElement.src = dataUri;
-
-		//         // Append the <embed> element to the target container (tata-tertib)
-		//         document.getElementById("tata-tertib").appendChild(newEmbedElement);
-		// 	},
-		// })
 	} catch (error) {
-		console.log(error)
+		errorHandling({
+			type: "intermediate",
+			error: `- Error When Fetching Tata Tertib Template: ${error}`,
+			message: `Something wrong when fetching tata tertib template!`,
+			title: "Error!",
+		})
 	}
 }
 
@@ -348,8 +355,15 @@ const raiseAndUnraiseHand = ({ parameter, socket, status }) => {
 	}
 }
 
-const createUserList = async ({ username, id, micStatus }) => {
+const createUserList = async ({ username, id, micStatus, parameter, socket }) => {
 	try {
+		let kickIcon = ""
+		if (parameter.isHost) {
+			kickIcon = `
+				<div class="kick-icon">
+					<i class="fas fa-times-circle fa-lg" style="color: #ff0000;" id="kick-icon-${id}"></i>
+				</div>`
+		}
 		const usersListContainer = document.getElementById("users-list-container")
 		const newUser = document.createElement("div")
 		newUser.id = `user-list-${id}`
@@ -363,11 +377,22 @@ const createUserList = async ({ username, id, micStatus }) => {
 					<div class="user-list-mic-icon">
 						<i class="fas ${micStatus ? "fa-microphone" : "fa-microphone-slash"}" style="color: #ffffff;" id="user-list-mic-icon-${id}"></i>
 					</div>
+					${parameter.isHost && parameter.socketId != id ? kickIcon: ""}
 				</section>`
 		usersListContainer.insertBefore(newUser, usersListContainer.firstChild)
+		if (parameter.isHost && document.getElementById(`kick-icon-${id}`)) {
+			document.getElementById(`kick-icon-${id}`).addEventListener("click", () => {
+				socket.emit("kick-user", { socketId: id })
+			})
+		}
 		// usersListContainer.appendChild(newUser)
 	} catch (error) {
-		console.log("- Error Creating User List : ", error)
+		errorHandling({
+			type: "intermediate",
+			error: `- Error When Creating User List : ${error}`,
+			message: `Something wrong when creating user list!`,
+			title: "Error!",
+		})
 	}
 }
 
@@ -416,6 +441,37 @@ const newUserCheckOnRaiseHand = ({ id, socket, username }) => {
 	}
 }
 
+const showWarningError = ({ message, title }) => {
+	Swal.fire({
+		icon: "error",
+		title: title,
+		text: message,
+	})
+}
+
+const errorHandling = ({ type, error, message, title = "Something went wrong!" }) => {
+	switch (type) {
+		case "major":
+			console.log(error)
+			showWarningError({ message, title })
+			setTimeout(() => {
+				window.location.reload()
+			}, 5000)
+			break
+		case "intermediate":
+			console.log(error)
+			showWarningError({ message, title })
+			break
+		case "minor":
+			console.log(error)
+			break
+		default:
+			console.log(error)
+			showWarningError({ message: "Unknown Error", title })
+			break
+	}
+}
+
 module.exports = {
 	addPdfController,
 	startTimer,
@@ -438,4 +494,6 @@ module.exports = {
 	editUserListRaiseHand,
 	newUserCheckOnRaiseHand,
 	queueRenderPage,
+	showWarningError,
+	errorHandling,
 }

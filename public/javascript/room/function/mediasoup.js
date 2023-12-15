@@ -249,7 +249,7 @@ const connectRecvTransport = async ({ parameter, consumerTransport, socket, remo
 							socket,
 						})
 						turnOffOnCamera({ id: params.producerSocketOwner, status: false })
-						createUserList({ id: params.producerSocketOwner, username: params.username, micStatus: params.appData.isMicActive })
+						createUserList({ id: params.producerSocketOwner, username: params.username, micStatus: params.appData.isMicActive, parameter, socket })
 						newUserCheckOnRaiseHand({ id: params.producerSocketOwner, username: parameter.username, socket })
 					}
 					if (params.kind == "audio" && params.appData.label == "audio") {

@@ -433,6 +433,10 @@ io.on("connection", async (socket) => {
 	socket.on("raise-hand", ({ socketId, status, username }) => {
 		socket.to(socketId).emit("raise-hand", { socketId: socket.id, status, username })
 	})
+
+	socket.on("kick-user", ({ socketId }) => {
+		socket.to(socketId).emit("kick-user", {message: "You've been kicked by Admin!"})
+	})
 })
 app.use(router)
 app.use(errorHandler)

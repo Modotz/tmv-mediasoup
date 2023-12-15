@@ -17,7 +17,12 @@ const createMyVideo = async (parameter) => {
 		document.getElementById(`v-${parameter.socketId}`).srcObject = parameter.localStream
 		createAudioVisualizer({ id: parameter.socketId, track: parameter.localStream.getAudioTracks()[0] })
 	} catch (error) {
-		console.log("- Error Creating Video : ", error)
+		errorHandling({
+			type: "major",
+			error: `- Error When Creating Your Video : ${error}`,
+			message: `Something wrong when creating your video!\nThis will reload after a few seconds!\nIf this error still persists, please contact your Admin! `,
+			title: "Error!",
+		})
 	}
 }
 
@@ -162,7 +167,7 @@ const changeUserMic = ({ parameter, isMicActive, id }) => {
 	}
 
 	const userListMicIcon = document.getElementById(`user-list-mic-icon-${id}`)
-	if (isMicActive){
+	if (isMicActive) {
 		userListMicIcon.classList.replace("fa-microphone-slash", "fa-microphone")
 	} else {
 		userListMicIcon.classList.replace("fa-microphone", "fa-microphone-slash")

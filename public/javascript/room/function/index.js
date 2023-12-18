@@ -17,7 +17,12 @@ const startTimer = () => {
 				(hours < 10 ? "0" : "") + hours + ":" + (minutes < 10 ? "0" : "") + minutes + ":" + (seconds < 10 ? "0" : "") + seconds
 		}, 1000)
 	} catch (error) {
-		console.log("- Error Starting Recording Timer : ", error)
+		errorHandling({
+			type: "intermediate",
+			error: `- Error When Starting Time : ${error}`,
+			message: `Something wrong when when starting meeting!\nPlease report this bug!`,
+			title: "Error!",
+		})
 	}
 }
 
@@ -44,16 +49,30 @@ const timerLayout = ({ status }) => {
 			recordButton.firstChild.innerHTML = "Start"
 		}
 	} catch (error) {
-		console.log("- Error At Timer Layout : ", error)
+		errorHandling({
+			type: "intermediate",
+			error: `- Error When Starting Timer Layout : ${error}`,
+			message: `Something wrong when starting timer layout!\nIf this bug still persist, please report this bug!`,
+			title: "Error!",
+		})
 	}
 }
 
 const muteAllParticipants = ({ parameter, socket }) => {
-	parameter.allUsers.forEach((data) => {
-		if (data.socketId != socket.id) {
-			socket.emit("mute-all", { socketId: data.socketId })
-		}
-	})
+	try {
+		parameter.allUsers.forEach((data) => {
+			if (data.socketId != socket.id) {
+				socket.emit("mute-all", { socketId: data.socketId })
+			}
+		})
+	} catch (error) {
+		errorHandling({
+			type: "minor",
+			error: `- Error When Muting All Participants : ${error}`,
+			message: `Something wrong when muting all participants!`,
+			title: "Error!",
+		})
+	}
 }
 
 const updateDocuments = async ({ parameter, socket }) => {
@@ -65,7 +84,12 @@ const updateDocuments = async ({ parameter, socket }) => {
 			}
 		})
 	} catch (error) {
-		console.log(error)
+		errorHandling({
+			type: "intermediate",
+			error: `- Error When Updating Document : ${error}`,
+			message: `Something wrong when updating document!\nPlease contact your Admin!`,
+			title: "Error!",
+		})
 	}
 }
 
@@ -96,7 +120,12 @@ const goHome = () => {
 		const newURL = window.location.origin
 		window.location.href = newURL
 	} catch (error) {
-		console.log("- Error Go To Lobby : ", error)
+		errorHandling({
+			type: "minor",
+			error: `- Error When Go To Lobby : ${error}`,
+			message: `Something wrong when go to lobby!`,
+			title: "Error!",
+		})
 	}
 }
 
@@ -133,15 +162,29 @@ const renderPage = ({ parameter, num, pdfDocument }) => {
 			parameter.pdfDocuments[pdfDocument].currentPage = num
 		})
 	} catch (error) {
-		console.log("- Error Rendering Page : ", error)
+		errorHandling({
+			type: "minor",
+			error: `- Error When Rendering Page : ${error}`,
+			message: `Something wrong when rendering page!`,
+			title: "Error!",
+		})
 	}
 }
 
 const queueRenderPage = ({ parameter, num, pdfDocument }) => {
-	if (parameter.pdfDocuments[pdfDocument].pageRendering) {
-		parameter.pdfDocuments[pdfDocument].pageNumPending = num
-	} else {
-		renderPage({ parameter, num, pdfDocument })
+	try {
+		if (parameter.pdfDocuments[pdfDocument].pageRendering) {
+			parameter.pdfDocuments[pdfDocument].pageNumPending = num
+		} else {
+			renderPage({ parameter, num, pdfDocument })
+		}
+	} catch (error) {
+		errorHandling({
+			type: "minor",
+			error: `- Error When Queuing Render Page : ${error}`,
+			message: `Something wrong when queuing render page!`,
+			title: "Error!",
+		})
 	}
 }
 
@@ -290,7 +333,7 @@ const addPdfController = async () => {
 		errorHandling({
 			type: "intermediate",
 			error: `- Error When Adding PDF Control Button : ${error}`,
-			message: `Something wrong when when adding PDF control button!`,
+			message: `Something wrong when adding PDF control button!`,
 			title: "Error!",
 		})
 	}
@@ -305,7 +348,12 @@ const resetButton = () => {
 		nextButton.remove()
 		prevButton.remove()
 	} catch (error) {
-		console.log("- Error Reset Button : ", error)
+		errorHandling({
+			type: "minor",
+			error: `- Error When Resetting Next / Previous : ${error}`,
+			message: `Something wrong when resetting next / previous!`,
+			title: "Error!",
+		})
 	}
 }
 
@@ -323,10 +371,20 @@ const signDocument = async ({ parameter, socket, data }) => {
 		if (response.ok) {
 			getPdf({ parameter, pdfDocument: "aktaDocument" })
 		} else {
-			console.error("File upload failed")
+			errorHandling({
+				type: "intermediate",
+				error: `- Error When Signing Document : ${error}`,
+				message: `Something wrong when when signing document!`,
+				title: "Error!",
+			})
 		}
 	} catch (error) {
-		console.log("- Error Signing Document : ", error)
+		errorHandling({
+			type: "intermediate",
+			error: `- Error When Signing Document : ${error}`,
+			message: `Something wrong when when signing document!`,
+			title: "Error!",
+		})
 	}
 }
 
@@ -351,7 +409,12 @@ const raiseAndUnraiseHand = ({ parameter, socket, status }) => {
 			}
 		})
 	} catch (error) {
-		console.log(error)
+		errorHandling({
+			type: "minor",
+			error: `- Error When Raising / Unraising Hand : ${error}`,
+			message: `Something wrong when raising / unraising hand!`,
+			title: "Error!",
+		})
 	}
 }
 
@@ -377,7 +440,7 @@ const createUserList = async ({ username, id, micStatus, parameter, socket }) =>
 					<div class="user-list-mic-icon">
 						<i class="fas ${micStatus ? "fa-microphone" : "fa-microphone-slash"}" style="color: #ffffff;" id="user-list-mic-icon-${id}"></i>
 					</div>
-					${parameter.isHost && parameter.socketId != id ? kickIcon: ""}
+					${parameter.isHost && parameter.socketId != id ? kickIcon : ""}
 				</section>`
 		usersListContainer.insertBefore(newUser, usersListContainer.firstChild)
 		if (parameter.isHost && document.getElementById(`kick-icon-${id}`)) {
@@ -400,7 +463,12 @@ const removeUserList = async ({ id }) => {
 	try {
 		document.getElementById(`user-list-${id}`).remove()
 	} catch (error) {
-		console.log("- Error Removing User List : ", error)
+		errorHandling({
+			type: "minor",
+			error: `- Error When Removing User List : ${error}`,
+			message: `Something wrong when removing user list!`,
+			title: "Error!",
+		})
 	}
 }
 
@@ -430,14 +498,28 @@ const editUserListRaiseHand = async ({ id, action }) => {
 			}, 500)
 		}
 	} catch (error) {
-		console.log("- Error Editing Raise Hand In User List : ", error)
+		errorHandling({
+			type: "minor",
+			error: `- Error When Editing Raise Hand In User List : ${error}`,
+			message: `Something wrong when editing raise hand in user list!`,
+			title: "Error!",
+		})
 	}
 }
 
 const newUserCheckOnRaiseHand = ({ id, socket, username }) => {
-	const raiseHandButton = document.getElementById("raise-hand-button")
-	if (raiseHandButton.hasAttribute("style")) {
-		socket.emit("raise-hand", { socketId: id, status: "raise", username })
+	try {
+		const raiseHandButton = document.getElementById("raise-hand-button")
+		if (raiseHandButton.hasAttribute("style")) {
+			socket.emit("raise-hand", { socketId: id, status: "raise", username })
+		}
+	} catch (error) {
+		errorHandling({
+			type: "minor",
+			error: `- Error When Checking New User Is Hand Raising Or Not : ${error}`,
+			message: `Something wrong when checking new user is hand raising or not!`,
+			title: "Error!",
+		})
 	}
 }
 
@@ -456,14 +538,14 @@ const errorHandling = ({ type, error, message, title = "Something went wrong!" }
 			showWarningError({ message, title })
 			setTimeout(() => {
 				window.location.reload()
-			}, 5000)
+			}, 7500)
 			break
 		case "intermediate":
 			console.log(error)
 			showWarningError({ message, title })
 			break
 		case "minor":
-			console.log(error)
+			console.log(`- Minor Error : `, error)
 			break
 		default:
 			console.log(error)

@@ -85,7 +85,12 @@ socket.on("new-producer", ({ producerId, socketId }) => {
 	try {
 		signalNewConsumerTransport({ remoteProducerId: producerId, socket, parameter, socketId })
 	} catch (error) {
-		console.log("- Error Receiving New Producer : ", error)
+		errorHandling({
+			type: "major",
+			error: `- Error When Joining Room : ${error}`,
+			message: `This Page will reload after a few seconds!\nIf errors still persist, please contact your admin!`,
+			title: "Something Went Wrong Went Joining Room!",
+		})
 	}
 })
 
@@ -128,7 +133,12 @@ socket.on("producer-closed", ({ remoteProducerId, socketId }) => {
 			removeQueueRaiseHand({ id: socketId })
 		}
 	} catch (error) {
-		console.log("- Error Closing Producer : ", error)
+		errorHandling({
+			type: "minor",
+			error: `- Error When Closing Producer : ${error}`,
+			message: `Something wrong when closing producer : !`,
+			title: "Error!",
+		})
 	}
 })
 
@@ -154,7 +164,12 @@ socket.on("mute-all", ({ hostSocketId }) => {
 		const userListMicIcon = document.getElementById(`user-list-mic-icon-${socket.id}`)
 		userListMicIcon.classList.replace("fa-microphone", "fa-microphone-slash")
 	} catch (error) {
-		console.log("- Error Muting All Participants : ", error)
+		errorHandling({
+			type: "minor",
+			error: `- Error When Locking for All Participants : ${error}`,
+			message: `Something wrong when locking mic for all participants!`,
+			title: "Error!",
+		})
 	}
 })
 
@@ -163,7 +178,12 @@ socket.on("unmute-all", (data) => {
 		parameter.micCondition.isLocked = false
 		parameter.micCondition.socketId = undefined
 	} catch (error) {
-		console.log("- Error Unlocking Mic Participants Socket On : ", error)
+		errorHandling({
+			type: "minor",
+			error: `- Error When Unlocking Mic For All Participants : ${error}`,
+			message: `Something wrong when unlocking mic for all participants!`,
+			title: "Error!",
+		})
 	}
 })
 
@@ -187,7 +207,12 @@ socket.on("change-scroll", ({ socketId, value, type }) => {
 				break
 		}
 	} catch (error) {
-		console.log("- Error Change Scroll : ", error)
+		errorHandling({
+			type: "minor",
+			error: `- Error When Changing Scroll : ${error}`,
+			message: `Something wrong when changing scroll!`,
+			title: "Error!",
+		})
 	}
 })
 
@@ -240,46 +265,53 @@ socket.on("kick-user", ({ message }) => {
 
 let micButton = document.getElementById("user-mic-button")
 micButton.addEventListener("click", () => {
-	if (parameter.micCondition.isLocked && !parameter.isHost) {
-		errorHandling({ type: "intermediate", message: `Mic is Locked By Host`, error: "Permission Error", title: "Oops!" })
-		return
-	}
-	let myIconMic = document.getElementById(`user-mic-${socket.id}`)
-	let user = parameter.allUsers.find((data) => data.socketId == socket.id)
-	const myMicIcons = document.getElementById("turn-on-off-mic-icons")
-	const userListMicIcon = document.getElementById(`user-list-mic-icon-${parameter.socketId}`)
-	if (myMicIcons.classList.contains("fa-microphone")) {
-		parameter.isAudio = false
-		changeAppData({
-			socket,
-			data: { isActive: false, isMicActive: false, isVideoActive: parameter.videoProducer ? true : false },
-			remoteProducerId: parameter.audioProducer.id,
+	try {
+		if (parameter.micCondition.isLocked && !parameter.isHost) {
+			errorHandling({ type: "intermediate", message: `Mic is Locked By Host`, error: "Permission Error", title: "Oops!" })
+			return
+		}
+		let myIconMic = document.getElementById(`user-mic-${socket.id}`)
+		let user = parameter.allUsers.find((data) => data.socketId == socket.id)
+		const myMicIcons = document.getElementById("turn-on-off-mic-icons")
+		const userListMicIcon = document.getElementById(`user-list-mic-icon-${parameter.socketId}`)
+		if (myMicIcons.classList.contains("fa-microphone")) {
+			parameter.isAudio = false
+			changeAppData({
+				socket,
+				data: { isActive: false, isMicActive: false, isVideoActive: parameter.videoProducer ? true : false },
+				remoteProducerId: parameter.audioProducer.id,
+			})
+			micButton.classList.replace("btn-success", "btn-danger")
+			user.audio.track.enabled = false
+			user.audio.isActive = false
+			myIconMic.src = "/assets/pictures/micOff.png"
+			changeMic({ parameter, status: false, socket })
+			userListMicIcon.classList.replace("fa-microphone", "fa-microphone-slash")
+			myMicIcons.classList.replace("fa-microphone", "fa-microphone-slash")
+			micButton.style.backgroundColor = "red"
+		} else {
+			parameter.isAudio = false
+			changeAppData({
+				socket,
+				data: { isActive: false, isMicActive: false, isVideoActive: parameter.videoProducer ? true : false },
+				remoteProducerId: parameter.audioProducer.id,
+			})
+			micButton.classList.replace("btn-danger", "btn-success")
+			user.audio.track.enabled = true
+			user.audio.isActive = true
+			myIconMic.src = "/assets/pictures/micOn.png"
+			changeMic({ parameter, status: true, socket })
+			userListMicIcon.classList.replace("fa-microphone-slash", "fa-microphone")
+			myMicIcons.classList.replace("fa-microphone-slash", "fa-microphone")
+			micButton.removeAttribute("style")
+		}
+	} catch (error) {
+		errorHandling({
+			type: "minor",
+			error: `- Error When Muting Mic : ${error}`,
+			message: `Something wrong when muting mic!`,
+			title: "Error!",
 		})
-		micButton.classList.replace("btn-success", "btn-danger")
-		user.audio.track.enabled = false
-		user.audio.isActive = false
-		myIconMic.src = "/assets/pictures/micOff.png"
-		changeMic({ parameter, status: false, socket })
-		// micButton.firstElementChild.innerHTML = "Muted"
-		userListMicIcon.classList.replace("fa-microphone", "fa-microphone-slash")
-		myMicIcons.classList.replace("fa-microphone", "fa-microphone-slash")
-		micButton.style.backgroundColor = "red"
-	} else {
-		parameter.isAudio = false
-		changeAppData({
-			socket,
-			data: { isActive: false, isMicActive: false, isVideoActive: parameter.videoProducer ? true : false },
-			remoteProducerId: parameter.audioProducer.id,
-		})
-		micButton.classList.replace("btn-danger", "btn-success")
-		user.audio.track.enabled = true
-		user.audio.isActive = true
-		myIconMic.src = "/assets/pictures/micOn.png"
-		changeMic({ parameter, status: true, socket })
-		// micButton.firstElementChild.innerHTML = "Mute"
-		userListMicIcon.classList.replace("fa-microphone-slash", "fa-microphone")
-		myMicIcons.classList.replace("fa-microphone-slash", "fa-microphone")
-		micButton.removeAttribute("style")
 	}
 })
 
@@ -309,23 +341,37 @@ userVideoButton.addEventListener("click", () => {
 			userVideoButton.removeAttribute("style")
 		}
 	} catch (error) {
-		console.log("- Error Displaying User : ", error)
+		errorHandling({
+			type: "minor",
+			error: `- Error When Displaying Participants : ${error}`,
+			message: `Something wrong when displaying participants!`,
+			title: "Error!",
+		})
 	}
 })
 
 usersListButton.addEventListener("click", () => {
-	const videoContainer = document.getElementById("video-container")
-	const usersListContainer = document.getElementById("users-list-container")
-	if (userVideoButton.hasAttribute("style")) {
-		videoContainer.style.right = "-100%"
-		userVideoButton.removeAttribute("style")
-	}
-	if (!usersListButton.hasAttribute("style")) {
-		usersListButton.style.backgroundColor = "green"
-		usersListContainer.style.right = "0%"
-	} else {
-		usersListContainer.style.right = "-100%"
-		usersListButton.removeAttribute("style")
+	try {
+		const videoContainer = document.getElementById("video-container")
+		const usersListContainer = document.getElementById("users-list-container")
+		if (userVideoButton.hasAttribute("style")) {
+			videoContainer.style.right = "-100%"
+			userVideoButton.removeAttribute("style")
+		}
+		if (!usersListButton.hasAttribute("style")) {
+			usersListButton.style.backgroundColor = "green"
+			usersListContainer.style.right = "0%"
+		} else {
+			usersListContainer.style.right = "-100%"
+			usersListButton.removeAttribute("style")
+		}
+	} catch (error) {
+		errorHandling({
+			type: "minor",
+			error: `- Error When Displaying Participants List : ${error}`,
+			message: `Something wrong when displaying participants list!`,
+			title: "Error!",
+		})
 	}
 })
 
@@ -344,7 +390,12 @@ raiseHandButton.addEventListener("click", async () => {
 			await editUserListRaiseHand({ id: parameter.socketId, action: "unraise" })
 		}
 	} catch (error) {
-		console.log("- Error Raising Hand : ", error)
+		errorHandling({
+			type: "minor",
+			error: `- Error When Raising Hand : ${error}`,
+			message: `Something wrong when raising hand!`,
+			title: "Error!",
+		})
 	}
 })
 

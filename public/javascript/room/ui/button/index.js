@@ -10,12 +10,21 @@ const changeMic = ({ parameter, socket, status }) => {
 }
 
 const turnOffOnCamera = ({ id, status }) => {
-	let videoId = document.getElementById(`user-picture-container-${id}`)
-	let cameraIconsUserList = document.getElementById("ulic-" + id)
-	if (!status && videoId) {
-		videoId.className = "video-off"
-	} else videoId.className = "video-on"
-	if (cameraIconsUserList) cameraIconsUserList.className = `${status ? "fas fa-video" : "fas fa-video-slash"}`
+	try {
+		let videoId = document.getElementById(`user-picture-container-${id}`)
+		let cameraIconsUserList = document.getElementById("ulic-" + id)
+		if (!status && videoId) {
+			videoId.className = "video-off"
+		} else videoId.className = "video-on"
+		if (cameraIconsUserList) cameraIconsUserList.className = `${status ? "fas fa-video" : "fas fa-video-slash"}`
+	} catch (error) {
+		errorHandling({
+			type: "minor",
+			error: `- Error When Turning On or Off The Camera For User Id ${id} : ${error}`,
+			message: `Something wrong when turning on or off the camera for user id ${id}!`,
+			title: "Error!",
+		})
+	}
 }
 
 const recordVideo = async ({ parameter, socket }) => {
@@ -142,7 +151,6 @@ const recordVideo = async ({ parameter, socket }) => {
 			})
 		}
 	} catch (error) {
-		console.log("- Error Recording : ", error)
 		// socket.send({ type: 'uploading' })
 		timerLayout({ status: false })
 		if (parameter.record.recordedStream) {
@@ -176,6 +184,13 @@ const recordVideo = async ({ parameter, socket }) => {
 			parameter.record.recordedMedia.reset()
 			parameter.record.recordedMedia = null
 		}
+
+		errorHandling({
+			type: "intermediate",
+			error: `- Error Recording : ${error}`,
+			message: `Something wrong when recording!`,
+			title: "Error!",
+		})
 	}
 }
 
@@ -369,7 +384,12 @@ const displayMainEvent = ({ event, parameter }) => {
 				break
 		}
 	} catch (error) {
-		console.log("- Error displaying main event : ", error)
+		errorHandling({
+			type: "minor",
+			error: `- Error When Displaying Main Event : ${error}`,
+			message: `Something wrong when displaying main event!`,
+			title: "Error!",
+		})
 	}
 }
 
@@ -459,7 +479,12 @@ const signPermission = ({ socket, parameter, PPATSocket, data }) => {
 		}
 		signInButton.addEventListener("click", signDocument)
 	} catch (error) {
-		console.log(error)
+		errorHandling({
+			type: "intermediate",
+			error: `- Error Displaying Sign Document Modal : ${error}`,
+			message: `Something went wrong when display sign document modal!\nPlease contact your admin!`,
+			title: "Error Displaying Sign Document!",
+		})
 	}
 }
 
@@ -474,7 +499,12 @@ const createQueueRaiseHand = async ({ id, username }) => {
 		<span class="raise-hand-queue-username">${username}</span>`
 		queueContainer.insertBefore(raiseHandContainer, queueContainer.lastChild)
 	} catch (error) {
-		console.log("- Error Creating Queue Raise Hand : ", error)
+		errorHandling({
+			type: "minor",
+			error: `- Error When Creating Queue Raise Hand : ${error}`,
+			message: `Something wrong when creating queue raise hand!`,
+			title: "Error!",
+		})
 	}
 }
 
@@ -482,7 +512,12 @@ const removeQueueRaiseHand = async ({ id }) => {
 	try {
 		document.getElementById(`raise-hand-queue-${id}`).remove()
 	} catch (error) {
-		console.log("- Error Removing Queue Raise Hand : ", error)
+		errorHandling({
+			type: "minor",
+			error: `- Error When Removing Queue Raise Hand For User Id ${id} : ${error}`,
+			message: `Something wrong when removing queue raise hand for user id ${id}!`,
+			title: "Error!",
+		})
 	}
 }
 

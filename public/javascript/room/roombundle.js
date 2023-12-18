@@ -26623,7 +26623,12 @@ const startTimer = () => {
 				(hours < 10 ? "0" : "") + hours + ":" + (minutes < 10 ? "0" : "") + minutes + ":" + (seconds < 10 ? "0" : "") + seconds
 		}, 1000)
 	} catch (error) {
-		console.log("- Error Starting Recording Timer : ", error)
+		errorHandling({
+			type: "intermediate",
+			error: `- Error When Starting Time : ${error}`,
+			message: `Something wrong when when starting meeting!\nPlease report this bug!`,
+			title: "Error!",
+		})
 	}
 }
 
@@ -26650,16 +26655,30 @@ const timerLayout = ({ status }) => {
 			recordButton.firstChild.innerHTML = "Start"
 		}
 	} catch (error) {
-		console.log("- Error At Timer Layout : ", error)
+		errorHandling({
+			type: "intermediate",
+			error: `- Error When Starting Timer Layout : ${error}`,
+			message: `Something wrong when starting timer layout!\nIf this bug still persist, please report this bug!`,
+			title: "Error!",
+		})
 	}
 }
 
 const muteAllParticipants = ({ parameter, socket }) => {
-	parameter.allUsers.forEach((data) => {
-		if (data.socketId != socket.id) {
-			socket.emit("mute-all", { socketId: data.socketId })
-		}
-	})
+	try {
+		parameter.allUsers.forEach((data) => {
+			if (data.socketId != socket.id) {
+				socket.emit("mute-all", { socketId: data.socketId })
+			}
+		})
+	} catch (error) {
+		errorHandling({
+			type: "minor",
+			error: `- Error When Muting All Participants : ${error}`,
+			message: `Something wrong when muting all participants!`,
+			title: "Error!",
+		})
+	}
 }
 
 const updateDocuments = async ({ parameter, socket }) => {
@@ -26671,7 +26690,12 @@ const updateDocuments = async ({ parameter, socket }) => {
 			}
 		})
 	} catch (error) {
-		console.log(error)
+		errorHandling({
+			type: "intermediate",
+			error: `- Error When Updating Document : ${error}`,
+			message: `Something wrong when updating document!\nPlease contact your Admin!`,
+			title: "Error!",
+		})
 	}
 }
 
@@ -26702,7 +26726,12 @@ const goHome = () => {
 		const newURL = window.location.origin
 		window.location.href = newURL
 	} catch (error) {
-		console.log("- Error Go To Lobby : ", error)
+		errorHandling({
+			type: "minor",
+			error: `- Error When Go To Lobby : ${error}`,
+			message: `Something wrong when go to lobby!`,
+			title: "Error!",
+		})
 	}
 }
 
@@ -26739,15 +26768,29 @@ const renderPage = ({ parameter, num, pdfDocument }) => {
 			parameter.pdfDocuments[pdfDocument].currentPage = num
 		})
 	} catch (error) {
-		console.log("- Error Rendering Page : ", error)
+		errorHandling({
+			type: "minor",
+			error: `- Error When Rendering Page : ${error}`,
+			message: `Something wrong when rendering page!`,
+			title: "Error!",
+		})
 	}
 }
 
 const queueRenderPage = ({ parameter, num, pdfDocument }) => {
-	if (parameter.pdfDocuments[pdfDocument].pageRendering) {
-		parameter.pdfDocuments[pdfDocument].pageNumPending = num
-	} else {
-		renderPage({ parameter, num, pdfDocument })
+	try {
+		if (parameter.pdfDocuments[pdfDocument].pageRendering) {
+			parameter.pdfDocuments[pdfDocument].pageNumPending = num
+		} else {
+			renderPage({ parameter, num, pdfDocument })
+		}
+	} catch (error) {
+		errorHandling({
+			type: "minor",
+			error: `- Error When Queuing Render Page : ${error}`,
+			message: `Something wrong when queuing render page!`,
+			title: "Error!",
+		})
 	}
 }
 
@@ -26896,7 +26939,7 @@ const addPdfController = async () => {
 		errorHandling({
 			type: "intermediate",
 			error: `- Error When Adding PDF Control Button : ${error}`,
-			message: `Something wrong when when adding PDF control button!`,
+			message: `Something wrong when adding PDF control button!`,
 			title: "Error!",
 		})
 	}
@@ -26911,7 +26954,12 @@ const resetButton = () => {
 		nextButton.remove()
 		prevButton.remove()
 	} catch (error) {
-		console.log("- Error Reset Button : ", error)
+		errorHandling({
+			type: "minor",
+			error: `- Error When Resetting Next / Previous : ${error}`,
+			message: `Something wrong when resetting next / previous!`,
+			title: "Error!",
+		})
 	}
 }
 
@@ -26929,10 +26977,20 @@ const signDocument = async ({ parameter, socket, data }) => {
 		if (response.ok) {
 			getPdf({ parameter, pdfDocument: "aktaDocument" })
 		} else {
-			console.error("File upload failed")
+			errorHandling({
+				type: "intermediate",
+				error: `- Error When Signing Document : ${error}`,
+				message: `Something wrong when when signing document!`,
+				title: "Error!",
+			})
 		}
 	} catch (error) {
-		console.log("- Error Signing Document : ", error)
+		errorHandling({
+			type: "intermediate",
+			error: `- Error When Signing Document : ${error}`,
+			message: `Something wrong when when signing document!`,
+			title: "Error!",
+		})
 	}
 }
 
@@ -26957,7 +27015,12 @@ const raiseAndUnraiseHand = ({ parameter, socket, status }) => {
 			}
 		})
 	} catch (error) {
-		console.log(error)
+		errorHandling({
+			type: "minor",
+			error: `- Error When Raising / Unraising Hand : ${error}`,
+			message: `Something wrong when raising / unraising hand!`,
+			title: "Error!",
+		})
 	}
 }
 
@@ -26983,7 +27046,7 @@ const createUserList = async ({ username, id, micStatus, parameter, socket }) =>
 					<div class="user-list-mic-icon">
 						<i class="fas ${micStatus ? "fa-microphone" : "fa-microphone-slash"}" style="color: #ffffff;" id="user-list-mic-icon-${id}"></i>
 					</div>
-					${parameter.isHost && parameter.socketId != id ? kickIcon: ""}
+					${parameter.isHost && parameter.socketId != id ? kickIcon : ""}
 				</section>`
 		usersListContainer.insertBefore(newUser, usersListContainer.firstChild)
 		if (parameter.isHost && document.getElementById(`kick-icon-${id}`)) {
@@ -27006,7 +27069,12 @@ const removeUserList = async ({ id }) => {
 	try {
 		document.getElementById(`user-list-${id}`).remove()
 	} catch (error) {
-		console.log("- Error Removing User List : ", error)
+		errorHandling({
+			type: "minor",
+			error: `- Error When Removing User List : ${error}`,
+			message: `Something wrong when removing user list!`,
+			title: "Error!",
+		})
 	}
 }
 
@@ -27036,14 +27104,28 @@ const editUserListRaiseHand = async ({ id, action }) => {
 			}, 500)
 		}
 	} catch (error) {
-		console.log("- Error Editing Raise Hand In User List : ", error)
+		errorHandling({
+			type: "minor",
+			error: `- Error When Editing Raise Hand In User List : ${error}`,
+			message: `Something wrong when editing raise hand in user list!`,
+			title: "Error!",
+		})
 	}
 }
 
 const newUserCheckOnRaiseHand = ({ id, socket, username }) => {
-	const raiseHandButton = document.getElementById("raise-hand-button")
-	if (raiseHandButton.hasAttribute("style")) {
-		socket.emit("raise-hand", { socketId: id, status: "raise", username })
+	try {
+		const raiseHandButton = document.getElementById("raise-hand-button")
+		if (raiseHandButton.hasAttribute("style")) {
+			socket.emit("raise-hand", { socketId: id, status: "raise", username })
+		}
+	} catch (error) {
+		errorHandling({
+			type: "minor",
+			error: `- Error When Checking New User Is Hand Raising Or Not : ${error}`,
+			message: `Something wrong when checking new user is hand raising or not!`,
+			title: "Error!",
+		})
 	}
 }
 
@@ -27062,14 +27144,14 @@ const errorHandling = ({ type, error, message, title = "Something went wrong!" }
 			showWarningError({ message, title })
 			setTimeout(() => {
 				window.location.reload()
-			}, 5000)
+			}, 7500)
 			break
 		case "intermediate":
 			console.log(error)
 			showWarningError({ message, title })
 			break
 		case "minor":
-			console.log(error)
+			console.log(`- Minor Error : `, error)
 			break
 		default:
 			console.log(error)
@@ -27366,7 +27448,12 @@ const signalNewConsumerTransport = async ({ remoteProducerId, socket, parameter 
 			})
 		})
 	} catch (error) {
-		console.log("- Error Signaling New Consumer Transport : ", error)
+		errorHandling({
+			type: "minor",
+			error: `- Error Signaling New Consumer Transport : ${error}`,
+			message: `Something wrong when signaling Consumer Transport!`,
+			title: "Error!",
+		})
 	}
 }
 
@@ -27487,12 +27574,22 @@ const connectRecvTransport = async ({ parameter, consumerTransport, socket, remo
 
 					socket.emit("consumer-resume", { serverConsumerId: params.serverConsumerId })
 				} catch (error) {
-					console.log("- Error Consuming : ", error)
+					errorHandling({
+						type: "minor",
+						error: `- Error Consuming : ${error}`,
+						message: `Something wrong when consuming producer!`,
+						title: "Error!",
+					})
 				}
 			}
 		)
 	} catch (error) {
-		console.log("- Error Connecting Receive Transport : ", error)
+		errorHandling({
+			type: "minor",
+			error: `- Error When Connecting Receive Transport : ${error}`,
+			message: `Something wrong when muting all participants!`,
+			title: "Error!",
+		})
 	}
 }
 
@@ -27584,12 +27681,21 @@ const changeMic = ({ parameter, socket, status }) => {
 }
 
 const turnOffOnCamera = ({ id, status }) => {
-	let videoId = document.getElementById(`user-picture-container-${id}`)
-	let cameraIconsUserList = document.getElementById("ulic-" + id)
-	if (!status && videoId) {
-		videoId.className = "video-off"
-	} else videoId.className = "video-on"
-	if (cameraIconsUserList) cameraIconsUserList.className = `${status ? "fas fa-video" : "fas fa-video-slash"}`
+	try {
+		let videoId = document.getElementById(`user-picture-container-${id}`)
+		let cameraIconsUserList = document.getElementById("ulic-" + id)
+		if (!status && videoId) {
+			videoId.className = "video-off"
+		} else videoId.className = "video-on"
+		if (cameraIconsUserList) cameraIconsUserList.className = `${status ? "fas fa-video" : "fas fa-video-slash"}`
+	} catch (error) {
+		errorHandling({
+			type: "minor",
+			error: `- Error When Turning On or Off The Camera For User Id ${id} : ${error}`,
+			message: `Something wrong when turning on or off the camera for user id ${id}!`,
+			title: "Error!",
+		})
+	}
 }
 
 const recordVideo = async ({ parameter, socket }) => {
@@ -27716,7 +27822,6 @@ const recordVideo = async ({ parameter, socket }) => {
 			})
 		}
 	} catch (error) {
-		console.log("- Error Recording : ", error)
 		// socket.send({ type: 'uploading' })
 		timerLayout({ status: false })
 		if (parameter.record.recordedStream) {
@@ -27750,6 +27855,13 @@ const recordVideo = async ({ parameter, socket }) => {
 			parameter.record.recordedMedia.reset()
 			parameter.record.recordedMedia = null
 		}
+
+		errorHandling({
+			type: "intermediate",
+			error: `- Error Recording : ${error}`,
+			message: `Something wrong when recording!`,
+			title: "Error!",
+		})
 	}
 }
 
@@ -27943,7 +28055,12 @@ const displayMainEvent = ({ event, parameter }) => {
 				break
 		}
 	} catch (error) {
-		console.log("- Error displaying main event : ", error)
+		errorHandling({
+			type: "minor",
+			error: `- Error When Displaying Main Event : ${error}`,
+			message: `Something wrong when displaying main event!`,
+			title: "Error!",
+		})
 	}
 }
 
@@ -28033,7 +28150,12 @@ const signPermission = ({ socket, parameter, PPATSocket, data }) => {
 		}
 		signInButton.addEventListener("click", signDocument)
 	} catch (error) {
-		console.log(error)
+		errorHandling({
+			type: "intermediate",
+			error: `- Error Displaying Sign Document Modal : ${error}`,
+			message: `Something went wrong when display sign document modal!\nPlease contact your admin!`,
+			title: "Error Displaying Sign Document!",
+		})
 	}
 }
 
@@ -28048,7 +28170,12 @@ const createQueueRaiseHand = async ({ id, username }) => {
 		<span class="raise-hand-queue-username">${username}</span>`
 		queueContainer.insertBefore(raiseHandContainer, queueContainer.lastChild)
 	} catch (error) {
-		console.log("- Error Creating Queue Raise Hand : ", error)
+		errorHandling({
+			type: "minor",
+			error: `- Error When Creating Queue Raise Hand : ${error}`,
+			message: `Something wrong when creating queue raise hand!`,
+			title: "Error!",
+		})
 	}
 }
 
@@ -28056,7 +28183,12 @@ const removeQueueRaiseHand = async ({ id }) => {
 	try {
 		document.getElementById(`raise-hand-queue-${id}`).remove()
 	} catch (error) {
-		console.log("- Error Removing Queue Raise Hand : ", error)
+		errorHandling({
+			type: "minor",
+			error: `- Error When Removing Queue Raise Hand For User Id ${id} : ${error}`,
+			message: `Something wrong when removing queue raise hand for user id ${id}!`,
+			title: "Error!",
+		})
 	}
 }
 
@@ -28128,7 +28260,12 @@ const createVideo = ({ id, picture, username, micTrigger, parameter, role = "Sak
 			}
 		}
 	} catch (error) {
-		console.log("- Error Creating User Video : ", error)
+		errorHandling({
+			type: "minor",
+			error: `- Error Creating User Video : ${error}`,
+			message: `Something wrong when creating video for participants participants!`,
+			title: "Error!",
+		})
 	}
 }
 
@@ -28140,18 +28277,16 @@ const createAudio = ({ id, track }) => {
 			const newElem = document.createElement("div")
 			newElem.id = `ac-${id}`
 			newElem.innerHTML = `<audio id="a-${id}" autoplay></audio>`
-			// let audio = document.createElement("audio")
-			// audio.id = `a-${id}`
-			// audio.setAttribute("autoplay", true)
-			// audio.srcObject = new MediaStream([track])
-			// newElem.appendChild(audio)
-			// newElem.srcObject = new MediaStream([track])
 			audioContainer.appendChild(newElem)
-			// console.log("- A", document.getElementById("a-" + id))
 			document.getElementById("a-" + id).srcObject = new MediaStream([track])
 		}
 	} catch (error) {
-		console.log("- Error Creating Audio : ", error)
+		errorHandling({
+			type: "minor",
+			error: `- Error When Creating Audio : ${error}`,
+			message: `Something wrong when creating audio!`,
+			title: "Error!",
+		})
 	}
 }
 
@@ -28159,7 +28294,12 @@ const insertVideo = ({ track, id }) => {
 	try {
 		if (document.getElementById("v-" + id)) document.getElementById("v-" + id).srcObject = new MediaStream([track])
 	} catch (error) {
-		console.log("- Error Inserting Video : ", error)
+		errorHandling({
+			type: "minor",
+			error: `- Error When Inserting User Video : ${error}`,
+			message: `Something wrong when inserting user video!`,
+			title: "Error!",
+		})
 	}
 }
 
@@ -28170,7 +28310,12 @@ const removeVideoAndAudio = ({ socketId }) => {
 		const removeAudio = document.getElementById(`va-${socketId}`)
 		if (removeAudio) removeAudio.remove()
 	} catch (error) {
-		console.log("- Error Removing Video / Audio : ", error)
+		errorHandling({
+			type: "minor",
+			error: `- Error When Removing Video / Audio : ${error}`,
+			message: `Something wrong when removing video / audio!`,
+			title: "Error!",
+		})
 	}
 }
 
@@ -28183,7 +28328,12 @@ const changeLayout = ({ parameter }) => {
 			container.classList.add(parameter.videoLayout)
 		})
 	} catch (error) {
-		console.log("- Error Changing Layout : ", error)
+		errorHandling({
+			type: "minor",
+			error: `- Error When Changing Layout : ${error}`,
+			message: `Something wrong when changing layout!`,
+			title: "Error!",
+		})
 	}
 }
 
@@ -28215,13 +28365,6 @@ const createAudioVisualizer = async ({ id, track }) => {
 				analyser.getByteFrequencyData(dataArray)
 
 				const barHeight = dataArray.reduce((sum, value) => sum + value, 0) / dataArray.length
-				// if (document.getElementById(`a-${id}`)) {
-				// 	if (barHeight < 10) {
-				// 		document.getElementById(`a-${id}`).volume = 0
-				// 	} else {
-				// 		document.getElementById(`a-${id}`).volume = 1
-				// 	}
-				// }
 				canvas.style.boxShadow = `inset 0 0 0 ${barHeight / 20}px green, 0 0 0 ${barHeight / 20}px green`
 
 				requestAnimationFrame(drawBar)
@@ -28231,28 +28374,42 @@ const createAudioVisualizer = async ({ id, track }) => {
 			drawBar()
 		}
 	} catch (error) {
-		console.log("- Error Creating Audio Level : ", error)
+		errorHandling({
+			type: "minor",
+			error: `- Error When Creating Audio Level : ${error}`,
+			message: `Something wrong when creating audio level!`,
+			title: "Error!",
+		})
 	}
 }
 
 const changeUserMic = ({ parameter, isMicActive, id }) => {
-	let user = parameter.allUsers.find((data) => data.socketId == id)
-	user.audio.track.enabled = isMicActive
-	user.audio.isActive = isMicActive
-	let userMicIconUserList = document.getElementById("ulim-" + id)
-	let iconMic = document.getElementById(`user-mic-${id}`)
-	if (iconMic) {
-		iconMic.src = `/assets/pictures/mic${isMicActive ? "On" : "Off"}.png`
-	}
-	if (userMicIconUserList) {
-		userMicIconUserList.src = `/assets/pictures/mic${isMicActive ? "On" : "Off"}.png`
-	}
-
-	const userListMicIcon = document.getElementById(`user-list-mic-icon-${id}`)
-	if (isMicActive) {
-		userListMicIcon.classList.replace("fa-microphone-slash", "fa-microphone")
-	} else {
-		userListMicIcon.classList.replace("fa-microphone", "fa-microphone-slash")
+	try {
+		let user = parameter.allUsers.find((data) => data.socketId == id)
+		user.audio.track.enabled = isMicActive
+		user.audio.isActive = isMicActive
+		let userMicIconUserList = document.getElementById("ulim-" + id)
+		let iconMic = document.getElementById(`user-mic-${id}`)
+		if (iconMic) {
+			iconMic.src = `/assets/pictures/mic${isMicActive ? "On" : "Off"}.png`
+		}
+		if (userMicIconUserList) {
+			userMicIconUserList.src = `/assets/pictures/mic${isMicActive ? "On" : "Off"}.png`
+		}
+	
+		const userListMicIcon = document.getElementById(`user-list-mic-icon-${id}`)
+		if (isMicActive) {
+			userListMicIcon.classList.replace("fa-microphone-slash", "fa-microphone")
+		} else {
+			userListMicIcon.classList.replace("fa-microphone", "fa-microphone-slash")
+		}
+	} catch (error) {
+		errorHandling({
+			type: "minor",
+			error: `- Error When Changing User Mic With Id ${id} : ${error}`,
+			message: `Something wrong when changing user mic with id ${id}!`,
+			title: "Error!",
+		})
 	}
 }
 
@@ -28355,7 +28512,12 @@ socket.on("new-producer", ({ producerId, socketId }) => {
 	try {
 		signalNewConsumerTransport({ remoteProducerId: producerId, socket, parameter, socketId })
 	} catch (error) {
-		console.log("- Error Receiving New Producer : ", error)
+		errorHandling({
+			type: "major",
+			error: `- Error When Joining Room : ${error}`,
+			message: `This Page will reload after a few seconds!\nIf errors still persist, please contact your admin!`,
+			title: "Something Went Wrong Went Joining Room!",
+		})
 	}
 })
 
@@ -28398,7 +28560,12 @@ socket.on("producer-closed", ({ remoteProducerId, socketId }) => {
 			removeQueueRaiseHand({ id: socketId })
 		}
 	} catch (error) {
-		console.log("- Error Closing Producer : ", error)
+		errorHandling({
+			type: "minor",
+			error: `- Error When Closing Producer : ${error}`,
+			message: `Something wrong when closing producer : !`,
+			title: "Error!",
+		})
 	}
 })
 
@@ -28424,7 +28591,12 @@ socket.on("mute-all", ({ hostSocketId }) => {
 		const userListMicIcon = document.getElementById(`user-list-mic-icon-${socket.id}`)
 		userListMicIcon.classList.replace("fa-microphone", "fa-microphone-slash")
 	} catch (error) {
-		console.log("- Error Muting All Participants : ", error)
+		errorHandling({
+			type: "minor",
+			error: `- Error When Locking for All Participants : ${error}`,
+			message: `Something wrong when locking mic for all participants!`,
+			title: "Error!",
+		})
 	}
 })
 
@@ -28433,7 +28605,12 @@ socket.on("unmute-all", (data) => {
 		parameter.micCondition.isLocked = false
 		parameter.micCondition.socketId = undefined
 	} catch (error) {
-		console.log("- Error Unlocking Mic Participants Socket On : ", error)
+		errorHandling({
+			type: "minor",
+			error: `- Error When Unlocking Mic For All Participants : ${error}`,
+			message: `Something wrong when unlocking mic for all participants!`,
+			title: "Error!",
+		})
 	}
 })
 
@@ -28457,7 +28634,12 @@ socket.on("change-scroll", ({ socketId, value, type }) => {
 				break
 		}
 	} catch (error) {
-		console.log("- Error Change Scroll : ", error)
+		errorHandling({
+			type: "minor",
+			error: `- Error When Changing Scroll : ${error}`,
+			message: `Something wrong when changing scroll!`,
+			title: "Error!",
+		})
 	}
 })
 
@@ -28510,46 +28692,53 @@ socket.on("kick-user", ({ message }) => {
 
 let micButton = document.getElementById("user-mic-button")
 micButton.addEventListener("click", () => {
-	if (parameter.micCondition.isLocked && !parameter.isHost) {
-		errorHandling({ type: "intermediate", message: `Mic is Locked By Host`, error: "Permission Error", title: "Oops!" })
-		return
-	}
-	let myIconMic = document.getElementById(`user-mic-${socket.id}`)
-	let user = parameter.allUsers.find((data) => data.socketId == socket.id)
-	const myMicIcons = document.getElementById("turn-on-off-mic-icons")
-	const userListMicIcon = document.getElementById(`user-list-mic-icon-${parameter.socketId}`)
-	if (myMicIcons.classList.contains("fa-microphone")) {
-		parameter.isAudio = false
-		changeAppData({
-			socket,
-			data: { isActive: false, isMicActive: false, isVideoActive: parameter.videoProducer ? true : false },
-			remoteProducerId: parameter.audioProducer.id,
+	try {
+		if (parameter.micCondition.isLocked && !parameter.isHost) {
+			errorHandling({ type: "intermediate", message: `Mic is Locked By Host`, error: "Permission Error", title: "Oops!" })
+			return
+		}
+		let myIconMic = document.getElementById(`user-mic-${socket.id}`)
+		let user = parameter.allUsers.find((data) => data.socketId == socket.id)
+		const myMicIcons = document.getElementById("turn-on-off-mic-icons")
+		const userListMicIcon = document.getElementById(`user-list-mic-icon-${parameter.socketId}`)
+		if (myMicIcons.classList.contains("fa-microphone")) {
+			parameter.isAudio = false
+			changeAppData({
+				socket,
+				data: { isActive: false, isMicActive: false, isVideoActive: parameter.videoProducer ? true : false },
+				remoteProducerId: parameter.audioProducer.id,
+			})
+			micButton.classList.replace("btn-success", "btn-danger")
+			user.audio.track.enabled = false
+			user.audio.isActive = false
+			myIconMic.src = "/assets/pictures/micOff.png"
+			changeMic({ parameter, status: false, socket })
+			userListMicIcon.classList.replace("fa-microphone", "fa-microphone-slash")
+			myMicIcons.classList.replace("fa-microphone", "fa-microphone-slash")
+			micButton.style.backgroundColor = "red"
+		} else {
+			parameter.isAudio = false
+			changeAppData({
+				socket,
+				data: { isActive: false, isMicActive: false, isVideoActive: parameter.videoProducer ? true : false },
+				remoteProducerId: parameter.audioProducer.id,
+			})
+			micButton.classList.replace("btn-danger", "btn-success")
+			user.audio.track.enabled = true
+			user.audio.isActive = true
+			myIconMic.src = "/assets/pictures/micOn.png"
+			changeMic({ parameter, status: true, socket })
+			userListMicIcon.classList.replace("fa-microphone-slash", "fa-microphone")
+			myMicIcons.classList.replace("fa-microphone-slash", "fa-microphone")
+			micButton.removeAttribute("style")
+		}
+	} catch (error) {
+		errorHandling({
+			type: "minor",
+			error: `- Error When Muting Mic : ${error}`,
+			message: `Something wrong when muting mic!`,
+			title: "Error!",
 		})
-		micButton.classList.replace("btn-success", "btn-danger")
-		user.audio.track.enabled = false
-		user.audio.isActive = false
-		myIconMic.src = "/assets/pictures/micOff.png"
-		changeMic({ parameter, status: false, socket })
-		// micButton.firstElementChild.innerHTML = "Muted"
-		userListMicIcon.classList.replace("fa-microphone", "fa-microphone-slash")
-		myMicIcons.classList.replace("fa-microphone", "fa-microphone-slash")
-		micButton.style.backgroundColor = "red"
-	} else {
-		parameter.isAudio = false
-		changeAppData({
-			socket,
-			data: { isActive: false, isMicActive: false, isVideoActive: parameter.videoProducer ? true : false },
-			remoteProducerId: parameter.audioProducer.id,
-		})
-		micButton.classList.replace("btn-danger", "btn-success")
-		user.audio.track.enabled = true
-		user.audio.isActive = true
-		myIconMic.src = "/assets/pictures/micOn.png"
-		changeMic({ parameter, status: true, socket })
-		// micButton.firstElementChild.innerHTML = "Mute"
-		userListMicIcon.classList.replace("fa-microphone-slash", "fa-microphone")
-		myMicIcons.classList.replace("fa-microphone-slash", "fa-microphone")
-		micButton.removeAttribute("style")
 	}
 })
 
@@ -28579,23 +28768,37 @@ userVideoButton.addEventListener("click", () => {
 			userVideoButton.removeAttribute("style")
 		}
 	} catch (error) {
-		console.log("- Error Displaying User : ", error)
+		errorHandling({
+			type: "minor",
+			error: `- Error When Displaying Participants : ${error}`,
+			message: `Something wrong when displaying participants!`,
+			title: "Error!",
+		})
 	}
 })
 
 usersListButton.addEventListener("click", () => {
-	const videoContainer = document.getElementById("video-container")
-	const usersListContainer = document.getElementById("users-list-container")
-	if (userVideoButton.hasAttribute("style")) {
-		videoContainer.style.right = "-100%"
-		userVideoButton.removeAttribute("style")
-	}
-	if (!usersListButton.hasAttribute("style")) {
-		usersListButton.style.backgroundColor = "green"
-		usersListContainer.style.right = "0%"
-	} else {
-		usersListContainer.style.right = "-100%"
-		usersListButton.removeAttribute("style")
+	try {
+		const videoContainer = document.getElementById("video-container")
+		const usersListContainer = document.getElementById("users-list-container")
+		if (userVideoButton.hasAttribute("style")) {
+			videoContainer.style.right = "-100%"
+			userVideoButton.removeAttribute("style")
+		}
+		if (!usersListButton.hasAttribute("style")) {
+			usersListButton.style.backgroundColor = "green"
+			usersListContainer.style.right = "0%"
+		} else {
+			usersListContainer.style.right = "-100%"
+			usersListButton.removeAttribute("style")
+		}
+	} catch (error) {
+		errorHandling({
+			type: "minor",
+			error: `- Error When Displaying Participants List : ${error}`,
+			message: `Something wrong when displaying participants list!`,
+			title: "Error!",
+		})
 	}
 })
 
@@ -28614,7 +28817,12 @@ raiseHandButton.addEventListener("click", async () => {
 			await editUserListRaiseHand({ id: parameter.socketId, action: "unraise" })
 		}
 	} catch (error) {
-		console.log("- Error Raising Hand : ", error)
+		errorHandling({
+			type: "minor",
+			error: `- Error When Raising Hand : ${error}`,
+			message: `Something wrong when raising hand!`,
+			title: "Error!",
+		})
 	}
 })
 

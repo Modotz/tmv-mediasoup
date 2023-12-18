@@ -160,7 +160,12 @@ const signalNewConsumerTransport = async ({ remoteProducerId, socket, parameter 
 			})
 		})
 	} catch (error) {
-		console.log("- Error Signaling New Consumer Transport : ", error)
+		errorHandling({
+			type: "minor",
+			error: `- Error Signaling New Consumer Transport : ${error}`,
+			message: `Something wrong when signaling Consumer Transport!`,
+			title: "Error!",
+		})
 	}
 }
 
@@ -281,12 +286,22 @@ const connectRecvTransport = async ({ parameter, consumerTransport, socket, remo
 
 					socket.emit("consumer-resume", { serverConsumerId: params.serverConsumerId })
 				} catch (error) {
-					console.log("- Error Consuming : ", error)
+					errorHandling({
+						type: "minor",
+						error: `- Error Consuming : ${error}`,
+						message: `Something wrong when consuming producer!`,
+						title: "Error!",
+					})
 				}
 			}
 		)
 	} catch (error) {
-		console.log("- Error Connecting Receive Transport : ", error)
+		errorHandling({
+			type: "minor",
+			error: `- Error When Connecting Receive Transport : ${error}`,
+			message: `Something wrong when muting all participants!`,
+			title: "Error!",
+		})
 	}
 }
 

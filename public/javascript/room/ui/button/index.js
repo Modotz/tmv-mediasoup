@@ -1,5 +1,15 @@
 const RecordRTC = require("recordrtc")
-const { timerLayout, muteAllParticipants, unlockAllMic, getPdf, goHome, signDocument, updateDocuments, showWarningError } = require("../../function")
+const {
+	timerLayout,
+	muteAllParticipants,
+	unlockAllMic,
+	getPdf,
+	goHome,
+	signDocument,
+	updateDocuments,
+	showWarningError,
+	errorHandling,
+} = require("../../function")
 
 const changeMic = ({ parameter, socket, status }) => {
 	parameter.allUsers.forEach((data) => {
@@ -407,8 +417,10 @@ const addPPATSignButton = ({ parameter, socket }) => {
 				room: parameter.userData.transactionId,
 				role: "PPAT",
 			}
-			await signDocument({ parameter, socket, data })
-			await updateDocuments({ parameter, socket })
+			signPermission({ socket, parameter, PPATSocket: socket.id, data })
+			// socket.emit("get-sign-permission", { PPATSocket: socket.id, saksiSocket: socket.id, data })
+			// await signDocument({ parameter, socket, data })
+			// await updateDocuments({ parameter, socket })
 		})
 		pdfControllerContainer.appendChild(PPATSignButton)
 	} catch (error) {
@@ -451,8 +463,8 @@ const addSaksiSignButton = async ({ id, role, username, parameter, socket }) => 
 	let videoId = document.getElementById(`vc-${id}`)
 	let saksiSignButton = document.createElement("button")
 	saksiSignButton.id = "signature-" + id
-	saksiSignButton.className = "signature"
-	saksiSignButton.innerHTML = "Sign"
+	saksiSignButton.className = "btn signature"
+	saksiSignButton.innerHTML = `<i class="fas fa-signature fa-lg"></i>`
 	videoId.appendChild(saksiSignButton)
 	saksiSignButton.addEventListener("click", async () => {
 		let data = {
@@ -471,13 +483,16 @@ const signPermission = ({ socket, parameter, PPATSocket, data }) => {
 		displaySign.classList.add("show")
 		displaySign.style.display = "block"
 		const signInButton = document.getElementById("confirm-sign-button")
-		const signDocument = () => {
+		const signDocuments = () => {
+			if (data.isPPAT) {
+				signDocument({ parameter, socket, data })
+			}
 			socket.emit("document-sign-agreed", { PPATSocket, data })
 			displaySign.classList.remove("show")
 			displaySign.removeAttribute("style")
-			signInButton.removeEventListener("click", signDocument)
+			signInButton.removeEventListener("click", signDocuments)
 		}
-		signInButton.addEventListener("click", signDocument)
+		signInButton.addEventListener("click", signDocuments)
 	} catch (error) {
 		errorHandling({
 			type: "intermediate",

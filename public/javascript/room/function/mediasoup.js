@@ -72,7 +72,7 @@ const createSendTransport = async ({ socket, parameter }) => {
 			parameter.producerTransport.on("connectionstatechange", async (e) => {
 				try {
 					console.log("- State Change Producer : ", e)
-					if (e == "failed") goToLobby()
+					if (e == "failed") window.location.reload()
 				} catch (error) {
 					console.log("- Error Connecting State Change Producer : ", error)
 				}

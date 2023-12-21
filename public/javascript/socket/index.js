@@ -53,6 +53,10 @@ socket.on("connection-success", async ({ socketId }) => {
 		parameter.isAudio = true
 		await getPdf({ parameter, pdfDocument: "aktaDocument" })
 		await addTataTertibTemplate({ templateTataTertib })
+		await getMyStream(parameter)
+		await createMyVideo(parameter)
+		await createUserList({ username: parameter.username, id: parameter.socketId, micStatus: true, parameter, socket })
+		await joinRoom({ socket, parameter })
 		if (parameter.userData.authority == "PPAT") {
 			parameter.isHost = true
 			await addPdfController()
@@ -66,10 +70,6 @@ socket.on("connection-success", async ({ socketId }) => {
 			await addPPATSignButton({ parameter, socket })
 			await addReloadButton({ parameter, socket })
 		}
-		await getMyStream(parameter)
-		await createMyVideo(parameter)
-		await createUserList({ username: parameter.username, id: parameter.socketId, micStatus: true, parameter, socket })
-		await joinRoom({ socket, parameter })
 		// console.log("- Parameter : ", parameter)
 	} catch (error) {
 		errorHandling({

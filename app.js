@@ -419,11 +419,19 @@ io.on("connection", async (socket) => {
 	})
 
 	socket.on("get-sign-permission", ({ PPATSocket, saksiSocket, data }) => {
-		socket.to(saksiSocket).emit("get-sign-permission", { PPATSocket, saksiSocket, message: "PPAT Request Your Sign", data })
+		if (saksiSocket == socket.id){
+			socket.emit("get-sign-permission", { PPATSocket, saksiSocket, message: "PPAT Request Your Sign", data })
+		} else {
+			socket.to(saksiSocket).emit("get-sign-permission", { PPATSocket, saksiSocket, message: "PPAT Request Your Sign", data })
+		}
 	})
 
 	socket.on("document-sign-agreed", ({ PPATSocket, data }) => {
-		socket.to(PPATSocket).emit("document-sign-agreed", { message: "Saksi Signed Document", data })
+		if (PPATSocket == socket.id){
+			socket.emit("document-sign-agreed", { message: "Saksi Signed Document", data })
+		} else {
+			socket.to(PPATSocket).emit("document-sign-agreed", { message: "Saksi Signed Document", data })
+		}
 	})
 
 	socket.on("reload-document", ({ socketId }) => {

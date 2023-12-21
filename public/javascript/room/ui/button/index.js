@@ -405,24 +405,39 @@ const displayMainEvent = ({ event, parameter }) => {
 
 const addPPATSignButton = ({ parameter, socket }) => {
 	try {
-		let pdfControllerContainer = document.getElementById("pdf-controller")
-		const PPATSignButton = document.createElement("button")
-		PPATSignButton.id = "PPAT-sign-button"
-		PPATSignButton.innerHTML = "Sign Document"
-		PPATSignButton.className = "btn btn-primary"
-		PPATSignButton.addEventListener("click", async () => {
+		// let pdfControllerContainer = document.getElementById("pdf-controller")
+		// const PPATSignButton = document.createElement("button")
+		// PPATSignButton.id = "PPAT-sign-button"
+		// PPATSignButton.innerHTML = "Sign Document"
+		// PPATSignButton.className = "btn btn-primary"
+		// PPATSignButton.addEventListener("click", async () => {
+		// 	let data = {
+		// 		isPPAT: true,
+		// 		username: parameter.username,
+		// 		room: parameter.userData.transactionId,
+		// 		role: "PPAT",
+		// 	}
+		// 	signPermission({ socket, parameter, PPATSocket: socket.id, data })
+		// 	// socket.emit("get-sign-permission", { PPATSocket: socket.id, saksiSocket: socket.id, data })
+		// 	// await signDocument({ parameter, socket, data })
+		// 	// await updateDocuments({ parameter, socket })
+		// })
+		// pdfControllerContainer.appendChild(PPATSignButton)
+		let videoId = document.getElementById(`vc-${socket.id}`)
+		let saksiSignButton = document.createElement("button")
+		saksiSignButton.id = "signature-" + socket.id
+		saksiSignButton.className = "btn signature"
+		saksiSignButton.innerHTML = `<i class="fas fa-signature fa-lg"></i>`
+		videoId.appendChild(saksiSignButton)
+		saksiSignButton.addEventListener("click", async () => {
 			let data = {
 				isPPAT: true,
 				username: parameter.username,
 				room: parameter.userData.transactionId,
 				role: "PPAT",
 			}
-			signPermission({ socket, parameter, PPATSocket: socket.id, data })
-			// socket.emit("get-sign-permission", { PPATSocket: socket.id, saksiSocket: socket.id, data })
-			// await signDocument({ parameter, socket, data })
-			// await updateDocuments({ parameter, socket })
+			socket.emit("get-sign-permission", { PPATSocket: socket.id, saksiSocket: socket.id, data })
 		})
-		pdfControllerContainer.appendChild(PPATSignButton)
 	} catch (error) {
 		errorHandling({
 			type: "intermediate",

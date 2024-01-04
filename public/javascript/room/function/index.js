@@ -298,7 +298,6 @@ const firstPdfControl = async ({ parameter, socket, pdfDocument }) => {
 			parameter.scrollTimer = setTimeout(function () {
 				let totalScroll = pdfContainer.scrollHeight - pdfContainer.clientHeight
 				let scrolled = Math.floor((pdfContainer.scrollTop / Math.floor(totalScroll)) * 100)
-				console.log(scrolled)
 				parameter.allUsers.forEach((data) => {
 					if (data.socketId != socket.id) {
 						socket.emit("change-scroll", { socketId: data.socketId, value: scrolled, type: "transaksi" })
@@ -532,23 +531,21 @@ const showWarningError = ({ message, title }) => {
 }
 
 const errorHandling = ({ type, error, message, title = "Something went wrong!" }) => {
+	console.log(error)
 	switch (type) {
 		case "major":
-			console.log(error)
 			showWarningError({ message, title })
 			setTimeout(() => {
 				window.location.reload()
 			}, 7500)
 			break
 		case "intermediate":
-			console.log(error)
 			showWarningError({ message, title })
 			break
 		case "minor":
 			console.log(`- Minor Error : `, error)
 			break
 		default:
-			console.log(error)
 			showWarningError({ message: "Unknown Error", title })
 			break
 	}

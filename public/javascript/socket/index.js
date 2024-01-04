@@ -72,7 +72,7 @@ socket.on("connection-success", async ({ socketId }) => {
 		}
 		// console.log("- Parameter : ", parameter)
 	} catch (error) {
-		errorHandling({
+		await errorHandling({
 			type: "intermediate",
 			error: `- Error On Connecting : ${error}`,
 			message: `Something wrong when connecting to meeting!`,
@@ -192,7 +192,6 @@ socket.on("change-scroll", ({ socketId, value, type }) => {
 		switch (type) {
 			case "transaksi":
 				let pdfContainer = document.getElementById("pdf-container")
-				console.log(value)
 				let totalScroll = pdfContainer.scrollHeight - pdfContainer.clientHeight
 				let scrolled = Math.floor((totalScroll * value) / 100)
 				pdfContainer.scrollTop = scrolled
@@ -239,6 +238,28 @@ socket.on("get-sign-permission", ({ message, PPATSocket, data }) => {
 socket.on("document-sign-agreed", async ({ message, data }) => {
 	await signDocument({ data, parameter, socket })
 	await updateDocuments({ parameter, socket })
+	let aktaButton = document.getElementById("akta-button")
+	let rulesButton = document.getElementById("rules-button")
+	rulesButton.className = "btn btn-secondary"
+	aktaButton.className = "btn btn-success"
+	if (parameter.event !== "transaksi") {
+		parameter.event = "transaksi"
+		await displayMainEvent({ event: "transaksi", parameter })
+		await queueRenderPage({ parameter, num: 6, pdfDocument: "aktaDocument" })
+		parameter.allUsers.forEach((data) => {
+			if (data.socketId != socket.id) {
+				socket.emit("change-event", { socketId: data.socketId, event: "transaksi" })
+				socket.emit("change-page", { socketId: data.socketId, currentPage: 6, pdfDocument: "aktaDocument" })
+			}
+		})
+	} else {
+		await queueRenderPage({ parameter, num: 6, pdfDocument: "aktaDocument" })
+		parameter.allUsers.forEach((data) => {
+			if (data.socketId != socket.id) {
+				socket.emit("change-page", { socketId: data.socketId, currentPage: 6, pdfDocument: "aktaDocument" })
+			}
+		})
+	}
 })
 
 socket.on("reload-document", ({ message }) => {

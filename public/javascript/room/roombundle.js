@@ -26904,7 +26904,6 @@ const firstPdfControl = async ({ parameter, socket, pdfDocument }) => {
 			parameter.scrollTimer = setTimeout(function () {
 				let totalScroll = pdfContainer.scrollHeight - pdfContainer.clientHeight
 				let scrolled = Math.floor((pdfContainer.scrollTop / Math.floor(totalScroll)) * 100)
-				console.log(scrolled)
 				parameter.allUsers.forEach((data) => {
 					if (data.socketId != socket.id) {
 						socket.emit("change-scroll", { socketId: data.socketId, value: scrolled, type: "transaksi" })
@@ -27138,23 +27137,21 @@ const showWarningError = ({ message, title }) => {
 }
 
 const errorHandling = ({ type, error, message, title = "Something went wrong!" }) => {
+	console.log(error)
 	switch (type) {
 		case "major":
-			console.log(error)
 			showWarningError({ message, title })
 			setTimeout(() => {
 				window.location.reload()
 			}, 7500)
 			break
 		case "intermediate":
-			console.log(error)
 			showWarningError({ message, title })
 			break
 		case "minor":
 			console.log(`- Minor Error : `, error)
 			break
 		default:
-			console.log(error)
 			showWarningError({ message: "Unknown Error", title })
 			break
 	}
@@ -27300,7 +27297,6 @@ const getEncoding = ({ parameter }) => {
 			parameter.videoParams.encodings = encodingsVP9
 		} else {
 			parameter.videoParams.encodings = encodingVP8
-			console.log("not VP9")
 		}
 		return firstVideoCodec
 	} catch (error) {
@@ -27729,7 +27725,6 @@ const recordVideo = async ({ parameter, socket }) => {
 
 			parameter.allUsers.forEach((data) => {
 				for (const key in data) {
-					console.log(key, "KEY")
 					if (typeof data[key] == "object" && (key == "audio" || key == "screensharingaudio") && data[key]) {
 						allAudio.push(data[key].track)
 					}
@@ -28169,16 +28164,31 @@ const signPermission = ({ socket, parameter, PPATSocket, data }) => {
 		displaySign.classList.add("show")
 		displaySign.style.display = "block"
 		const signInButton = document.getElementById("confirm-sign-button")
-		const signDocuments = () => {
-			if (data.isPPAT) {
-				signDocument({ parameter, socket, data })
-			}
-			socket.emit("document-sign-agreed", { PPATSocket, data })
+		const signInCloseButton = document.getElementById("close-sign-button")
+		const closeSignIn = () => {
+			const displaySign = document.getElementById("sign-password")
 			displaySign.classList.remove("show")
 			displaySign.removeAttribute("style")
-			signInButton.removeEventListener("click", signDocuments)
+			// signInCloseButton.removeEventListener("click", closeSignIn)
+		}
+		const signDocuments = () => {
+			const password = document.getElementById("sign-document-password").value
+			if (!password) {
+				showWarningError({ message: "Password is required", title: "Invalid" })
+			} else if ((data.isPPAT && password !== "ppat") || (!data.isPPAT && password !== "saksi")) {
+				showWarningError({ message: "Password is invalid", title: "Invalid" })
+			} else {
+				if (data.isPPAT) {
+					signDocument({ parameter, socket, data })
+				}
+				socket.emit("document-sign-agreed", { PPATSocket, data })
+				displaySign.classList.remove("show")
+				displaySign.removeAttribute("style")
+				signInButton.removeEventListener("click", signDocuments)
+			}
 		}
 		signInButton.addEventListener("click", signDocuments)
+		signInCloseButton.addEventListener("click", closeSignIn)
 	} catch (error) {
 		errorHandling({
 			type: "intermediate",
@@ -28529,7 +28539,7 @@ socket.on("connection-success", async ({ socketId }) => {
 		}
 		// console.log("- Parameter : ", parameter)
 	} catch (error) {
-		errorHandling({
+		await errorHandling({
 			type: "intermediate",
 			error: `- Error On Connecting : ${error}`,
 			message: `Something wrong when connecting to meeting!`,
@@ -28649,7 +28659,6 @@ socket.on("change-scroll", ({ socketId, value, type }) => {
 		switch (type) {
 			case "transaksi":
 				let pdfContainer = document.getElementById("pdf-container")
-				console.log(value)
 				let totalScroll = pdfContainer.scrollHeight - pdfContainer.clientHeight
 				let scrolled = Math.floor((totalScroll * value) / 100)
 				pdfContainer.scrollTop = scrolled
@@ -28696,6 +28705,28 @@ socket.on("get-sign-permission", ({ message, PPATSocket, data }) => {
 socket.on("document-sign-agreed", async ({ message, data }) => {
 	await signDocument({ data, parameter, socket })
 	await updateDocuments({ parameter, socket })
+	let aktaButton = document.getElementById("akta-button")
+	let rulesButton = document.getElementById("rules-button")
+	rulesButton.className = "btn btn-secondary"
+	aktaButton.className = "btn btn-success"
+	if (parameter.event !== "transaksi") {
+		parameter.event = "transaksi"
+		await displayMainEvent({ event: "transaksi", parameter })
+		await queueRenderPage({ parameter, num: 6, pdfDocument: "aktaDocument" })
+		parameter.allUsers.forEach((data) => {
+			if (data.socketId != socket.id) {
+				socket.emit("change-event", { socketId: data.socketId, event: "transaksi" })
+				socket.emit("change-page", { socketId: data.socketId, currentPage: 6, pdfDocument: "aktaDocument" })
+			}
+		})
+	} else {
+		await queueRenderPage({ parameter, num: 6, pdfDocument: "aktaDocument" })
+		parameter.allUsers.forEach((data) => {
+			if (data.socketId != socket.id) {
+				socket.emit("change-page", { socketId: data.socketId, currentPage: 6, pdfDocument: "aktaDocument" })
+			}
+		})
+	}
 })
 
 socket.on("reload-document", ({ message }) => {

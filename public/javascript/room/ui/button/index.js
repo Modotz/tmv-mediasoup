@@ -58,7 +58,6 @@ const recordVideo = async ({ parameter, socket }) => {
 
 			parameter.allUsers.forEach((data) => {
 				for (const key in data) {
-					console.log(key, "KEY")
 					if (typeof data[key] == "object" && (key == "audio" || key == "screensharingaudio") && data[key]) {
 						allAudio.push(data[key].track)
 					}
@@ -498,16 +497,31 @@ const signPermission = ({ socket, parameter, PPATSocket, data }) => {
 		displaySign.classList.add("show")
 		displaySign.style.display = "block"
 		const signInButton = document.getElementById("confirm-sign-button")
-		const signDocuments = () => {
-			if (data.isPPAT) {
-				signDocument({ parameter, socket, data })
-			}
-			socket.emit("document-sign-agreed", { PPATSocket, data })
+		const signInCloseButton = document.getElementById("close-sign-button")
+		const closeSignIn = () => {
+			const displaySign = document.getElementById("sign-password")
 			displaySign.classList.remove("show")
 			displaySign.removeAttribute("style")
-			signInButton.removeEventListener("click", signDocuments)
+			// signInCloseButton.removeEventListener("click", closeSignIn)
+		}
+		const signDocuments = () => {
+			const password = document.getElementById("sign-document-password").value
+			if (!password) {
+				showWarningError({ message: "Password is required", title: "Invalid" })
+			} else if ((data.isPPAT && password !== "ppat") || (!data.isPPAT && password !== "saksi")) {
+				showWarningError({ message: "Password is invalid", title: "Invalid" })
+			} else {
+				if (data.isPPAT) {
+					signDocument({ parameter, socket, data })
+				}
+				socket.emit("document-sign-agreed", { PPATSocket, data })
+				displaySign.classList.remove("show")
+				displaySign.removeAttribute("style")
+				signInButton.removeEventListener("click", signDocuments)
+			}
 		}
 		signInButton.addEventListener("click", signDocuments)
+		signInCloseButton.addEventListener("click", closeSignIn)
 	} catch (error) {
 		errorHandling({
 			type: "intermediate",

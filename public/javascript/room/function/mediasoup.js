@@ -73,7 +73,10 @@ const createSendTransport = async ({ socket, parameter }) => {
 			parameter.producerTransport.on("connectionstatechange", async (e) => {
 				try {
 					console.log("- State Change Producer : ", e)
-					if (e == "failed") goToLobby()
+					if (e == "failed") {
+						// socket.close()
+						window.location.reload()
+					}
 				} catch (error) {
 					console.log("- Error Connecting State Change Producer : ", error)
 				}
@@ -141,6 +144,10 @@ const connectSendTransport = async (parameter) => {
 		// 	}
 		// }, 1000)
 	} catch (error) {
+		window.alert(`Error getting your stream\nPlease make sure your camera is working\nThis page will refresh in a few seconds\n`)
+		setTimeout(() => {
+			window.location.reload()
+		}, 7000)
 		console.log("- Error Connecting Transport Producer : ", error)
 	}
 }
@@ -174,9 +181,12 @@ const signalNewConsumerTransport = async ({ remoteProducerId, socket, parameter 
 					errback(error)
 				}
 			})
-			parameter.consumerTransport.on("connectionstatechange", async (e) => {
-				console.log("- Receiver Transport State : ", e)
-			})
+			// parameter.consumerTransport.on("connectionstatechange", async (e) => {
+			// 	console.log("- Receiver Transport State : ", e)
+			// 	// if (e === "connecting"){
+			// 	// 	const userVideo = document.getElementById()
+			// 	// }
+			// })
 			connectRecvTransport({
 				parameter,
 				consumerTransport: parameter.consumerTransport,
@@ -208,6 +218,24 @@ const connectRecvTransport = async ({ parameter, consumerTransport, socket, remo
 					let streamId
 					if (params?.appData?.label == "audio" || params?.appData?.label == "video") streamId = `${params.producerSocketOwner}-mic-webcam`
 					else streamId = `${params.producerSocketOwner}-screen-sharing`
+					consumerTransport.on("connectionstatechange", async (e) => {
+						console.log("- Receiver Transport State : ", e)
+						if (e === "connecting"){
+							const userVideo = document.getElementById(`vc-${params.producerSocketOwner}`)
+							if (userVideo){
+								const buffer = document.createElement("img")
+								buffer.src = "/assets/pictures/ZKZg.gif"
+								buffer.id = `buffer-${params.producerSocketOwner}`
+								buffer.style.zIndex = 100
+								buffer.style.maxHeight = "100%"
+								buffer.style.maxWidth = "100%"
+								userVideo.appendChild(buffer)
+							}
+						} else if (e == "connected"){
+							const removeBuffer = document.getElementById(`buffer-${params.producerSocketOwner}`)
+							removeBuffer.remove()
+						}
+					})
 
 					const consumer = await consumerTransport.consume({
 						id: params.id,
@@ -227,7 +255,7 @@ const connectRecvTransport = async ({ parameter, consumerTransport, socket, remo
 					// 				console.log("- With Codec : ", value.bytesReceived - withCodec)
 					// 				withCodec = value.bytesReceived
 					// 				// break
-					// 			} 
+					// 			}
 					// 		}
 					// 	}, 1000)
 					// }

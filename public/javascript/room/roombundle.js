@@ -22247,7 +22247,8 @@ const { createDevice } = require("./mediasoup")
 const getMyStream = async (parameter) => {
 	try {
 		let config = {
-			video: localStorage.getItem("is_video_active") == "true" ? { deviceId: { exact: localStorage.getItem("selectedVideoDevices") }, frameRate: { ideal: 30, max: 35 } } : false,
+			// video: localStorage.getItem("is_video_active") == "true" ? { deviceId: { exact: localStorage.getItem("selectedVideoDevices") }, frameRate: { ideal: 30, max: 35 } } : false,
+			video: localStorage.getItem("is_video_active") == "true" ? { deviceId: { exact: localStorage.getItem("selectedVideoDevices") } } : false,
 			audio: localStorage.getItem("selectedVideoDevices")
 				? {
 						deviceId: { exact: localStorage.getItem("selectedAudioDevices") },
@@ -22330,6 +22331,15 @@ const getMyStream = async (parameter) => {
 		createUserList({ username: "Diky", socketId: parameter.socketId, cameraTrigger: videoCondition, picture, micTrigger: audioCondition })
 	} catch (error) {
 		console.log("- Error Getting My Stream : ", error)
+		let ae = document.getElementById("alert-error")
+		ae.className = "show"
+		ae.innerHTML = `Error getting your stream\nPlease make sure your camera is working\nThis page will refresh in a few seconds`
+		// Show Warning
+		setTimeout(() => {
+			ae.className = ae.className.replace("show", "")
+			ae.innerHTML = ``
+		}, 5000)
+		return
 	}
 }
 
@@ -22590,14 +22600,15 @@ const connectRecvTransport = async ({ parameter, consumerTransport, socket, remo
 								const buffer = document.createElement("img")
 								buffer.src = "/assets/pictures/ZKZg.gif"
 								buffer.id = `buffer-${params.producerSocketOwner}`
-								buffer.style.zIndex = 100
+								buffer.style.zIndex = "100"
 								buffer.style.maxHeight = "100%"
 								buffer.style.maxWidth = "100%"
+								buffer.style.position = "absolute"
 								userVideo.appendChild(buffer)
 							}
 						} else if (e == "connected"){
 							const removeBuffer = document.getElementById(`buffer-${params.producerSocketOwner}`)
-							removeBuffer.remove()
+							if (removeBuffer) removeBuffer.remove()
 						}
 					})
 
@@ -23229,7 +23240,7 @@ const createVideo = ({ id, videoClassName, picture, username, micTrigger }) => {
 			const micIcons = `<div class="icons-mic"><img src="/assets/pictures/mic${
 				micTrigger ? "On" : "Off"
 			}.png" class="mic-image" id="user-mic-${id}"/></div>`
-			userVideoContainer.innerHTML = `${micIcons}<video id="v-${id}" class="user-video" poster="/assets/pictures/unknown.jpg" autoplay></video>${addPicture}<div class="username">${username}</div>`
+			userVideoContainer.innerHTML = `${micIcons}<video id="v-${id}" class="user-video" autoplay></video>${addPicture}<div class="username">${username}</div>`
 			videoContainer.appendChild(userVideoContainer)
 		}
 	} catch (error) {
@@ -23712,6 +23723,18 @@ switchCameraButton.addEventListener("click", async () => {
 
 let screenSharingButton = document.getElementById("user-screen-share-button")
 screenSharingButton.addEventListener("click", () => {
+	if (parameter.isScreenSharing.isScreenSharing && parameter.isScreenSharing.socketId !== parameter.socketId) {
+		let ae = document.getElementById("alert-error")
+		ae.className = "show"
+		ae.innerHTML = `Someone is already screen-sharing`
+		// Show Warning
+		setTimeout(() => {
+			ae.className = ae.className.replace("show", "")
+			ae.innerHTML = ``
+		}, 3000)
+		return
+	}
+	parameter.isScreenSharing.socketId = parameter.socketId
 	if (screenSharingButton.classList[1] == "button-small-custom") {
 		screenSharingButton.classList.remove("button-small-custom")
 		screenSharingButton.classList.add("button-small-custom-clicked")

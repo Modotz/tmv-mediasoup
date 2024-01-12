@@ -220,22 +220,22 @@ const connectRecvTransport = async ({ parameter, consumerTransport, socket, remo
 					else streamId = `${params.producerSocketOwner}-screen-sharing`
 					consumerTransport.on("connectionstatechange", async (e) => {
 						console.log("- Receiver Transport State : ", e)
-						if (e === "connecting"){
-							const userVideo = document.getElementById(`vc-${params.producerSocketOwner}`)
-							if (userVideo){
-								const buffer = document.createElement("img")
-								buffer.src = "/assets/pictures/ZKZg.gif"
-								buffer.id = `buffer-${params.producerSocketOwner}`
-								buffer.style.zIndex = "100"
-								buffer.style.maxHeight = "100%"
-								buffer.style.maxWidth = "100%"
-								buffer.style.position = "absolute"
-								userVideo.appendChild(buffer)
-							}
-						} else if (e == "connected"){
-							const removeBuffer = document.getElementById(`buffer-${params.producerSocketOwner}`)
-							if (removeBuffer) removeBuffer.remove()
-						}
+						// if (e === "connecting"){
+						// 	const userVideo = document.getElementById(`vc-${params.producerSocketOwner}`)
+						// 	if (userVideo){
+						// 		const buffer = document.createElement("img")
+						// 		buffer.src = "/assets/pictures/ZKZg.gif"
+						// 		buffer.id = `buffer-${params.producerSocketOwner}`
+						// 		buffer.style.zIndex = "100"
+						// 		buffer.style.maxHeight = "100%"
+						// 		buffer.style.maxWidth = "100%"
+						// 		buffer.style.position = "absolute"
+						// 		userVideo.appendChild(buffer)
+						// 	}
+						// } else if (e == "connected"){
+						// 	const removeBuffer = document.getElementById(`buffer-${params.producerSocketOwner}`)
+						// 	if (removeBuffer) removeBuffer.remove()
+						// }
 					})
 
 					const consumer = await consumerTransport.consume({

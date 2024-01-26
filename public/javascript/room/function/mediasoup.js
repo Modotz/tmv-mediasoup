@@ -76,6 +76,23 @@ const createSendTransport = async ({ socket, parameter }) => {
 					console.log("- Error Connecting State Change Producer : ", error)
 				}
 			})
+
+			socket.emit("create-webrtc-transport", { consumer: true, roomName: parameter.roomName }, ({ params }) => {
+				parameter.consumerTransport = parameter.device.createRecvTransport(params)
+
+				parameter.consumerTransport.on("connect", async ({ dtlsParameters }, callback, errback) => {
+					try {
+						await socket.emit("transport-recv-connect", { dtlsParameters, serverConsumerTransportId: params.id })
+						callback()
+					} catch (error) {
+						errback(error)
+					}
+				})
+				parameter.consumerTransport.on("connectionstatechange", async (e) => {
+					console.log("- Receiver Transport State : ", e)
+				})
+			})
+
 			connectSendTransport(parameter)
 		})
 	} catch (error) {
@@ -136,28 +153,38 @@ const signalNewConsumerTransport = async ({ remoteProducerId, socket, parameter 
 	try {
 		if (parameter.consumingTransports.includes(remoteProducerId)) return
 		parameter.consumingTransports.push(remoteProducerId)
-		await socket.emit("create-webrtc-transport", { consumer: true, roomName: parameter.roomName }, ({ params }) => {
-			parameter.consumerTransport = parameter.device.createRecvTransport(params)
+		if (!parameter.consumerTransport) {
+			await socket.emit("create-webrtc-transport", { consumer: true, roomName: parameter.roomName }, ({ params }) => {
+				parameter.consumerTransport = parameter.device.createRecvTransport(params)
 
-			parameter.consumerTransport.on("connect", async ({ dtlsParameters }, callback, errback) => {
-				try {
-					await socket.emit("transport-recv-connect", { dtlsParameters, serverConsumerTransportId: params.id })
-					callback()
-				} catch (error) {
-					errback(error)
-				}
+				parameter.consumerTransport.on("connect", async ({ dtlsParameters }, callback, errback) => {
+					try {
+						await socket.emit("transport-recv-connect", { dtlsParameters, serverConsumerTransportId: params.id })
+						callback()
+					} catch (error) {
+						errback(error)
+					}
+				})
+				parameter.consumerTransport.on("connectionstatechange", async (e) => {
+					console.log("- Receiver Transport State : ", e)
+				})
+				connectRecvTransport({
+					parameter,
+					consumerTransport: parameter.consumerTransport,
+					socket,
+					remoteProducerId,
+					serverConsumerTransportId: params.id,
+				})
 			})
-			parameter.consumerTransport.on("connectionstatechange", async (e) => {
-				console.log("- Receiver Transport State : ", e)
-			})
+		} else {
 			connectRecvTransport({
 				parameter,
 				consumerTransport: parameter.consumerTransport,
 				socket,
 				remoteProducerId,
-				serverConsumerTransportId: params.id,
+				serverConsumerTransportId: parameter.consumerTransport.id,
 			})
-		})
+		}
 	} catch (error) {
 		errorHandling({
 			type: "minor",

@@ -33,21 +33,21 @@ app.use(express.json({ limit: "10mb" }))
 app.use(express.static("public"))
 app.use(express.static(path.join(__dirname, "public")))
 
-// const httpsServer = https.createServer(options, app)
-// mongoose.connection.once("open", () => {
-// 	httpsServer.listen(port, () => {
-// 		console.log("App On : " + port)
-// 	})
-// })
-// const io = new Server(httpsServer)
-
-const httpServer = http.createServer(app)
-mongoose.connection.once('open', () => {
-    httpServer.listen(port, () => {
-        console.log('App On : ' + port)
-    })
+const httpsServer = https.createServer(options, app)
+mongoose.connection.once("open", () => {
+	httpsServer.listen(port, () => {
+		console.log("App On : " + port)
+	})
 })
-const io = new Server(httpServer)
+const io = new Server(httpsServer)
+
+// const httpServer = http.createServer(app)
+// mongoose.connection.once('open', () => {
+//     httpServer.listen(port, () => {
+//         console.log('App On : ' + port)
+//     })
+// })
+// const io = new Server(httpServer)
 
 let serverParameter = new Server_Parameter()
 let mediasoupParameter = new Mediasoup_Parameter()
@@ -285,11 +285,11 @@ io.on("connection", async (socket) => {
 					)
 					removeConsumerAndTransport.consumers = removeConsumerAndTransport.consumers.filter((data) => data != consumer.id)
 
-					removeConsumerAndTransport.transports = removeConsumerAndTransport.transports.filter((data) => data != consumerTransport.id)
+					// removeConsumerAndTransport.transports = removeConsumerAndTransport.transports.filter((data) => data != consumerTransport.id)
 
 					serverParameter.allUsers[socket.id].consumers = serverParameter.allUsers[socket.id].consumers.filter((id) => id != consumer.id)
-					consumerTransport.close([])
-					mediasoupParameter.transports = mediasoupParameter.transports.filter((transportData) => transportData.transport.id !== consumerTransport.id)
+					// consumerTransport.close([])
+					// mediasoupParameter.transports = mediasoupParameter.transports.filter((transportData) => transportData.transport.id !== consumerTransport.id)
 					consumer.close()
 					mediasoupParameter.consumers = mediasoupParameter.consumers.filter((consumerData) => consumerData.consumer.id !== consumer.id)
 				})

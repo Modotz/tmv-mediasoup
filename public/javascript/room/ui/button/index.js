@@ -599,7 +599,9 @@ const addPreviousButtonScreenSharingView = ({ status, parameter }) => {
 const videoDisplayModeScreenSharing = ({ parameter, status }) => {
 	try {
 		const minMaxButton = document.getElementById("min-max-display-button")
-		minMaxButton.className = "fa-solid fa-minimize fa-lg"
+		if (minMaxButton) {
+			minMaxButton.className = "fa-solid fa-minimize fa-lg"
+		}
 		addPreviousButtonScreenSharingView({ parameter, status: false })
 		addNextButtonScreenSharingView({ status: false, parameter })
 

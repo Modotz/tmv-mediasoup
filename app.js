@@ -5,7 +5,7 @@ const express = require("express")
 const cors = require("cors")
 const router = require("./routes/index.js")
 const app = express()
-const port = 3001
+const port = 9188
 // const port = 80
 const session = require("express-session")
 const fs = require("fs")
@@ -171,7 +171,11 @@ io.on("connection", async (socket) => {
 	})
 
 	socket.on("transport-connect", ({ dtlsParameters }) => {
-		getTransport({ socketId: socket.id, mediasoupParameter }).connect({ dtlsParameters })
+		try {
+			getTransport({ socketId: socket.id, mediasoupParameter }).connect({ dtlsParameters })
+		} catch (error) {
+			console.log("- Error Connecting Transport : ", error)
+		}
 	})
 
 	socket.on("transport-produce", async ({ kind, rtpParameters, appData, roomName }, callback) => {
@@ -321,61 +325,105 @@ io.on("connection", async (socket) => {
 	})
 
 	socket.on("mic-config", ({ sendTo, isMicActive, id }) => {
-		socket.to(sendTo).emit("mic-config", { isMicActive, id })
+		try {
+			socket.to(sendTo).emit("mic-config", { isMicActive, id })
+		} catch (error) {
+			console.log("- Error Transmitting Mic Signal : ", error)
+		}
 	})
 
 	socket.on("close-producer-from-client", ({ id }) => {
-		let socketId
-		mediasoupParameter.producers.forEach((data) => {
-			if (data.producer.id == id) {
-				data.producer.close()
-				socketId = data.socketId
-			}
-		})
-		let producerData = mediasoupParameter.producers.find((producer) => producer.socketId == socketId && producer.producer.kind == "audio")
-		producerData.producer.appData.isVideoActive = false
-		let removeProducer = serverParameter.allRooms[serverParameter.allUsers[socket.id].roomName].participants.find(
-			(data) => data.socketId == socket.id
-		)
-		removeProducer.producers = removeProducer.producers.filter((data) => data != id)
-		mediasoupParameter.producers = mediasoupParameter.producers.filter((data) => data.producer.id != id)
+		try {
+			let socketId
+			mediasoupParameter.producers.forEach((data) => {
+				if (data.producer.id == id) {
+					data.producer.close()
+					socketId = data.socketId
+				}
+			})
+			let producerData = mediasoupParameter.producers.find((producer) => producer.socketId == socketId && producer.producer.kind == "audio")
+			producerData.producer.appData.isVideoActive = false
+			let removeProducer = serverParameter.allRooms[serverParameter.allUsers[socket.id].roomName].participants.find(
+				(data) => data.socketId == socket.id
+			)
+			removeProducer.producers = removeProducer.producers.filter((data) => data != id)
+			mediasoupParameter.producers = mediasoupParameter.producers.filter((data) => data.producer.id != id)
+		} catch (error) {
+			console.log("- Error Close Producer From Client L ", error)
+		}
 	})
 
 	socket.on("send-message", (data) => {
-		socket.to(data.sendTo).emit("receive-message", data)
+		try {
+			socket.to(data.sendTo).emit("receive-message", data)
+		} catch (error) {
+			console.log("- Error Sending Message : ", error)
+		}
 	})
 
 	socket.on("mute-all", ({ socketId }) => {
-		socket.to(socketId).emit("mute-all", { hostSocketId: socketId })
+		try {
+			socket.to(socketId).emit("mute-all", { hostSocketId: socketId })
+		} catch (error) {
+			console.log("- Error Transmiting Mute All Signal : ", error)
+		}
 	})
 
 	socket.on("unmute-all", ({ socketId }) => {
-		socket.to(socketId).emit("unmute-all", { message: "Hello World" })
+		try {
+			socket.to(socketId).emit("unmute-all", { message: "Hello World" })
+		} catch (error) {
+			console.log("- Error Transmiting Unmute All Signal : ", error)
+		}
 	})
 
 	socket.on("end-meeting", ({ socketId }) => {
-		socket.to(socketId).emit("end-meeting", { message: "Hello World" })
+		try {
+			socket.to(socketId).emit("end-meeting", { message: "Hello World" })
+		} catch (error) {
+			console.log("- Error Transmitting End Meeting Signal : ", error)
+		}
 	})
 
 	socket.on("change-app-data", ({ data, remoteProducerId }) => {
-		let producerData = mediasoupParameter.producers.find((producer) => producer.producer.id == remoteProducerId)
-		producerData.producer.appData = { ...producerData.producer.appData, ...data }
+		try {
+			let producerData = mediasoupParameter.producers.find((producer) => producer.producer.id == remoteProducerId)
+			producerData.producer.appData = { ...producerData.producer.appData, ...data }
+		} catch (error) {
+			console.log("- Error Transmitting Change App Data : ", error)
+		}
 	})
 
 	socket.on("change-scroll", ({ socketId, value, type }) => {
-		socket.to(socketId).emit("change-scroll", { value, type })
+		try {
+			socket.to(socketId).emit("change-scroll", { value, type })
+		} catch (error) {
+			console.log("- Error Transmitting Change Scroll Signal : ", error)
+		}
 	})
 
 	socket.on("change-page", ({ socketId, currentPage, pdfDocument }) => {
-		socket.to(socketId).emit("change-page", { currentPage, pdfDocument })
+		try {
+			socket.to(socketId).emit("change-page", { currentPage, pdfDocument })
+		} catch (error) {
+			console.log("- Error Transmitting Change Page Signal : ", error)
+		}
 	})
 
 	socket.on("change-event", ({ socketId, event }) => {
-		socket.to(socketId).emit("change-event", { event })
+		try {
+			socket.to(socketId).emit("change-event", { event })
+		} catch (error) {
+			console.log("- Error Transmitting Change Event Signal : ", error)
+		}
 	})
 
 	socket.on("update-document", ({ socketId }) => {
-		socket.to(socketId).emit("update-document", { message: "Updating Document" })
+		try {
+			socket.to(socketId).emit("update-document", { message: "Updating Document" })
+		} catch (error) {
+			console.log("- Error Transmitting Update Document Signal : ", error)
+		}
 	})
 
 	socket.on("message", function (data) {
@@ -419,31 +467,51 @@ io.on("connection", async (socket) => {
 	})
 
 	socket.on("get-sign-permission", ({ PPATSocket, saksiSocket, data }) => {
-		if (saksiSocket == socket.id){
-			socket.emit("get-sign-permission", { PPATSocket, saksiSocket, message: "PPAT Request Your Sign", data })
-		} else {
-			socket.to(saksiSocket).emit("get-sign-permission", { PPATSocket, saksiSocket, message: "PPAT Request Your Sign", data })
+		try {
+			if (saksiSocket == socket.id) {
+				socket.emit("get-sign-permission", { PPATSocket, saksiSocket, message: "PPAT Request Your Sign", data })
+			} else {
+				socket.to(saksiSocket).emit("get-sign-permission", { PPATSocket, saksiSocket, message: "PPAT Request Your Sign", data })
+			}
+		} catch (error) {
+			console.log("- Error Transmitting Get Sign Permission Signal : ", error)
 		}
 	})
 
 	socket.on("document-sign-agreed", ({ PPATSocket, data }) => {
-		if (PPATSocket == socket.id){
-			socket.emit("document-sign-agreed", { message: "Saksi Signed Document", data })
-		} else {
-			socket.to(PPATSocket).emit("document-sign-agreed", { message: "Saksi Signed Document", data })
+		try {
+			if (PPATSocket == socket.id) {
+				socket.emit("document-sign-agreed", { message: "Saksi Signed Document", data })
+			} else {
+				socket.to(PPATSocket).emit("document-sign-agreed", { message: "Saksi Signed Document", data })
+			}
+		} catch (error) {
+			console.log("- Error Transmitting Sign Agreed Signal : ", error)
 		}
 	})
 
 	socket.on("reload-document", ({ socketId }) => {
-		socket.to(socketId).emit("reload-document", { message: "Refresh Document" })
+		try {
+			socket.to(socketId).emit("reload-document", { message: "Refresh Document" })
+		} catch (error) {
+			console.log("- Error Transmitting Reload Document : ", error)
+		}
 	})
 
 	socket.on("raise-hand", ({ socketId, status, username }) => {
-		socket.to(socketId).emit("raise-hand", { socketId: socket.id, status, username })
+		try {
+			socket.to(socketId).emit("raise-hand", { socketId: socket.id, status, username })
+		} catch (error) {
+			console.log("- Error Transmitting Raise Hand Signal : ", error)
+		}
 	})
 
 	socket.on("kick-user", ({ socketId }) => {
-		socket.to(socketId).emit("kick-user", {message: "You've been kicked by Admin!"})
+		try {
+			socket.to(socketId).emit("kick-user", { message: "You've been kicked by Admin!" })
+		} catch (error) {
+			console.log("- Error Transmitting Kick User Signal : ", error)
+		}
 	})
 })
 app.use(router)

@@ -54,8 +54,12 @@ const createWebRtcTransport = async ({ router, serverParameter }) => {
 }
 
 const getTransport = ({ socketId, mediasoupParameter }) => {
-	const [producerTransport] = mediasoupParameter.transports.filter((transport) => transport.socketId === socketId && !transport.consumer)
-	return producerTransport.transport
+	try {
+		const [producerTransport] = mediasoupParameter.transports.filter((transport) => transport.socketId === socketId && !transport.consumer)
+		return producerTransport.transport
+	} catch (error) {
+		console.log("- Error Getting Transport : ", error)		
+	}
 }
 
 const informConsumer = ({ roomName, socketId, producerId, mediasoupParameter, serverParameter }) => {

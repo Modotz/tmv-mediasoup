@@ -21941,6 +21941,55 @@ let audioParams = {
 module.exports = { params, audioParams, encodingVP8, encodingsVP9 }
 
 },{}],58:[function(require,module,exports){
+async function getLabeledFaceDescriptions({ picture, name }) {
+	const descriptions = []
+	for (let i = 1; i <= 10; i++) {
+		const img = await faceapi.fetchImage(picture, name)
+		const detections = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor()
+		if (detections) {
+			descriptions.push(detections.descriptor)
+		}
+	}
+	return new faceapi.LabeledFaceDescriptors(name, descriptions)
+}
+
+const startFR = ({ picture, name, id }) => {
+	try {
+        const video = document.getElementById(`v-${id}`)
+		video.addEventListener("play", async () => {
+			const labeledFaceDescriptors = await getLabeledFaceDescriptions({ picture, name })
+			let faceContainer = document.getElementById(`face-recognition-${id}`)
+			// const faceMatcher = new faceapi.FaceMatcher(labeledFaceDescriptors)
+			const faceMatcher = new faceapi.FaceMatcher(labeledFaceDescriptors, 0.45)
+			const canvas = faceapi.createCanvasFromMedia(video)
+            console.log(canvas)
+			faceContainer.append(canvas)
+			const displaySize = { width: video.videoWidth, height: video.videoHeight }
+			faceapi.matchDimensions(canvas, displaySize)
+			setInterval(async () => {
+				const detections = await faceapi.detectAllFaces(video).withFaceLandmarks().withFaceDescriptors()
+				const resizedDetections = faceapi.resizeResults(detections, displaySize)
+				canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height)
+				const results = resizedDetections.map((d) => {
+					return faceMatcher.findBestMatch(d.descriptor)
+				})
+				results.forEach((result, i) => {
+					const box = resizedDetections[i].detection.box
+					const drawBox = new faceapi.draw.DrawBox(box, {
+						label: result,
+					})
+					drawBox.draw(canvas)
+				})
+			}, 100)
+		})
+	} catch (error) {
+		console.log("- Error Starting Face Recognition : ", error)
+	}
+}
+
+module.exports = { startFR }
+
+},{}],59:[function(require,module,exports){
 const startTimer = () => {
 	try {
 		let startTime = Date.now()
@@ -22233,14 +22282,7 @@ const checkLocalStorage = ({ parameter }) => {
 		// Set Room Id
 		localStorage.setItem("room_id", parameter.roomName)
 		// Check Config For Audio Devices, Selected Audio Device, Video Devices, Selected Video Devices, Room Id, Username
-		if (
-			!localStorage.getItem("audioDevices") ||
-			!localStorage.getItem("room_id") ||
-			!localStorage.getItem("selectedVideoDevices") ||
-			!localStorage.getItem("videoDevices") ||
-			!localStorage.getItem("username") ||
-			!localStorage.getItem("selectedAudioDevices")
-		) {
+		if (!localStorage.getItem("username")) {
 			goToLobby()
 		}
 	} catch (error) {
@@ -22287,55 +22329,158 @@ module.exports = {
 	hideVideoOptionsMenu,
 }
 
-},{}],59:[function(require,module,exports){
+},{}],60:[function(require,module,exports){
 const { createUserList } = require(".")
 const { socket } = require("../../socket")
+const { startFR } = require("./face-recognition")
 const { createDevice } = require("./mediasoup")
+
+// const getMyStream = async (parameter) => {
+// 	try {
+// 		function arrayBufferToBase64(buffer) {
+// 			var binary = ""
+// 			var bytes = new Uint8Array(buffer)
+// 			var len = bytes.byteLength
+// 			for (var i = 0; i < len; i++) {
+// 				binary += String.fromCharCode(bytes[i])
+// 			}
+// 			return window.btoa(binary)
+// 		}
+
+// 		let username = localStorage.getItem("username")
+// 		parameter.username = username
+// 		// let picture = localStorage.getItem("picture") ? localStorage.getItem("picture") : "/assets/pictures/unknown.jpg"
+// 		const baseurl = window.location.origin
+// 		const url = window.location.pathname
+// 		const parts = url.split("/")
+// 		const roomName = parts[2]
+// 		const response = await fetch(`${baseurl}/user/${username}`)
+// 		if (!response.ok) {
+// 			return
+// 		}
+// 		const pictureBuffer = await response.arrayBuffer()
+// 		const pictureUser = new Blob([pictureBuffer], { type: "application/png" })
+// 		const pic = `data:image/png;base64,${await arrayBufferToBase64(pictureBuffer)}`
+// 		let config = {
+// 			video: true,
+// 			audio: {
+// 				autoGainControl: false,
+// 				noiseSuppression: true,
+// 				echoCancellation: true,
+// 			},
+// 		}
+
+// 		let stream = await navigator.mediaDevices.getUserMedia(config)
+
+// 		document.getElementById("video").srcObject = stream
+
+// 		startFR({ videoElementId: "video", name: username, picture: pic })
+
+// 		// let audioCondition = true
+// 		// let videoCondition = true
+// 		// parameter.initialVideo = true
+// 		// parameter.initialAudio = true
+// 		// parameter.videoParams.track = stream.getVideoTracks()[0]
+// 		// stream.getAudioTracks()[0].enabled = audioCondition
+// 		// let user = {
+// 		// 	username,
+// 		// 	socketId: parameter.socketId,
+// 		// 	picture,
+// 		// 	audio: {
+// 		// 		isActive: audioCondition,
+// 		// 		track: stream.getAudioTracks()[0],
+// 		// 		producerId: undefined,
+// 		// 		transportId: undefined,
+// 		// 		consumerId: undefined,
+// 		// 	},
+// 		// }
+
+// 		// if (videoCondition) {
+// 		// 	user.video = {
+// 		// 		isActive: videoCondition,
+// 		// 		track: stream.getVideoTracks()[0],
+// 		// 		producerId: undefined,
+// 		// 		transportId: undefined,
+// 		// 		consumerId: undefined,
+// 		// 	}
+// 		// }
+
+// 		// parameter.picture = picture
+
+// 		// parameter.audioParams.appData.isMicActive = audioCondition
+// 		// parameter.audioParams.appData.isVideoActive = videoCondition
+// 		// parameter.videoParams.appData.isMicActive = audioCondition
+// 		// parameter.videoParams.appData.isVideoActive = videoCondition
+
+// 		// parameter.audioParams.appData.isActive = audioCondition
+// 		// parameter.videoParams.appData.isActive = videoCondition
+
+// 		// parameter.videoParams.appData.picture = picture
+// 		// parameter.audioParams.appData.picture = picture
+
+// 		// parameter.allUsers = [...parameter.allUsers, user]
+// 		// parameter.localStream = stream
+// 		// parameter.audioParams.track = stream.getAudioTracks()[0]
+
+// 		// parameter.devices.audio.id = localStorage.getItem("selectedAudioDevices")
+// 		// parameter.devices.video.id = localStorage.getItem("selectedVideoDevices")
+// 		// createUserList({ username: parameter.username, socketId: parameter.socketId, cameraTrigger: videoCondition, picture, micTrigger: audioCondition })
+// 	} catch (error) {
+// 		console.log("- Error Getting My Stream : ", error)
+// 		let ae = document.getElementById("alert-error")
+// 		ae.className = "show"
+// 		ae.innerHTML = `Error getting your stream\nPlease make sure your camera is working\nThis page will refresh in a few seconds`
+// 		// Show Warning
+// 		setTimeout(() => {
+// 			ae.className = ae.className.replace("show", "")
+// 			ae.innerHTML = ``
+// 		}, 5000)
+// 		return
+// 	}
+// }
 
 const getMyStream = async (parameter) => {
 	try {
-		let config = {
-			// video: localStorage.getItem("is_video_active") == "true" ? { deviceId: { exact: localStorage.getItem("selectedVideoDevices") }, frameRate: { ideal: 30, max: 35 } } : false,
-			video: localStorage.getItem("is_video_active") == "true" ? { deviceId: { exact: localStorage.getItem("selectedVideoDevices") } } : false,
-			audio: localStorage.getItem("selectedVideoDevices")
-				? {
-						deviceId: { exact: localStorage.getItem("selectedAudioDevices") },
-						autoGainControl: false,
-						noiseSuppression: true,
-						echoCancellation: true,
-				  }
-				: {
-						autoGainControl: false,
-						noiseSuppression: true,
-						echoCancellation: true,
-				  },
+		function arrayBufferToBase64(buffer) {
+			var binary = ""
+			var bytes = new Uint8Array(buffer)
+			var len = bytes.byteLength
+			for (var i = 0; i < len; i++) {
+				binary += String.fromCharCode(bytes[i])
+			}
+			return window.btoa(binary)
 		}
 
 		let username = localStorage.getItem("username")
 		parameter.username = username
+		// let picture = localStorage.getItem("picture") ? localStorage.getItem("picture") : "/assets/pictures/unknown.jpg"
+		const baseurl = window.location.origin
+		const url = window.location.pathname
+		const parts = url.split("/")
+		const roomName = parts[2]
+		const response = await fetch(`${baseurl}/user/${username}`)
+		if (!response.ok) {
+			return
+		}
+		const pictureBuffer = await response.arrayBuffer()
+		const pictureUser = new Blob([pictureBuffer], { type: "application/png" })
+		const picture = `data:image/png;base64,${await arrayBufferToBase64(pictureBuffer)}`
+		let config = {
+			video: true,
+			audio: {
+				autoGainControl: false,
+				noiseSuppression: true,
+				echoCancellation: true,
+			},
+		}
 
 		let stream = await navigator.mediaDevices.getUserMedia(config)
-		let picture = localStorage.getItem("picture") ? localStorage.getItem("picture") : "/assets/pictures/unknown.jpg"
 
-		let audioCondition
-		let videoCondition
+		let audioCondition = true
+		let videoCondition = true
 		parameter.initialVideo = true
 		parameter.initialAudio = true
-		if (localStorage.getItem("is_mic_active") == "false") {
-			document.getElementById("mic-image").src = "/assets/pictures/micOff.png"
-			document.getElementById("user-mic-button").className = "btn button-small-custom-clicked"
-			parameter.initialAudio = false
-			audioCondition = false
-		} else audioCondition = true
-		if (localStorage.getItem("is_video_active") == "false") {
-			document.getElementById("turn-on-off-camera-icons").className = "fas fa-video-slash"
-			document.getElementById("user-turn-on-off-camera-button").className = "btn button-small-custom-clicked"
-			videoCondition = false
-			parameter.initialVideo = false
-		} else {
-			videoCondition = true
-			parameter.videoParams.track = stream.getVideoTracks()[0]
-		}
+		parameter.videoParams.track = stream.getVideoTracks()[0]
 		stream.getAudioTracks()[0].enabled = audioCondition
 		let user = {
 			username,
@@ -22348,10 +22493,7 @@ const getMyStream = async (parameter) => {
 				transportId: undefined,
 				consumerId: undefined,
 			},
-		}
-
-		if (videoCondition) {
-			user.video = {
+			video: {
 				isActive: videoCondition,
 				track: stream.getVideoTracks()[0],
 				producerId: undefined,
@@ -22424,7 +22566,7 @@ const joinRoom = async ({ parameter, socket }) => {
 
 module.exports = { getMyStream, getRoomId, joinRoom }
 
-},{".":58,"../../socket":65,"./mediasoup":60}],60:[function(require,module,exports){
+},{".":59,"../../socket":66,"./face-recognition":58,"./mediasoup":61}],61:[function(require,module,exports){
 const mediasoupClient = require("mediasoup-client")
 const { createVideo, createAudio, insertVideo, updatingLayout, changeLayout, createAudioVisualizer } = require("../ui/video")
 const {
@@ -22756,7 +22898,7 @@ const connectRecvTransport = async ({ parameter, consumerTransport, socket, remo
 
 module.exports = { createDevice, createSendTransport, signalNewConsumerTransport }
 
-},{".":58,"../config/mediasoup":57,"../ui/button":63,"../ui/video":64,"mediasoup-client":42}],61:[function(require,module,exports){
+},{".":59,"../config/mediasoup":57,"../ui/button":64,"../ui/video":65,"mediasoup-client":42}],62:[function(require,module,exports){
 const { params, audioParams } = require("../config/mediasoup")
 
 class Parameters {
@@ -22821,9 +22963,9 @@ class Parameters {
 
 module.exports = { Parameters }
 
-},{"../config/mediasoup":57}],62:[function(require,module,exports){
+},{"../config/mediasoup":57}],63:[function(require,module,exports){
 const { socket } = require("../socket")
-},{"../socket":65}],63:[function(require,module,exports){
+},{"../socket":66}],64:[function(require,module,exports){
 const RecordRTC = require("recordrtc")
 const { timerLayout, muteAllParticipants, unlockAllMic, changeAppData, changeUserListMicIcon } = require("../../function")
 const { updatingLayout, changeLayout, createAudioVisualizer } = require("../video")
@@ -23837,12 +23979,15 @@ module.exports = {
 	getCameraOptions,
 }
 
-},{"../../function":58,"../video":64,"recordrtc":51}],64:[function(require,module,exports){
+},{"../../function":59,"../video":65,"recordrtc":51}],65:[function(require,module,exports){
+const { startFR } = require("../../function/face-recognition")
+
 const createMyVideo = async (parameter) => {
 	try {
 		let picture = `<div class="${parameter.initialVideo ? "video-on" : "video-off"}" id="user-picture-container-${parameter.socketId}"><img src="${
 			parameter.picture
 		}" class="image-turn-off" id="user-picture-${parameter.socketId}""/></div>`
+		let faceRecognition = `<div class="face-recognition" id="face-recognition-${parameter.socketId}"></div>`
 		let videoContainer = document.getElementById("video-container")
 		let userVideoContainer = document.createElement("div")
 		userVideoContainer.id = "vc-" + parameter.socketId
@@ -23852,12 +23997,13 @@ const createMyVideo = async (parameter) => {
 			parameter.initialAudio ? "On" : "Off"
 		}.png" class="mic-image" id="user-mic-${parameter.socketId}"></div>`
 		// userVideoContainer.innerHTML = `${micIcons}<video id="v-${parameter.socketId}" muted autoplay class="user-video"></video>${picture}<div class="username">${parameter.username}</div>`
-		userVideoContainer.innerHTML = `<div class="outside-video-user">${micIcons}<video id="v-${parameter.socketId}" muted autoplay class="user-video"></video>${picture}<div class="username">${parameter.username}</div></div>`
+		userVideoContainer.innerHTML = `<div class="outside-video-user">${micIcons}<video id="v-${parameter.socketId}" muted autoplay class="user-video"></video>${faceRecognition}${picture}<div class="username">${parameter.username}</div></div>`
 		videoContainer.appendChild(userVideoContainer)
 		parameter.userVideoElements.push(userVideoContainer)
 		// document.getElementById(`v-${parameter.socketId}`).style.transform = "rotateY(0deg)"
 		document.getElementById(`v-${parameter.socketId}`).srcObject = parameter.localStream
 		createAudioVisualizer({ id: parameter.socketId, track: parameter.localStream.getAudioTracks()[0] })
+		startFR({ picture: parameter.picture, name: parameter.username, id: parameter.socketId })
 	} catch (error) {
 		console.log("- Error Creating Video : ", error)
 	}
@@ -23868,6 +24014,8 @@ const createVideo = ({ id, videoClassName, picture, username, micTrigger, parame
 		let isVideoExist = document.getElementById("vc-" + id)
 		let addPicture = `<div class="video-on" id="user-picture-container-${id}"><img src="${picture}" class="image-turn-off" id="user-picture-${id}""/></div>`
 		if (!isVideoExist) {
+			let faceRecognition = `<div class="face-recognition" id="face-recognition-${id}"></div>`
+
 			let videoContainer = document.getElementById("video-container")
 			let userVideoContainer = document.createElement("div")
 			userVideoContainer.id = "vc-" + id
@@ -23876,9 +24024,10 @@ const createVideo = ({ id, videoClassName, picture, username, micTrigger, parame
 				micTrigger ? "On" : "Off"
 			}.png" class="mic-image" id="user-mic-${id}"/></div>`
 			// userVideoContainer.innerHTML = `${micIcons}<video id="v-${id}" class="user-video" autoplay></video>${addPicture}<div class="username">${username}</div>`
-			userVideoContainer.innerHTML = `<div class="outside-video-user">${micIcons}<video id="v-${id}" class="user-video" autoplay></video>${addPicture}<div class="username">${username}</div></div>`
+			userVideoContainer.innerHTML = `<div class="outside-video-user">${micIcons}<video id="v-${id}" class="user-video" autoplay></video>${faceRecognition}${addPicture}<div class="username">${username}</div></div>`
 			videoContainer.appendChild(userVideoContainer)
 			parameter.userVideoElements.push(userVideoContainer)
+			startFR({ id: id, name: username, picture: picture })
 		}
 	} catch (error) {
 		console.log("- Error Creating User Video : ", error)
@@ -24118,7 +24267,7 @@ module.exports = {
 	removeUserList,
 }
 
-},{}],65:[function(require,module,exports){
+},{"../../function/face-recognition":58}],66:[function(require,module,exports){
 const {
 	changeUserListMicIcon,
 	sendMessage,
@@ -24164,14 +24313,21 @@ let parameter
 // 	console.log(`connect_error due to ${err.message}`)
 // })
 
-const socket = io("/")
+const socket = io("/", { autoConnect: false })
+Promise.all([
+	faceapi.nets.ssdMobilenetv1.loadFromUri("../javascript/room/face-api/models"),
+	faceapi.nets.faceRecognitionNet.loadFromUri("../javascript/room/face-api/models"),
+	faceapi.nets.faceLandmark68Net.loadFromUri("../javascript/room/face-api/models"),
+]).then((_) => {
+	socket.connect()
+})
 
-// socket.io.on("error", (error) => {
-// 	console.log("-Socket Error : ", error)
-// })
-// socket.io.on("ping", () => {
-// 	console.log("- Ping Socket")
-// })
+socket.io.on("error", (error) => {
+	console.log("-Socket Error : ", error)
+})
+socket.io.on("ping", () => {
+	console.log("- Ping Socket")
+})
 
 socket.on("connection-success", async ({ socketId }) => {
 	try {
@@ -25008,4 +25164,4 @@ document.addEventListener("click", function (e) {
 
 module.exports = { socket, parameter }
 
-},{"../room/function":58,"../room/function/initialization":59,"../room/function/mediasoup":60,"../room/function/parameter":61,"../room/ui/button":63,"../room/ui/video":64,"recordrtc":51}]},{},[62]);
+},{"../room/function":59,"../room/function/initialization":60,"../room/function/mediasoup":61,"../room/function/parameter":62,"../room/ui/button":64,"../room/ui/video":65,"recordrtc":51}]},{},[63]);

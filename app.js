@@ -23,28 +23,28 @@ app.use(cors())
 app.set("view engine", "ejs")
 app.use(express.static(path.join(__dirname, "views")))
 app.use(express.urlencoded({ extended: true }))
-app.use(express.json())
+app.use(express.json({ limit: "100mb" }))
 
 app.use(express.static("public"))
 app.use(express.static(path.join(__dirname, "public")))
 
-// const httpsServer = https.createServer(options, app)
-// httpsServer.listen(port, () => {
-// 	console.log("App On : " + port)
-// })
-// const io = new Server(httpsServer, {
-// 	pingInterval: 5000,
-// 	pingTimeout: 6000,
-// })
-
-const httpServer = http.createServer(app)
-httpServer.listen(port, () => {
+const httpsServer = https.createServer(options, app)
+httpsServer.listen(port, () => {
 	console.log("App On : " + port)
 })
-const io = new Server(httpServer, {
-	pingInterval: 7000,
-	pingTimeout: 8000,
+const io = new Server(httpsServer, {
+	pingInterval: 5000,
+	pingTimeout: 6000,
 })
+
+// const httpServer = http.createServer(app)
+// httpServer.listen(port, () => {
+// 	console.log("App On : " + port)
+// })
+// const io = new Server(httpServer, {
+// 	pingInterval: 7000,
+// 	pingTimeout: 8000,
+// })
 
 let serverParameter = new Server_Parameter()
 let mediasoupParameter = new Mediasoup_Parameter()
@@ -387,21 +387,21 @@ io.on("connection", async (socket) => {
 		}
 	})
 
-	socket.on("manually-turn-off-video", ({ socketId }) => {
-		// console.log(`- Socket Manual Turn Off : ${socketId}`)
-		// console.log("- Server Parameter : ", serverParameter.allUsers)
-		if (serverParameter?.allUsers[socketId]) {
-			console.log("- Closing Reconnect Network")
-			serverParameter?.allUsers[socketId]?.socket?.disconnect()
-		}
-		// setTimeout(() => {
-		// 	// console.log(serverParameter.allUsers[socketId], "<<<<<<<<<<<")
-		// 	if (serverParameter.allUsers[socketId]) {
-		// 		serverParameter.allUsers[socketId].socket.close()
-		// 		console.log(" ->>>>>>>>>>>>>>",serverParameter.allUsers[socketId].socket.id)
-		// 	}
-		// }, 1000)
-	})
+	// socket.on("manually-turn-off-video", ({ socketId }) => {
+	// 	// console.log(`- Socket Manual Turn Off : ${socketId}`)
+	// 	// console.log("- Server Parameter : ", serverParameter.allUsers)
+	// 	if (serverParameter?.allUsers[socketId]) {
+	// 		console.log("- Closing Reconnect Network")
+	// 		serverParameter?.allUsers[socketId]?.socket?.disconnect()
+	// 	}
+	// 	// setTimeout(() => {
+	// 	// 	// console.log(serverParameter.allUsers[socketId], "<<<<<<<<<<<")
+	// 	// 	if (serverParameter.allUsers[socketId]) {
+	// 	// 		serverParameter.allUsers[socketId].socket.close()
+	// 	// 		console.log(" ->>>>>>>>>>>>>>",serverParameter.allUsers[socketId].socket.id)
+	// 	// 	}
+	// 	// }, 1000)
+	// })
 })
 
 app.get("/mediasoup", (req, res, next) => {

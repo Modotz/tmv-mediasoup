@@ -43,14 +43,21 @@ let parameter
 // 	console.log(`connect_error due to ${err.message}`)
 // })
 
-const socket = io("/")
+const socket = io("/", { autoConnect: false })
+Promise.all([
+	faceapi.nets.ssdMobilenetv1.loadFromUri("../javascript/room/face-api/models"),
+	faceapi.nets.faceRecognitionNet.loadFromUri("../javascript/room/face-api/models"),
+	faceapi.nets.faceLandmark68Net.loadFromUri("../javascript/room/face-api/models"),
+]).then((_) => {
+	socket.connect()
+})
 
-// socket.io.on("error", (error) => {
-// 	console.log("-Socket Error : ", error)
-// })
-// socket.io.on("ping", () => {
-// 	console.log("- Ping Socket")
-// })
+socket.io.on("error", (error) => {
+	console.log("-Socket Error : ", error)
+})
+socket.io.on("ping", () => {
+	console.log("- Ping Socket")
+})
 
 socket.on("connection-success", async ({ socketId }) => {
 	try {

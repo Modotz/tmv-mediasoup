@@ -290,14 +290,7 @@ const checkLocalStorage = ({ parameter }) => {
 		// Set Room Id
 		localStorage.setItem("room_id", parameter.roomName)
 		// Check Config For Audio Devices, Selected Audio Device, Video Devices, Selected Video Devices, Room Id, Username
-		if (
-			!localStorage.getItem("audioDevices") ||
-			!localStorage.getItem("room_id") ||
-			!localStorage.getItem("selectedVideoDevices") ||
-			!localStorage.getItem("videoDevices") ||
-			!localStorage.getItem("username") ||
-			!localStorage.getItem("selectedAudioDevices")
-		) {
+		if (!localStorage.getItem("username")) {
 			goToLobby()
 		}
 	} catch (error) {

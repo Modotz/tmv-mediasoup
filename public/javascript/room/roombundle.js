@@ -21943,7 +21943,7 @@ module.exports = { params, audioParams, encodingVP8, encodingsVP9 }
 },{}],58:[function(require,module,exports){
 async function getLabeledFaceDescriptions({ picture, name }) {
 	const descriptions = []
-	for (let i = 1; i <= 10; i++) {
+	for (let i = 1; i <= 2; i++) {
 		const img = await faceapi.fetchImage(picture, name)
 		const detections = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor()
 		if (detections) {
@@ -21955,15 +21955,14 @@ async function getLabeledFaceDescriptions({ picture, name }) {
 
 const startFR = ({ picture, name, id }) => {
 	try {
-        const video = document.getElementById(`v-${id}`)
+		const video = document.getElementById(`v-${id}`)
 		video.addEventListener("play", async () => {
 			const labeledFaceDescriptors = await getLabeledFaceDescriptions({ picture, name })
 			let faceContainer = document.getElementById(`face-recognition-${id}`)
 			// const faceMatcher = new faceapi.FaceMatcher(labeledFaceDescriptors)
 			const faceMatcher = new faceapi.FaceMatcher(labeledFaceDescriptors, 0.45)
 			const canvas = faceapi.createCanvasFromMedia(video)
-            console.log(canvas)
-			faceContainer.append(canvas)
+			faceContainer.appendChild(canvas)
 			const displaySize = { width: video.videoWidth, height: video.videoHeight }
 			faceapi.matchDimensions(canvas, displaySize)
 			setInterval(async () => {
@@ -21977,6 +21976,9 @@ const startFR = ({ picture, name, id }) => {
 					const box = resizedDetections[i].detection.box
 					const drawBox = new faceapi.draw.DrawBox(box, {
 						label: result,
+						boxColor: result._distance <= 0.45 ? "blue" : "red",
+						drawLabelOptions: { fontSize: 11 },
+						lineWidth: 1,
 					})
 					drawBox.draw(canvas)
 				})
@@ -22282,7 +22284,7 @@ const checkLocalStorage = ({ parameter }) => {
 		// Set Room Id
 		localStorage.setItem("room_id", parameter.roomName)
 		// Check Config For Audio Devices, Selected Audio Device, Video Devices, Selected Video Devices, Room Id, Username
-		if (!localStorage.getItem("username")) {
+		if (!localStorage.getItem("username") || !localStorage.getItem("nik")) {
 			goToLobby()
 		}
 	} catch (error) {
@@ -22441,16 +22443,6 @@ const { createDevice } = require("./mediasoup")
 
 const getMyStream = async (parameter) => {
 	try {
-		function arrayBufferToBase64(buffer) {
-			var binary = ""
-			var bytes = new Uint8Array(buffer)
-			var len = bytes.byteLength
-			for (var i = 0; i < len; i++) {
-				binary += String.fromCharCode(bytes[i])
-			}
-			return window.btoa(binary)
-		}
-
 		let username = localStorage.getItem("username")
 		parameter.username = username
 		// let picture = localStorage.getItem("picture") ? localStorage.getItem("picture") : "/assets/pictures/unknown.jpg"
@@ -22458,13 +22450,12 @@ const getMyStream = async (parameter) => {
 		const url = window.location.pathname
 		const parts = url.split("/")
 		const roomName = parts[2]
-		const response = await fetch(`${baseurl}/user/${username}`)
+		const response = await fetch(`${baseurl}/check/${localStorage.getItem("nik")}`)
 		if (!response.ok) {
 			return
 		}
-		const pictureBuffer = await response.arrayBuffer()
-		const pictureUser = new Blob([pictureBuffer], { type: "application/png" })
-		const picture = `data:image/png;base64,${await arrayBufferToBase64(pictureBuffer)}`
+		const data = await response.json()
+		const picture = `data:image/png;base64,${data.base64data}`
 		let config = {
 			video: true,
 			audio: {
@@ -22499,7 +22490,7 @@ const getMyStream = async (parameter) => {
 				producerId: undefined,
 				transportId: undefined,
 				consumerId: undefined,
-			}
+			},
 		}
 
 		parameter.picture = picture
@@ -22521,6 +22512,7 @@ const getMyStream = async (parameter) => {
 
 		parameter.devices.audio.id = localStorage.getItem("selectedAudioDevices")
 		parameter.devices.video.id = localStorage.getItem("selectedVideoDevices")
+		// document.getElementById("testing-picture").src = picture
 		createUserList({ username: parameter.username, socketId: parameter.socketId, cameraTrigger: videoCondition, picture, micTrigger: audioCondition })
 	} catch (error) {
 		console.log("- Error Getting My Stream : ", error)

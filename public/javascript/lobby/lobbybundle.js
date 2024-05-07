@@ -4678,9 +4678,8 @@ joinRoomForm.addEventListener("submit", (e) => {
 					})
 					return
 				}
-
 				image_data_url_server = `data:image/png;base64,${data.base64data}`
-				comparePicture({ picture1: image_data_url, picture2: image_data_url_server })
+				comparePicture({ picture1: image_data_url, picture2: image_data_url_server, fullName: data.fullName, nik: data.nik })
 			})
 	} catch (error) {
 		console.log("- Error Submiting")
@@ -4713,7 +4712,7 @@ const capturePicture = async () => {
 	}
 }
 
-const comparePicture = async ({ picture1, picture2 }) => {
+const comparePicture = async ({ picture1, picture2, fullName, nik }) => {
 	try {
 		const input1 = await faceapi.fetchImage(picture1)
 		const input2 = await faceapi.fetchImage(picture2)
@@ -4721,13 +4720,19 @@ const comparePicture = async ({ picture1, picture2 }) => {
 		descriptors.desc2 = await faceapi.computeFaceDescriptor(input2)
 		const distance = faceapi.utils.round(faceapi.euclideanDistance(descriptors.desc1, descriptors.desc2))
 		console.log(distance)
-		if (distance <= 0.45) {
+		if (distance <= 0.5) {
+			localStorage.setItem("username", fullName)
+			localStorage.setItem("nik", nik)
 			Swal.fire({
 				icon: "success",
 				title: "Verified",
 				text: "Please Wait A Moment!\nYou will be forwaded to the meeting!",
 				showConfirmButton: false,
 				timer: 3000,
+			}).then((_) => {
+				setTimeout(() => {
+					goToRoom()
+				}, 1000)
 			})
 		} else {
 			Swal.fire({
@@ -4746,13 +4751,13 @@ const comparePicture = async ({ picture1, picture2 }) => {
 captureButton.addEventListener("click", capturePicture)
 
 Promise.all([
-	// faceapi.nets.ssdMobilenetv1.loadFromUri("../javascript/room/face-api/models"),
-	// faceapi.nets.faceRecognitionNet.loadFromUri("../javascript/room/face-api/models"),
-	// faceapi.nets.faceLandmark68Net.loadFromUri("../javascript/room/face-api/models"),
+	faceapi.nets.ssdMobilenetv1.loadFromUri("../javascript/room/face-api/models"),
+	faceapi.nets.faceRecognitionNet.loadFromUri("../javascript/room/face-api/models"),
+	faceapi.nets.faceLandmark68Net.loadFromUri("../javascript/room/face-api/models"),
 	// faceapi.loadFaceRecognitionModel("../javascript/room/face-api/models")
-	faceapi.loadSsdMobilenetv1Model("../javascript/room/face-api/models"),
-	faceapi.loadFaceLandmarkModel("../javascript/room/face-api/models"),
-	faceapi.loadFaceRecognitionModel("../javascript/room/face-api/models"),
+	// faceapi.loadSsdMobilenetv1Model("../javascript/room/face-api/models"),
+	// faceapi.loadFaceLandmarkModel("../javascript/room/face-api/models"),
+	// faceapi.loadFaceRecognitionModel("../javascript/room/face-api/models"),
 ]).then(getCameraReady)
 
 },{"sweetalert2":1}]},{},[2]);

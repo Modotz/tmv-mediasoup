@@ -1,6 +1,6 @@
 async function getLabeledFaceDescriptions({ picture, name }) {
 	const descriptions = []
-	for (let i = 1; i <= 10; i++) {
+	for (let i = 1; i <= 2; i++) {
 		const img = await faceapi.fetchImage(picture, name)
 		const detections = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor()
 		if (detections) {
@@ -12,15 +12,14 @@ async function getLabeledFaceDescriptions({ picture, name }) {
 
 const startFR = ({ picture, name, id }) => {
 	try {
-        const video = document.getElementById(`v-${id}`)
+		const video = document.getElementById(`v-${id}`)
 		video.addEventListener("play", async () => {
 			const labeledFaceDescriptors = await getLabeledFaceDescriptions({ picture, name })
 			let faceContainer = document.getElementById(`face-recognition-${id}`)
 			// const faceMatcher = new faceapi.FaceMatcher(labeledFaceDescriptors)
 			const faceMatcher = new faceapi.FaceMatcher(labeledFaceDescriptors, 0.45)
 			const canvas = faceapi.createCanvasFromMedia(video)
-            console.log(canvas)
-			faceContainer.append(canvas)
+			faceContainer.appendChild(canvas)
 			const displaySize = { width: video.videoWidth, height: video.videoHeight }
 			faceapi.matchDimensions(canvas, displaySize)
 			setInterval(async () => {
@@ -34,6 +33,9 @@ const startFR = ({ picture, name, id }) => {
 					const box = resizedDetections[i].detection.box
 					const drawBox = new faceapi.draw.DrawBox(box, {
 						label: result,
+						boxColor: result._distance <= 0.45 ? "blue" : "red",
+						drawLabelOptions: { fontSize: 11 },
+						lineWidth: 1,
 					})
 					drawBox.draw(canvas)
 				})

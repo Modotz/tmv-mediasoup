@@ -71,6 +71,10 @@
             background-color: black;
             height: 80%;
             width: 70%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
         }
 
         .user-video {
@@ -97,6 +101,16 @@
             justify-content: center;
             align-items: center;
         }
+
+
+        .face-recognition {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
     </style>
 </head>
 
@@ -106,7 +120,6 @@
             aria-hidden="true">
             <div class="modal-dialog modal-dialog-custom" role="document">
                 <div class="modal-content">
-                    <canvas id="canvas-element" style="display:none;"></canvas>
                     <div id="snapshot" style="display: none;"></div>
                     <img id="image--output" alt="verifikasi wajah" class="mw-100 my-3">
                 </div>
@@ -116,12 +129,13 @@
             <form class="form-custom" id="register-form">
                 <div class="form-group">
                     <label for="fullname" class="font-weight-bold">Full Name</label>
-                    <input type="text" class="form-control input-custom" id="fullname-id" aria-describedby="fullname"
-                        placeholder="Enter Your Full Name...">
+                    <input type="text" autocomplete="off" class="form-control input-custom" id="fullname-id"
+                        aria-describedby="fullname" placeholder="Enter Your Full Name...">
                 </div>
                 <div class="form-group">
                     <label for="nik" class="font-weight-bold">NIK</label>
-                    <input type="text" class="form-control input-custom" id="nik-id" placeholder="Enter Your NIK...">
+                    <input autocomplete="off" type="text" class="form-control input-custom" id="nik-id"
+                        placeholder="Enter Your NIK...">
                 </div>
                 <div class="submit-button-container">
                     <button type="submit" class="btn btn-primary button-custom">Register</button>
@@ -129,20 +143,22 @@
             </form>
         </div>
         <div class="camera-container" id="camera-container-id">
-            <div class="camera-box">
+            <div class="camera-box" id="camera-box-id">
                 <video id="local-video" poster="/assets/pictures/ZKZg.gif" preload="auto" autoplay class="user-video"
                     muted></video>
+                <div class="face-recognition" id="face-recognition-id"></div>
             </div>
             <div class="capture-box">
                 <button class="btn btn-primary" id="capture-button-id">Capture</button>
-                <button style="display: none;" type="button" id="preview-button-id" class="btn btn-primary"
+                <button disabled type="button" id="preview-button-id" class="btn btn-primary"
                     data-toggle="modal" data-target="#exampleModal">
                     Preview
                 </button>
-                <button style="display: none;" class="btn btn-primary" id="confirm-button-id">Confirm</button>
+                <button disabled class="btn btn-primary" id="confirm-button-id">Confirm</button>
             </div>
         </div>
     </div>
+    <script src="/javascript/room/face-api/face-api.min.js"></script>
     <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
         integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"

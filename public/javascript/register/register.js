@@ -5,7 +5,7 @@ const registerButton = document.getElementById("register-form")
 const cameraContainer = document.getElementById("camera-container-id")
 const localVideo = document.getElementById("local-video")
 const captureButton = document.getElementById("capture-button-id")
-const canvasElement = document.getElementById("canvas-element")
+// const canvasElement = document.getElementById("canvas-element")
 const previewButton = document.getElementById("preview-button-id")
 const confirmPicture = document.getElementById("confirm-button-id")
 const imageOutput = document.getElementById("image--output")
@@ -14,6 +14,35 @@ const nikForm = document.getElementById("nik-id")
 let picture
 let pictureBlob
 let image_data_url
+
+Promise.all([
+	faceapi.nets.ssdMobilenetv1.loadFromUri("../javascript/room/face-api/models"),
+	faceapi.nets.faceRecognitionNet.loadFromUri("../javascript/room/face-api/models"),
+	faceapi.nets.faceLandmark68Net.loadFromUri("../javascript/room/face-api/models"),
+	faceapi.nets.tinyFaceDetector.loadFromUri("../javascript/room/face-api/models"),
+]).then((_) => {
+	console.log(faceapi)
+})
+const startFR = async () => {
+	try {
+		const video = document.getElementById("local-video")
+		const canvas = faceapi.createCanvasFromMedia(video)
+		canvas.style.height = "100%"
+		document.getElementById("face-recognition-id").appendChild(canvas)
+		const displaySize = { width: video.videoWidth, height: video.videoHeight }
+		faceapi.matchDimensions(canvas, displaySize)
+		setInterval(async () => {
+			const detections = await faceapi.detectAllFaces(video, new faceapi.SsdMobilenetv1Options())
+			const resizedDetections = faceapi.resizeResults(detections, displaySize)
+			canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height)
+			faceapi.draw.drawDetections(canvas, resizedDetections)
+		}, 100)
+	} catch (error) {
+		console.log("- Error Starting Face Recognition : ", error)
+	}
+}
+
+localVideo?.addEventListener("play", startFR)
 registerButton.addEventListener("submit", (e) => {
 	e.preventDefault()
 	try {
@@ -53,8 +82,8 @@ const capturePicture = async () => {
 		canvasElement.getContext("2d").drawImage(localVideo, 0, 0)
 		image_data_url = canvasElement.toDataURL("image/png")
 		imageOutput.src = image_data_url
-		previewButton.removeAttribute("style")
-		confirmPicture.removeAttribute("style")
+		previewButton.removeAttribute("disabled")
+		confirmPicture.removeAttribute("disabled")
 	} catch (error) {
 		console.error("Error capturing picture:", error)
 	}

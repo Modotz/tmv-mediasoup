@@ -49,7 +49,7 @@ class FaceApiJS {
 
 			try {
 				await fs.access(faceDataPicture)
-				res.status(200).json({ message: "User Photo Is Exist!", isExist: true, base64data: base64data })
+				res.status(200).json({ message: "User Photo Is Exist!", isExist: true, base64data: base64data, fullName: fullName, nik })
 			} catch (error) {
 				return
 			}

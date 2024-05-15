@@ -49,15 +49,16 @@ Promise.all([
 	faceapi.nets.faceRecognitionNet.loadFromUri("../javascript/room/face-api/models"),
 	faceapi.nets.faceLandmark68Net.loadFromUri("../javascript/room/face-api/models"),
 ]).then((_) => {
+	document.getElementById("loading-id").className = "loading-hide"
 	socket.connect()
 })
 
 socket.io.on("error", (error) => {
 	console.log("-Socket Error : ", error)
 })
-socket.io.on("ping", () => {
-	console.log("- Ping Socket")
-})
+// socket.io.on("ping", () => {
+// 	console.log("- Ping Socket")
+// })
 
 socket.on("connection-success", async ({ socketId }) => {
 	try {
@@ -138,7 +139,7 @@ socket.on("producer-closed", ({ remoteProducerId, socketId }) => {
 		}
 
 		if (kind == "video") {
-			turnOffOnCamera({ id: socketId, status: false })
+			turnOffOnCamera({ id: socketId, status: false, parameter })
 		}
 
 		if (kind == "screensharing") {
@@ -287,7 +288,7 @@ cameraButton.addEventListener("click", async () => {
 			cameraButton.classList.replace("button-small-custom", "button-small-custom-clicked")
 			isActive.add("fa-video-slash")
 			isActive.remove("fa-video")
-			turnOffOnCamera({ id: socket.id, status: false })
+			turnOffOnCamera({ id: socket.id, status: false, parameter })
 			await socket.emit("close-producer-from-client", { id: parameter.videoProducer.id })
 			parameter.videoProducer.close()
 			parameter.videoProducer = null
@@ -296,7 +297,7 @@ cameraButton.addEventListener("click", async () => {
 			parameter.videoParams.appData.isActive = false
 			parameter.videoParams.appData.isVideoActive = false
 		} else {
-			let newStream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: parameter.devices.video.id } } })
+			let newStream = await navigator.mediaDevices.getUserMedia({ video:true })
 			cameraButton.classList.replace("button-small-custom-clicked", "button-small-custom")
 			if (parameter.localStream.getVideoTracks()[0]) {
 				parameter.localStream.removeTrack(parameter.localStream.getVideoTracks()[0])
@@ -319,7 +320,7 @@ cameraButton.addEventListener("click", async () => {
 				myData.video.producerId = parameter.videoProducer.id
 				myData.video.isActive = true
 			}
-			turnOffOnCamera({ id: socket.id, status: true })
+			turnOffOnCamera({ id: socket.id, status: true, parameter })
 		}
 	} catch (error) {
 		console.log("- Error Turning Off Camera : ", error)

@@ -21938,7 +21938,7 @@ let audioParams = {
 	zeroRtpOnPause: true,
 }
 
-module.exports = { params, audioParams, encodingVP8, encodingsVP9 }
+module.exports = { params, audioParams, encodingVP8, encodingsVP9, VIDEO_KSVC_ENCODINGS, VIDEO_SVC_ENCODINGS }
 
 },{}],58:[function(require,module,exports){
 async function getLabeledFaceDescriptions({ picture, name }) {
@@ -21953,8 +21953,14 @@ async function getLabeledFaceDescriptions({ picture, name }) {
 	return new faceapi.LabeledFaceDescriptors(name, descriptions)
 }
 
-const startFR = ({ picture, name, id }) => {
+const startFR = async ({ picture, name, id, parameter }) => {
+	let user = parameter.allUsers.find((data) => data.socketId == id)
+	document.getElementById(`cfr-${id}`)?.remove()
 	try {
+		let isCurrentUser = false
+		if (user.socketId == parameter.socketId) {
+			isCurrentUser = true
+		}
 		const video = document.getElementById(`v-${id}`)
 		video.addEventListener("play", async () => {
 			const labeledFaceDescriptors = await getLabeledFaceDescriptions({ picture, name })
@@ -21962,10 +21968,11 @@ const startFR = ({ picture, name, id }) => {
 			// const faceMatcher = new faceapi.FaceMatcher(labeledFaceDescriptors)
 			const faceMatcher = new faceapi.FaceMatcher(labeledFaceDescriptors, 0.45)
 			const canvas = faceapi.createCanvasFromMedia(video)
+			canvas.id = `cfr-${id}`
 			faceContainer.appendChild(canvas)
 			const displaySize = { width: video.videoWidth, height: video.videoHeight }
 			faceapi.matchDimensions(canvas, displaySize)
-			setInterval(async () => {
+			user.frInterval = setInterval(async () => {
 				const detections = await faceapi.detectAllFaces(video).withFaceLandmarks().withFaceDescriptors()
 				const resizedDetections = faceapi.resizeResults(detections, displaySize)
 				canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height)
@@ -21977,28 +21984,47 @@ const startFR = ({ picture, name, id }) => {
 					const drawBox = new faceapi.draw.DrawBox(box, {
 						label: result,
 						boxColor: result._distance <= 0.45 ? "blue" : "red",
-						drawLabelOptions: { fontSize: 11 },
-						lineWidth: 1,
+						drawLabelOptions: { fontSize: isCurrentUser ? 11 : 8 },
+						lineWidth: isCurrentUser ? 1 : 0.2,
 					})
 					drawBox.draw(canvas)
 				})
 			}, 100)
 		})
 	} catch (error) {
+		if (user?.frInterval) {
+			clearInterval(user.frInterval)
+		}
+		document.getElementById(`cfr-${id}`)?.remove()
 		console.log("- Error Starting Face Recognition : ", error)
 	}
 }
 
-module.exports = { startFR }
+const stopFR = async ({ id, parameter }) => {
+	try {
+		let user = parameter.allUsers.find((data) => data.socketId == id)
+		clearInterval(user?.frInterval)
+		if (user.frInterval) {
+			user.frInterval = null
+		}
+		document.getElementById(`cfr-${id}`)?.remove()
+	} catch (error) {
+		console.log("- Error Stopping Face Recognition : ", error)
+	}
+}
+
+module.exports = { startFR, stopFR }
 
 },{}],59:[function(require,module,exports){
+let intervalId
+
 const startTimer = () => {
 	try {
 		let startTime = Date.now()
 		let timerElement = document.getElementById("realtime-timer")
 
 		// Update the timer every second
-		let intervalId = setInterval(function () {
+		intervalId = setInterval(function () {
 			let currentTime = Date.now()
 			let elapsedTime = currentTime - startTime
 			let hours = Math.floor(elapsedTime / 3600000)
@@ -22034,6 +22060,7 @@ const timerLayout = ({ status }) => {
 			let recordButton = document.getElementById("record-video")
 			recordButton.innerHTML = "Record Video"
 			recordButton.removeAttribute("style")
+			clearInterval(intervalId)
 		}
 	} catch (error) {
 		console.log("- Error At Timer Layout : ", error)
@@ -22334,112 +22361,7 @@ module.exports = {
 },{}],60:[function(require,module,exports){
 const { createUserList } = require(".")
 const { socket } = require("../../socket")
-const { startFR } = require("./face-recognition")
 const { createDevice } = require("./mediasoup")
-
-// const getMyStream = async (parameter) => {
-// 	try {
-// 		function arrayBufferToBase64(buffer) {
-// 			var binary = ""
-// 			var bytes = new Uint8Array(buffer)
-// 			var len = bytes.byteLength
-// 			for (var i = 0; i < len; i++) {
-// 				binary += String.fromCharCode(bytes[i])
-// 			}
-// 			return window.btoa(binary)
-// 		}
-
-// 		let username = localStorage.getItem("username")
-// 		parameter.username = username
-// 		// let picture = localStorage.getItem("picture") ? localStorage.getItem("picture") : "/assets/pictures/unknown.jpg"
-// 		const baseurl = window.location.origin
-// 		const url = window.location.pathname
-// 		const parts = url.split("/")
-// 		const roomName = parts[2]
-// 		const response = await fetch(`${baseurl}/user/${username}`)
-// 		if (!response.ok) {
-// 			return
-// 		}
-// 		const pictureBuffer = await response.arrayBuffer()
-// 		const pictureUser = new Blob([pictureBuffer], { type: "application/png" })
-// 		const pic = `data:image/png;base64,${await arrayBufferToBase64(pictureBuffer)}`
-// 		let config = {
-// 			video: true,
-// 			audio: {
-// 				autoGainControl: false,
-// 				noiseSuppression: true,
-// 				echoCancellation: true,
-// 			},
-// 		}
-
-// 		let stream = await navigator.mediaDevices.getUserMedia(config)
-
-// 		document.getElementById("video").srcObject = stream
-
-// 		startFR({ videoElementId: "video", name: username, picture: pic })
-
-// 		// let audioCondition = true
-// 		// let videoCondition = true
-// 		// parameter.initialVideo = true
-// 		// parameter.initialAudio = true
-// 		// parameter.videoParams.track = stream.getVideoTracks()[0]
-// 		// stream.getAudioTracks()[0].enabled = audioCondition
-// 		// let user = {
-// 		// 	username,
-// 		// 	socketId: parameter.socketId,
-// 		// 	picture,
-// 		// 	audio: {
-// 		// 		isActive: audioCondition,
-// 		// 		track: stream.getAudioTracks()[0],
-// 		// 		producerId: undefined,
-// 		// 		transportId: undefined,
-// 		// 		consumerId: undefined,
-// 		// 	},
-// 		// }
-
-// 		// if (videoCondition) {
-// 		// 	user.video = {
-// 		// 		isActive: videoCondition,
-// 		// 		track: stream.getVideoTracks()[0],
-// 		// 		producerId: undefined,
-// 		// 		transportId: undefined,
-// 		// 		consumerId: undefined,
-// 		// 	}
-// 		// }
-
-// 		// parameter.picture = picture
-
-// 		// parameter.audioParams.appData.isMicActive = audioCondition
-// 		// parameter.audioParams.appData.isVideoActive = videoCondition
-// 		// parameter.videoParams.appData.isMicActive = audioCondition
-// 		// parameter.videoParams.appData.isVideoActive = videoCondition
-
-// 		// parameter.audioParams.appData.isActive = audioCondition
-// 		// parameter.videoParams.appData.isActive = videoCondition
-
-// 		// parameter.videoParams.appData.picture = picture
-// 		// parameter.audioParams.appData.picture = picture
-
-// 		// parameter.allUsers = [...parameter.allUsers, user]
-// 		// parameter.localStream = stream
-// 		// parameter.audioParams.track = stream.getAudioTracks()[0]
-
-// 		// parameter.devices.audio.id = localStorage.getItem("selectedAudioDevices")
-// 		// parameter.devices.video.id = localStorage.getItem("selectedVideoDevices")
-// 		// createUserList({ username: parameter.username, socketId: parameter.socketId, cameraTrigger: videoCondition, picture, micTrigger: audioCondition })
-// 	} catch (error) {
-// 		console.log("- Error Getting My Stream : ", error)
-// 		let ae = document.getElementById("alert-error")
-// 		ae.className = "show"
-// 		ae.innerHTML = `Error getting your stream\nPlease make sure your camera is working\nThis page will refresh in a few seconds`
-// 		// Show Warning
-// 		setTimeout(() => {
-// 			ae.className = ae.className.replace("show", "")
-// 			ae.innerHTML = ``
-// 		}, 5000)
-// 		return
-// 	}
-// }
 
 const getMyStream = async (parameter) => {
 	try {
@@ -22491,6 +22413,7 @@ const getMyStream = async (parameter) => {
 				transportId: undefined,
 				consumerId: undefined,
 			},
+			frInterval: null
 		}
 
 		parameter.picture = picture
@@ -22558,7 +22481,7 @@ const joinRoom = async ({ parameter, socket }) => {
 
 module.exports = { getMyStream, getRoomId, joinRoom }
 
-},{".":59,"../../socket":66,"./face-recognition":58,"./mediasoup":61}],61:[function(require,module,exports){
+},{".":59,"../../socket":66,"./mediasoup":61}],61:[function(require,module,exports){
 const mediasoupClient = require("mediasoup-client")
 const { createVideo, createAudio, insertVideo, updatingLayout, changeLayout, createAudioVisualizer } = require("../ui/video")
 const {
@@ -22574,13 +22497,16 @@ const { encodingVP8, encodingsVP9 } = require("../config/mediasoup")
 
 const getEncoding = ({ parameter }) => {
 	try {
-		const firstVideoCodec = parameter.device.rtpCapabilities.codecs.find((c) => c.kind === "video")
-		let mimeType = firstVideoCodec.mimeType.toLowerCase()
+		// const firstVideoCodec = parameter.device.rtpCapabilities.codecs.find((c) => c.kind === "video")
+		const firstVideoCodec = parameter.device.rtpCapabilities.codecs.find((c) => c.mimeType.toLowerCase() === "video/vp9")
+		let mimeType = firstVideoCodec?.mimeType?.toLowerCase()
 		if (mimeType.includes("vp9")) {
+			console.log("- Encoding VP 9")
+			parameter.videoParams.codec = firstVideoCodec
 			parameter.videoParams.encodings = encodingsVP9
 		} else {
+			console.log("- Encoding VP 8")
 			parameter.videoParams.encodings = encodingVP8
-			console.log("not VP9")
 		}
 		return firstVideoCodec
 	} catch (error) {
@@ -22813,6 +22739,7 @@ const connectRecvTransport = async ({ parameter, consumerTransport, socket, remo
 							username: params.username,
 							socketId: params.producerSocketOwner,
 							picture: params.appData.picture,
+							frInterval: null,
 						}
 						data[params.appData.label] = {
 							track,
@@ -22832,7 +22759,7 @@ const connectRecvTransport = async ({ parameter, consumerTransport, socket, remo
 							parameter,
 						})
 						changeLayout({ parameter })
-						turnOffOnCamera({ id: params.producerSocketOwner, status: false })
+						turnOffOnCamera({ id: params.producerSocketOwner, status: false, parameter })
 						createUserList({
 							username: params.username,
 							socketId: params.producerSocketOwner,
@@ -22847,7 +22774,7 @@ const connectRecvTransport = async ({ parameter, consumerTransport, socket, remo
 					}
 					if (params.kind == "video" && params.appData.label == "video") {
 						insertVideo({ id: params.producerSocketOwner, track, pictures: "/assets/pictures/unknown.jpg" })
-						turnOffOnCamera({ id: params.producerSocketOwner, status: true })
+						turnOffOnCamera({ id: params.producerSocketOwner, status: true, parameter })
 					}
 					if (params.appData.label == "screensharing") {
 						changeLayoutScreenSharingClient({ track, id: params.producerSocketOwner, parameter, status: true })
@@ -22878,6 +22805,13 @@ const connectRecvTransport = async ({ parameter, consumerTransport, socket, remo
 					]
 
 					socket.emit("consumer-resume", { serverConsumerId: params.serverConsumerId })
+					console.log(parameter.consumerTransports)
+					parameter.consumerTransports.forEach((data) => {
+						if (data.consumer.track.kind == "video"){
+							console.log(parameter)
+							console.log(data, "<<")
+						}
+					})
 				} catch (error) {
 					console.log("- Error Consuming : ", error)
 				}
@@ -22961,6 +22895,7 @@ const { socket } = require("../socket")
 const RecordRTC = require("recordrtc")
 const { timerLayout, muteAllParticipants, unlockAllMic, changeAppData, changeUserListMicIcon } = require("../../function")
 const { updatingLayout, changeLayout, createAudioVisualizer } = require("../video")
+const { stopFR, startFR } = require("../../function/face-recognition")
 
 const changeMic = ({ parameter, socket, status }) => {
 	parameter.allUsers.forEach((data) => {
@@ -22970,13 +22905,22 @@ const changeMic = ({ parameter, socket, status }) => {
 	})
 }
 
-const turnOffOnCamera = ({ id, status }) => {
-	let videoId = document.getElementById(`user-picture-container-${id}`)
-	let cameraIconsUserList = document.getElementById("ulic-" + id)
-	if (!status && videoId) {
-		videoId.className = "video-off"
-	} else videoId.className = "video-on"
-	if (cameraIconsUserList) cameraIconsUserList.className = `${status ? "fas fa-video" : "fas fa-video-slash"}`
+const turnOffOnCamera = ({ id, status, parameter }) => {
+	try {
+		let user = parameter.allUsers.find((data) => data.socketId == id)
+		let videoId = document.getElementById(`user-picture-container-${id}`)
+		let cameraIconsUserList = document.getElementById("ulic-" + id)
+		if (!status && videoId) {
+			videoId.className = "video-off"
+			stopFR({ id, parameter })
+		} else {
+			videoId.className = "video-on"
+			// startFR({ picture: user.picture, name: user.username, id: user.socketId, parameter })
+		}
+		if (cameraIconsUserList) cameraIconsUserList.className = `${status ? "fas fa-video" : "fas fa-video-slash"}`
+	} catch (error) {
+		console.log("- Error : ", error)
+	}
 }
 
 const switchCamera = async ({ parameter }) => {
@@ -23442,16 +23386,16 @@ const changeLayoutScreenSharing = ({ parameter, status }) => {
 		// slideUserVideoButton({ status: false })
 
 		const displayViewControllerIcon = document.getElementById("display-view-controller-icon")
-		if (displayViewControllerIcon){
+		if (displayViewControllerIcon) {
 			displayViewControllerIcon.removeAttribute("click", displayViewController)
 		}
 
 		const minMaxButtonControllerIcon = document.getElementById("min-max-display-button")
-		if (minMaxButtonControllerIcon){
+		if (minMaxButtonControllerIcon) {
 			minMaxButtonControllerIcon.removeEventListener("click", minMaxDisplayButtonController)
 		}
 
-		if (document.getElementById("video-screen-sharing-header")){
+		if (document.getElementById("video-screen-sharing-header")) {
 			document.getElementById("video-screen-sharing-header").remove()
 		}
 
@@ -23971,7 +23915,7 @@ module.exports = {
 	getCameraOptions,
 }
 
-},{"../../function":59,"../video":65,"recordrtc":51}],65:[function(require,module,exports){
+},{"../../function":59,"../../function/face-recognition":58,"../video":65,"recordrtc":51}],65:[function(require,module,exports){
 const { startFR } = require("../../function/face-recognition")
 
 const createMyVideo = async (parameter) => {
@@ -23995,7 +23939,7 @@ const createMyVideo = async (parameter) => {
 		// document.getElementById(`v-${parameter.socketId}`).style.transform = "rotateY(0deg)"
 		document.getElementById(`v-${parameter.socketId}`).srcObject = parameter.localStream
 		createAudioVisualizer({ id: parameter.socketId, track: parameter.localStream.getAudioTracks()[0] })
-		startFR({ picture: parameter.picture, name: parameter.username, id: parameter.socketId })
+		startFR({ picture: parameter.picture, name: parameter.username, id: parameter.socketId, parameter })
 	} catch (error) {
 		console.log("- Error Creating Video : ", error)
 	}
@@ -24019,7 +23963,7 @@ const createVideo = ({ id, videoClassName, picture, username, micTrigger, parame
 			userVideoContainer.innerHTML = `<div class="outside-video-user">${micIcons}<video id="v-${id}" class="user-video" autoplay></video>${faceRecognition}${addPicture}<div class="username">${username}</div></div>`
 			videoContainer.appendChild(userVideoContainer)
 			parameter.userVideoElements.push(userVideoContainer)
-			startFR({ id: id, name: username, picture: picture })
+			startFR({ id: id, name: username, picture: picture, parameter })
 		}
 	} catch (error) {
 		console.log("- Error Creating User Video : ", error)
@@ -24311,15 +24255,16 @@ Promise.all([
 	faceapi.nets.faceRecognitionNet.loadFromUri("../javascript/room/face-api/models"),
 	faceapi.nets.faceLandmark68Net.loadFromUri("../javascript/room/face-api/models"),
 ]).then((_) => {
+	document.getElementById("loading-id").className = "loading-hide"
 	socket.connect()
 })
 
 socket.io.on("error", (error) => {
 	console.log("-Socket Error : ", error)
 })
-socket.io.on("ping", () => {
-	console.log("- Ping Socket")
-})
+// socket.io.on("ping", () => {
+// 	console.log("- Ping Socket")
+// })
 
 socket.on("connection-success", async ({ socketId }) => {
 	try {
@@ -24400,7 +24345,7 @@ socket.on("producer-closed", ({ remoteProducerId, socketId }) => {
 		}
 
 		if (kind == "video") {
-			turnOffOnCamera({ id: socketId, status: false })
+			turnOffOnCamera({ id: socketId, status: false, parameter })
 		}
 
 		if (kind == "screensharing") {
@@ -24549,7 +24494,7 @@ cameraButton.addEventListener("click", async () => {
 			cameraButton.classList.replace("button-small-custom", "button-small-custom-clicked")
 			isActive.add("fa-video-slash")
 			isActive.remove("fa-video")
-			turnOffOnCamera({ id: socket.id, status: false })
+			turnOffOnCamera({ id: socket.id, status: false, parameter })
 			await socket.emit("close-producer-from-client", { id: parameter.videoProducer.id })
 			parameter.videoProducer.close()
 			parameter.videoProducer = null
@@ -24558,7 +24503,7 @@ cameraButton.addEventListener("click", async () => {
 			parameter.videoParams.appData.isActive = false
 			parameter.videoParams.appData.isVideoActive = false
 		} else {
-			let newStream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: parameter.devices.video.id } } })
+			let newStream = await navigator.mediaDevices.getUserMedia({ video:true })
 			cameraButton.classList.replace("button-small-custom-clicked", "button-small-custom")
 			if (parameter.localStream.getVideoTracks()[0]) {
 				parameter.localStream.removeTrack(parameter.localStream.getVideoTracks()[0])
@@ -24581,7 +24526,7 @@ cameraButton.addEventListener("click", async () => {
 				myData.video.producerId = parameter.videoProducer.id
 				myData.video.isActive = true
 			}
-			turnOffOnCamera({ id: socket.id, status: true })
+			turnOffOnCamera({ id: socket.id, status: true, parameter })
 		}
 	} catch (error) {
 		console.log("- Error Turning Off Camera : ", error)

@@ -7,19 +7,20 @@ const joinRoomForm = document.getElementById("join-room")
 const videoContainer = document.getElementById("video-container")
 let localStream = document.getElementById("local-video")
 const canvasElement = document.getElementById("canvas-element")
-const canvasElement2 = document.getElementById("canvas-element-2")
-const captureButton = document.getElementById("capture-button-id")
-const previewButton = document.getElementById("preview-button-id")
+const recaptureButton = document.getElementById("recapture-button-id")
+const userPicture = document.getElementById("user-picture-id")
+// const captureButton = document.getElementById("capture-button-id")
 const url = window.location.pathname
 const parts = url.split("/")
 const roomName = parts[2]
 let image_data_url
 let image_data_url_server
-const imageOutput = document.getElementById("image--output")
-const imageOutput2 = document.getElementById("image--output--2")
+const loader = document.getElementById("loading-id")
 
 const threshold = 0.6
 let descriptors = { desc1: null, desc2: null }
+
+let intervalFR
 
 const goToRoom = () => {
 	try {
@@ -38,9 +39,92 @@ nikInputForm.addEventListener("input", (e) => {
 	}
 })
 
+const createFaceBox = async ({ width, height }) => {
+	try {
+		const canvas = document.getElementById("face-matcher-box")
+		canvas.style.position = "absolute"
+		canvas.height = height
+		canvas.width = width
+		const ctx = canvas.getContext("2d")
+		const boxHeight = height / 2
+		const boxWidth = width / 3
+		const xPosition = width / 3
+		const yPosition = height / 6
+
+		ctx.strokeStyle = "white"
+		ctx.strokeRect(xPosition, yPosition, boxWidth, boxHeight)
+
+		ctx.fillStyle = "rgba(0, 0, 0, 0.3)"
+		ctx.fillRect(xPosition, yPosition, boxWidth, boxHeight)
+
+		return { boxHeight, boxWidth, xPosition, yPosition }
+	} catch (error) {
+		console.log("- Error Creating Box Canvas : ", error)
+	}
+}
+
+const startFR = async () => {
+	try {
+		const video = document.getElementById("local-video")
+		const canvas = faceapi.createCanvasFromMedia(video)
+		canvas.id = "fr-box-id"
+		document.getElementById("face-recognition-id").appendChild(canvas)
+		const displaySize = { width: video.videoWidth, height: video.videoHeight }
+		faceapi.matchDimensions(canvas, displaySize)
+		const boxCoordination = await createFaceBox({
+			width: canvas.clientWidth,
+			height: canvas.clientHeight,
+		})
+		let isValidPosition = []
+		intervalFR = setInterval(async () => {
+			const detections = await faceapi.detectAllFaces(video, new faceapi.SsdMobilenetv1Options())
+			const resizedDetections = faceapi.resizeResults(detections, displaySize)
+			canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height)
+			faceapi.draw.drawDetections(canvas, resizedDetections)
+
+			let xCalculation = boxCoordination.xPosition - resizedDetections[0]?.box?.x
+			let yCalculation = boxCoordination.yPosition - resizedDetections[0]?.box?.y
+			let widthCalculation = boxCoordination.boxWidth - resizedDetections[0]?.box?.width
+			let heightCalculation = boxCoordination.boxHeight - resizedDetections[0]?.box?.height
+			if (isValidPosition.length >= 20 && !image_data_url) {
+				await capturePicture()
+				NProgress.done()
+				Swal.fire({
+					icon: "success",
+					title: "Photo successfully taken",
+					showConfirmButton: false,
+					timer: 2000,
+				})
+				isValidPosition = []
+			}
+			// console.log(Math.abs(xCalculation), Math.abs(yCalculation), Math.abs(widthCalculation), Math.abs(heightCalculation), resizedDetections[0].score)
+			if (
+				!image_data_url &&
+				isValidPosition.length < 20 &&
+				Math.abs(xCalculation) <= 27 &&
+				Math.abs(yCalculation) <= 27 &&
+				Math.abs(widthCalculation) <= 150 &&
+				Math.abs(heightCalculation) <= 150 &&
+				resizedDetections[0].score >= 0.95
+			) {
+				NProgress.set(isValidPosition.length / 20)
+				isValidPosition.push(true)
+			} else if (image_data_url) {
+			} else {
+				isValidPosition = []
+				NProgress.done()
+			}
+		}, 100)
+	} catch (error) {
+		console.log("- Error Starting Face Recognition : ", error)
+	}
+}
+
 joinRoomForm.addEventListener("submit", (e) => {
 	try {
 		e.preventDefault()
+		// NProgress.start()
+		loader.className = "loading"
 		if (!image_data_url || !nikInputForm.value) {
 			Swal.fire({
 				icon: "error",
@@ -49,6 +133,7 @@ joinRoomForm.addEventListener("submit", (e) => {
 				showConfirmButton: false,
 				timer: 3000,
 			})
+			loader.className = "loading-hide"
 			return
 		}
 		fetch(`${baseurl}/check/${nikInputForm.value}`)
@@ -64,6 +149,7 @@ joinRoomForm.addEventListener("submit", (e) => {
 					})
 					return
 				}
+				loader.className = "loading-hide"
 				image_data_url_server = `data:image/png;base64,${data.base64data}`
 				comparePicture({ picture1: image_data_url, picture2: image_data_url_server, fullName: data.fullName, nik: data.nik })
 			})
@@ -74,6 +160,9 @@ joinRoomForm.addEventListener("submit", (e) => {
 
 const getCameraReady = async () => {
 	try {
+		console.log(faceapi)
+
+		loader.className = "loading-hide"
 		const config = {
 			video: true,
 		}
@@ -90,9 +179,23 @@ const capturePicture = async () => {
 		canvasElement.height = localStream.videoHeight
 		canvasElement.getContext("2d").drawImage(localStream, 0, 0)
 		image_data_url = canvasElement.toDataURL("image/png")
+		userPicture.src = image_data_url
+		userPicture.className = "picture"
+		localStream.className = "hide-element"
+		document.getElementById("fr-box-id").remove()
+		clearInterval(intervalFR)
+		intervalFR = null
 
-		imageOutput.src = image_data_url
-		previewButton.removeAttribute("disabled")
+		const canvas = document.getElementById("face-matcher-box")
+		const ctx = canvas.getContext("2d")
+		ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+		recaptureButton.removeAttribute("disabled")
+		await localStream.srcObject.getTracks().forEach((track) => {
+			track.stop()
+		})
+
+		localStream.srcObject = null
 	} catch (error) {
 		console.error("Error capturing picture:", error)
 	}
@@ -100,19 +203,19 @@ const capturePicture = async () => {
 
 const comparePicture = async ({ picture1, picture2, fullName, nik }) => {
 	try {
+		loader.className = "loading"
 		const input1 = await faceapi.fetchImage(picture1)
 		const input2 = await faceapi.fetchImage(picture2)
 		descriptors.desc1 = await faceapi.computeFaceDescriptor(input1)
 		descriptors.desc2 = await faceapi.computeFaceDescriptor(input2)
 		const distance = faceapi.utils.round(faceapi.euclideanDistance(descriptors.desc1, descriptors.desc2))
-		console.log(distance)
-		if (distance <= 0.5) {
+		if (distance <= 0.3) {
 			localStorage.setItem("username", fullName)
 			localStorage.setItem("nik", nik)
 			Swal.fire({
 				icon: "success",
 				title: "Verified",
-				text: "Please Wait A Moment!\nYou will be forwaded to the meeting!",
+				text: `Please Wait A Moment!\nYou will be forwaded to the meeting!\nDistance : ${distance}`,
 				showConfirmButton: false,
 				timer: 3000,
 			}).then((_) => {
@@ -124,24 +227,41 @@ const comparePicture = async ({ picture1, picture2, fullName, nik }) => {
 			Swal.fire({
 				icon: "error",
 				title: "Failed",
-				text: "Made sure to position your picture to camera to get better resutl!",
+				text: `Made sure to position your picture to camera to get better resutl!\nDistance : ${distance}`,
 				showConfirmButton: false,
 				timer: 2500,
 			})
 		}
+		loader.className = "loading-hide"
 	} catch (error) {
 		console.log("- Error Comparing Picture : ", error)
 	}
 }
 
-captureButton.addEventListener("click", capturePicture)
+// captureButton.addEventListener("click", capturePicture)
+
+localStream.addEventListener("play", startFR)
+
+const deletePhoto = () => {
+	try {
+		image_data_url = undefined
+		recaptureButton.setAttribute("disabled", true)
+
+		userPicture.className = "hide-element"
+		localStream.className = "user-video"
+		recaptureButton.setAttribute("disabled", true)
+
+		getCameraReady()
+	} catch (error) {
+		console.log("- Error Deleting Photo : ", error)
+	}
+}
+
+recaptureButton.addEventListener("click", deletePhoto)
 
 Promise.all([
 	faceapi.nets.ssdMobilenetv1.loadFromUri("../javascript/room/face-api/models"),
 	faceapi.nets.faceRecognitionNet.loadFromUri("../javascript/room/face-api/models"),
 	faceapi.nets.faceLandmark68Net.loadFromUri("../javascript/room/face-api/models"),
-	// faceapi.loadFaceRecognitionModel("../javascript/room/face-api/models")
-	// faceapi.loadSsdMobilenetv1Model("../javascript/room/face-api/models"),
-	// faceapi.loadFaceLandmarkModel("../javascript/room/face-api/models"),
-	// faceapi.loadFaceRecognitionModel("../javascript/room/face-api/models"),
+	faceapi.loadFaceRecognitionModel("../javascript/room/face-api/models"),
 ]).then(getCameraReady)

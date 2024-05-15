@@ -21,7 +21,7 @@ const createMyVideo = async (parameter) => {
 		// document.getElementById(`v-${parameter.socketId}`).style.transform = "rotateY(0deg)"
 		document.getElementById(`v-${parameter.socketId}`).srcObject = parameter.localStream
 		createAudioVisualizer({ id: parameter.socketId, track: parameter.localStream.getAudioTracks()[0] })
-		startFR({ picture: parameter.picture, name: parameter.username, id: parameter.socketId })
+		startFR({ picture: parameter.picture, name: parameter.username, id: parameter.socketId, parameter })
 	} catch (error) {
 		console.log("- Error Creating Video : ", error)
 	}
@@ -45,7 +45,7 @@ const createVideo = ({ id, videoClassName, picture, username, micTrigger, parame
 			userVideoContainer.innerHTML = `<div class="outside-video-user">${micIcons}<video id="v-${id}" class="user-video" autoplay></video>${faceRecognition}${addPicture}<div class="username">${username}</div></div>`
 			videoContainer.appendChild(userVideoContainer)
 			parameter.userVideoElements.push(userVideoContainer)
-			startFR({ id: id, name: username, picture: picture })
+			startFR({ id: id, name: username, picture: picture, parameter })
 		}
 	} catch (error) {
 		console.log("- Error Creating User Video : ", error)

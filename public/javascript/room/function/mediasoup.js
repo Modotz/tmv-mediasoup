@@ -9,7 +9,7 @@ const {
 	getCameraOptions,
 } = require("../ui/button")
 const { createUserList, muteAllParticipants, goToLobby } = require(".")
-const { encodingVP8, encodingsVP9 } = require("../config/mediasoup")
+const { encodingVP8, encodingsVP9, VIDEO_SVC_ENCODINGS } = require("../config/mediasoup")
 
 const getEncoding = ({ parameter }) => {
 	try {
@@ -19,8 +19,8 @@ const getEncoding = ({ parameter }) => {
 		let mimeType = firstVideoCodec.mimeType.toLowerCase()
 		if (mimeType.includes("vp9")) {
 			console.log("VP9 Codec")
-			// parameter.videoParams.codec = parameter.device.rtpCapabilities.codecs.find((codec) => codec.mimeType.toLowerCase() === "video/h264")
-			parameter.videoParams.encodings = encodingVP8
+			parameter.videoParams.codec = firstVideoCodec
+			parameter.videoParams.encodings = VIDEO_SVC_ENCODINGS
 		} else {
 			console.log("VP8 Codec")
 			// parameter.videoParams.codec = parameter.device.rtpCapabilities.codecs.find((codec) => codec.mimeType.toLowerCase() === "video/vp8")

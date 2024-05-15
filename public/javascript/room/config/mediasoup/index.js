@@ -83,4 +83,4 @@ let audioParams = {
 	zeroRtpOnPause: true,
 }
 
-module.exports = { params, audioParams, encodingVP8, encodingsVP9 }
+module.exports = { params, audioParams, encodingVP8, encodingsVP9, VIDEO_KSVC_ENCODINGS, VIDEO_SVC_ENCODINGS }

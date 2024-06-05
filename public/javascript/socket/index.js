@@ -930,32 +930,21 @@ socket.on("transcribe", ({ id, message }) => {
 		parameter.speechToText.words.push(message)
 	}
 
-	const findName = ({ parameter, id }) => {
-		if (id) {
-			let checkData = parameter.allUsers.find((data) => data.socketId === id)
-			return checkData?.username
-		}
-	}
-
 	const formattedMessage = ({ message }) => {
 		return message.split(" ").slice(-20).join(" ")
 	}
 
-	findName({ parameter, id: parameter?.speechToText?.words[parameter.speechToText.words.length - 1]?.socketId })
 	if (parameter.speechToText.words.length != 0) {
-		if (parameter.speechToText.words.length > 0) {
-			ccDisplay.textContent = `${findName({
-				parameter,
-				id: parameter.speechToText.words[parameter.speechToText.words.length - 2]?.socketId,
-			})} : ${formattedMessage({ message: parameter.speechToText.words[parameter.speechToText.words.length - 2]?.message })}\n${findName({
-				parameter,
-				id: parameter.speechToText.words[parameter.speechToText.words.length - 1]?.socketId,
-			})} : ${formattedMessage({ message: parameter.speechToText.words[parameter.speechToText.words.length - 1]?.message })}`
+		if (parameter.speechToText.words.length > 1) {
+			ccDisplay.textContent = `${parameter.speechToText.words[parameter.speechToText.words.length - 1]?.username} : ${formattedMessage({
+				message: parameter.speechToText.words[parameter.speechToText.words.length - 1]?.message,
+			})}\n${parameter.speechToText.words[parameter.speechToText.words.length - 2]?.username} : ${formattedMessage({
+				message: parameter.speechToText.words[parameter.speechToText.words.length - 2]?.message,
+			})}`
 		} else {
-			ccDisplay.textContent = `${findName({
-				parameter,
-				id: parameter.speechToText.words[parameter.speechToText.words.length - 1]?.socketId,
-			})} : ${formattedMessage({ message: parameter.speechToText.words[parameter.speechToText.words.length - 1]?.message })}`
+			ccDisplay.textContent = `${parameter.speechToText.words[parameter.speechToText.words.length - 1]?.username} : ${formattedMessage({
+				message: parameter.speechToText.words[parameter.speechToText.words.length - 1]?.message,
+			})}`
 		}
 	}
 })

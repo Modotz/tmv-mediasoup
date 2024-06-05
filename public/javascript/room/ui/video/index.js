@@ -295,7 +295,6 @@ const startSpeechToText = ({ parameter, socket, status }) => {
 		for (let i = event.resultIndex; i < event.results.length; i++) {
 			const transcript = event.results[i][0].transcript
 			if (event.results[i].isFinal) {
-				// console.log(transcript.trim().split(" "))
 				if (parameter.speechToText.words.length != 0 && parameter.speechToText.words[parameter.speechToText.words.length - 1].socketId == socket.id) {
 					parameter.speechToText.words[parameter.speechToText.words.length - 1].message = parameter.speechToText.words[
 						parameter.speechToText.words.length - 1
@@ -303,47 +302,60 @@ const startSpeechToText = ({ parameter, socket, status }) => {
 						.split(" ")
 						.concat(transcript.trim().split(" "))
 						.join(" ")
+					parameter.speechToText.words[parameter.speechToText.words.length - 1].socketId = socket.id
+					parameter.speechToText.words[parameter.speechToText.words.length - 1].username = parameter.username
 				} else {
-					parameter.speechToText.words.push({ message: transcript.trim(), socketId: socket.id })
+					parameter.speechToText.words.push({ message: transcript.trim(), socketId: socket.id, username: parameter.username })
 				}
 				parameter.allUsers.forEach((data) => {
 					if (data.socketId != socket.id) {
 						socket.emit("transcribe", {
 							sendTo: data.socketId,
 							id: socket.id,
-							message: { socketId: socket.id, message: parameter.speechToText.words[parameter.speechToText.words.length - 1].message },
+							message: {
+								socketId: socket.id,
+								message: parameter.speechToText.words[parameter.speechToText.words.length - 1].message,
+								username: parameter.username,
+							},
 						})
 					}
 				})
 			}
 		}
 
-		const findName = ({ parameter, id }) => {
-			if (id) {
-				let checkData = parameter.allUsers.find((data) => data.socketId === id)
-				return checkData.username
-			}
-		}
 
 		const formattedMessage = ({ message }) => {
 			return message.split(" ").slice(-20).join(" ")
 		}
 
-		findName({ parameter, id: parameter?.speechToText?.words[parameter.speechToText.words.length - 1]?.socketId })
+		// findName({ parameter, id: parameter?.speechToText?.words[parameter.speechToText.words.length - 1]?.socketId })
+		// if (parameter.speechToText.words.length != 0) {
+		// 	if (parameter.speechToText.words.length > 1) {
+		// 		ccDisplay.textContent = `${findName({
+		// 			parameter,
+		// 			id: parameter.speechToText.words[parameter.speechToText.words.length - 1]?.socketId,
+		// 		})} : ${formattedMessage({ message: parameter.speechToText.words[parameter.speechToText.words.length - 1]?.message })}\n${findName({
+		// 			parameter,
+		// 			id: parameter.speechToText.words[parameter.speechToText.words.length - 2]?.socketId,
+		// 		})} : ${formattedMessage({ message: parameter.speechToText.words[parameter.speechToText.words.length - 2]?.message })}`
+		// 	} else {
+		// 		ccDisplay.textContent = `${findName({
+		// 			parameter,
+		// 			id: parameter.speechToText.words[parameter.speechToText.words.length - 1]?.socketId,
+		// 		})} : ${formattedMessage({ message: parameter.speechToText.words[parameter.speechToText.words.length - 1]?.message })}`
+		// 	}
+		// }
 		if (parameter.speechToText.words.length != 0) {
 			if (parameter.speechToText.words.length > 1) {
-				ccDisplay.textContent = `${findName({
-					parameter,
-					id: parameter.speechToText.words[parameter.speechToText.words.length - 1]?.socketId,
-				})} : ${formattedMessage({ message: parameter.speechToText.words[parameter.speechToText.words.length - 1]?.message })}\n${findName({
-					parameter,
-					id: parameter.speechToText.words[parameter.speechToText.words.length - 2]?.socketId,
-				})} : ${formattedMessage({ message: parameter.speechToText.words[parameter.speechToText.words.length - 2]?.message })}`
+				ccDisplay.textContent = `${parameter.speechToText.words[parameter.speechToText.words.length - 1]?.username} : ${formattedMessage({
+					message: parameter.speechToText.words[parameter.speechToText.words.length - 1]?.message,
+				})}\n${parameter.speechToText.words[parameter.speechToText.words.length - 2]?.username} : ${formattedMessage({
+					message: parameter.speechToText.words[parameter.speechToText.words.length - 2]?.message,
+				})}`
 			} else {
-				ccDisplay.textContent = `${findName({
-					parameter,
-					id: parameter.speechToText.words[parameter.speechToText.words.length - 1]?.socketId,
-				})} : ${formattedMessage({ message: parameter.speechToText.words[parameter.speechToText.words.length - 1]?.message })}`
+				ccDisplay.textContent = `${parameter.speechToText.words[parameter.speechToText.words.length - 1]?.username} : ${formattedMessage({
+					message: parameter.speechToText.words[parameter.speechToText.words.length - 1]?.message,
+				})}`
 			}
 		}
 	}

@@ -407,6 +407,14 @@ io.on("connection", async (socket) => {
 		}
 	})
 
+	socket.on("transcribe", ({ sendTo, message, id }) => {
+		try {
+			socket.to(sendTo).emit("transcribe", { id, message })
+		} catch (error) {
+			console.log("- Error Mic Config : ", error)
+		}
+	})
+
 	// socket.on("manually-turn-off-video", ({ socketId }) => {
 	// 	// console.log(`- Socket Manual Turn Off : ${socketId}`)
 	// 	// console.log("- Server Parameter : ", serverParameter.allUsers)

@@ -181,7 +181,7 @@ socket.on("producer-closed", ({ remoteProducerId, socketId }) => {
 })
 
 socket.on("mic-config", ({ id, isMicActive }) => {
-	changeUserMic({ parameter, isMicActive, id })
+	changeUserMic({ parameter, isMicActive, id, socket })
 })
 
 socket.on("receive-message", ({ message, sender, messageDate }) => {
@@ -911,6 +911,65 @@ window.addEventListener("beforeunload", function (event) {
 		window.location.href = window.location.origin
 		socket.close()
 	} catch (error) {}
+})
+
+socket.on("transcribe", ({ id, message }) => {
+	const ccDisplay = document.getElementById("text-to-speech-result")
+
+	if (
+		parameter.speechToText.words.length != 0 &&
+		parameter.speechToText.words[parameter.speechToText.words.length - 1].socketId == message.socketId
+	) {
+		parameter.speechToText.words[parameter.speechToText.words.length - 1].message = parameter.speechToText.words[
+			parameter.speechToText.words.length - 1
+		].message
+			.split(" ")
+			.concat(message.message.trim().split(" "))
+			.join(" ")
+	} else if (parameter.speechToText.words.length != 0) {
+		parameter.speechToText.words.push(message)
+	}
+
+	const findName = ({ parameter, id }) => {
+		if (id) {
+			let checkData = parameter.allUsers.find((data) => data.socketId === id)
+			return checkData?.username
+		}
+	}
+
+	const formattedMessage = ({ message }) => {
+		return message.split(" ").slice(-20).join(" ")
+	}
+
+	findName({ parameter, id: parameter?.speechToText?.words[parameter.speechToText.words.length - 1]?.socketId })
+	if (parameter.speechToText.words.length != 0) {
+		if (parameter.speechToText.words.length > 0) {
+			ccDisplay.textContent = `${findName({
+				parameter,
+				id: parameter.speechToText.words[parameter.speechToText.words.length - 2]?.socketId,
+			})} : ${formattedMessage({ message: parameter.speechToText.words[parameter.speechToText.words.length - 2]?.message })}\n${findName({
+				parameter,
+				id: parameter.speechToText.words[parameter.speechToText.words.length - 1]?.socketId,
+			})} : ${formattedMessage({ message: parameter.speechToText.words[parameter.speechToText.words.length - 1]?.message })}`
+		} else {
+			ccDisplay.textContent = `${findName({
+				parameter,
+				id: parameter.speechToText.words[parameter.speechToText.words.length - 1]?.socketId,
+			})} : ${formattedMessage({ message: parameter.speechToText.words[parameter.speechToText.words.length - 1]?.message })}`
+		}
+	}
+})
+
+const displayCCButton = document.getElementById("display-cc")
+const displayCC = document.getElementById("text-to-speech-id")
+displayCCButton.addEventListener("click", () => {
+	if (displayCCButton.innerHTML == "Display CC") {
+		displayCC.className = "text-to-speech"
+		displayCCButton.innerHTML = "Hide CC"
+	} else {
+		displayCC.className = "text-to-speech-hide"
+		displayCCButton.innerHTML = "Display CC"
+	}
 })
 
 window.addEventListener("online", function () {

@@ -22036,7 +22036,7 @@ const createUserList = ({ username, socketId, cameraTrigger, picture, micTrigger
 			elementUser.className = "user-list-container"
 			userList.appendChild(elementUser)
 			let myUsername = document.createElement("div")
-			myUsername.innerHTML = `<img src="${picture}" class="mini-picture"/><span>${username}</span>`
+			myUsername.innerHTML = `<img src="${picture}" class="mini-picture"/><span id="ul-username-${socketId}">${username}</span>`
 			myUsername.id = "ulu-" + socketId
 			myUsername.className = "profile-list"
 			elementUser.appendChild(myUsername)
@@ -22329,6 +22329,7 @@ const getMyStream = async (parameter) => {
 
 		let username = localStorage.getItem("username")
 		parameter.username = username
+		document.getElementById("rename-input").value = username
 
 		let stream = await navigator.mediaDevices.getUserMedia(config)
 		let picture = localStorage.getItem("picture") ? localStorage.getItem("picture") : "/assets/pictures/unknown.jpg"
@@ -22845,6 +22846,7 @@ class Parameters {
 	upStreamQuality = 1
 	downStreamQuality = 1
 	speechToText = {
+		word: [],
 		words: [],
 		recognition: null,
 		speechRecognitionList: null,
@@ -23885,7 +23887,7 @@ const createMyVideo = async (parameter) => {
 			parameter.initialAudio ? "On" : "Off"
 		}.png" class="mic-image" id="user-mic-${parameter.socketId}"></div>`
 		// userVideoContainer.innerHTML = `${micIcons}<video id="v-${parameter.socketId}" muted autoplay class="user-video"></video>${picture}<div class="username">${parameter.username}</div>`
-		userVideoContainer.innerHTML = `<div class="outside-video-user">${micIcons}<video id="v-${parameter.socketId}" muted autoplay class="user-video"></video>${picture}<div class="username">${parameter.username}</div></div>`
+		userVideoContainer.innerHTML = `<div class="outside-video-user">${micIcons}<video id="v-${parameter.socketId}" muted autoplay class="user-video"></video>${picture}<div class="username" id="username-${parameter.socketId}">${parameter.username}</div></div>`
 		videoContainer.appendChild(userVideoContainer)
 		parameter.userVideoElements.push(userVideoContainer)
 		// document.getElementById(`v-${parameter.socketId}`).style.transform = "rotateY(0deg)"
@@ -23909,7 +23911,7 @@ const createVideo = ({ id, videoClassName, picture, username, micTrigger, parame
 				micTrigger ? "On" : "Off"
 			}.png" class="mic-image" id="user-mic-${id}"/></div>`
 			// userVideoContainer.innerHTML = `${micIcons}<video id="v-${id}" class="user-video" autoplay></video>${addPicture}<div class="username">${username}</div>`
-			userVideoContainer.innerHTML = `<div class="outside-video-user">${micIcons}<video id="v-${id}" class="user-video" autoplay></video>${addPicture}<div class="username">${username}</div></div>`
+			userVideoContainer.innerHTML = `<div class="outside-video-user">${micIcons}<video id="v-${id}" class="user-video" autoplay></video>${addPicture}<div class="username" id="username-${id}">${username}</div></div>`
 			videoContainer.appendChild(userVideoContainer)
 			parameter.userVideoElements.push(userVideoContainer)
 		}
@@ -24165,69 +24167,59 @@ const startSpeechToText = ({ parameter, socket, status }) => {
 	let finalWords = ""
 
 	parameter.speechToText.recognition.onresult = (event) => {
+		let interimResults = ""
+		let checkMySpeakingHistory = parameter.speechToText.words.find((data) => data.socketId == socket.id)
+		if (!checkMySpeakingHistory) {
+			parameter.speechToText.words.push({
+				username: parameter.username,
+				message: "",
+				lastSpeaking: new Date(),
+				socketId: socket.id,
+			})
+		}
 		for (let i = event.resultIndex; i < event.results.length; i++) {
 			const transcript = event.results[i][0].transcript
 			if (event.results[i].isFinal) {
-				if (parameter.speechToText.words.length != 0 && parameter.speechToText.words[parameter.speechToText.words.length - 1].socketId == socket.id) {
-					parameter.speechToText.words[parameter.speechToText.words.length - 1].message = parameter.speechToText.words[
-						parameter.speechToText.words.length - 1
-					].message
-						.split(" ")
-						.concat(transcript.trim().split(" "))
-						.join(" ")
-					parameter.speechToText.words[parameter.speechToText.words.length - 1].socketId = socket.id
-					parameter.speechToText.words[parameter.speechToText.words.length - 1].username = parameter.username
-				} else {
-					parameter.speechToText.words.push({ message: transcript.trim(), socketId: socket.id, username: parameter.username })
-				}
-				parameter.allUsers.forEach((data) => {
-					if (data.socketId != socket.id) {
-						socket.emit("transcribe", {
-							sendTo: data.socketId,
-							id: socket.id,
-							message: {
-								socketId: socket.id,
-								message: parameter.speechToText.words[parameter.speechToText.words.length - 1].message,
-								username: parameter.username,
-							},
-						})
-					}
-				})
+				parameter.speechToText.word.push(transcript.trim())
+			} else {
+				interimResults += transcript
 			}
 		}
-
+		let finalWords = parameter.speechToText.word.join(" ") + " " + interimResults
+		let mySpeakingHistory = parameter.speechToText.words.find((data) => data.socketId == socket.id)
+		mySpeakingHistory.lastSpeaking = new Date()
+		mySpeakingHistory.message = finalWords
 
 		const formattedMessage = ({ message }) => {
 			return message.split(" ").slice(-20).join(" ")
 		}
 
-		// findName({ parameter, id: parameter?.speechToText?.words[parameter.speechToText.words.length - 1]?.socketId })
-		// if (parameter.speechToText.words.length != 0) {
-		// 	if (parameter.speechToText.words.length > 1) {
-		// 		ccDisplay.textContent = `${findName({
-		// 			parameter,
-		// 			id: parameter.speechToText.words[parameter.speechToText.words.length - 1]?.socketId,
-		// 		})} : ${formattedMessage({ message: parameter.speechToText.words[parameter.speechToText.words.length - 1]?.message })}\n${findName({
-		// 			parameter,
-		// 			id: parameter.speechToText.words[parameter.speechToText.words.length - 2]?.socketId,
-		// 		})} : ${formattedMessage({ message: parameter.speechToText.words[parameter.speechToText.words.length - 2]?.message })}`
-		// 	} else {
-		// 		ccDisplay.textContent = `${findName({
-		// 			parameter,
-		// 			id: parameter.speechToText.words[parameter.speechToText.words.length - 1]?.socketId,
-		// 		})} : ${formattedMessage({ message: parameter.speechToText.words[parameter.speechToText.words.length - 1]?.message })}`
-		// 	}
-		// }
+		parameter.allUsers.forEach((data) => {
+			if (data.socketId != socket.id) {
+				socket.emit("transcribe", {
+					sendTo: data.socketId,
+					id: socket.id,
+					message: {
+						socketId: socket.id,
+						message: mySpeakingHistory.message,
+						username: parameter.username,
+						lastSpeaking: mySpeakingHistory.lastSpeaking,
+					},
+				})
+			}
+		})
+
 		if (parameter.speechToText.words.length != 0) {
+			parameter.speechToText.words.sort((a, b) => new Date(b.lastSpeaking) - new Date(a.lastSpeaking))
 			if (parameter.speechToText.words.length > 1) {
-				ccDisplay.textContent = `${parameter.speechToText.words[parameter.speechToText.words.length - 1]?.username} : ${formattedMessage({
-					message: parameter.speechToText.words[parameter.speechToText.words.length - 1]?.message,
-				})}\n${parameter.speechToText.words[parameter.speechToText.words.length - 2]?.username} : ${formattedMessage({
-					message: parameter.speechToText.words[parameter.speechToText.words.length - 2]?.message,
+				ccDisplay.textContent = `${parameter.speechToText.words[1]?.username} : ${formattedMessage({
+					message: parameter.speechToText.words[1]?.message,
+				})}\n${parameter.speechToText.words[0]?.username} : ${formattedMessage({
+					message: parameter.speechToText.words[0]?.message,
 				})}`
 			} else {
-				ccDisplay.textContent = `${parameter.speechToText.words[parameter.speechToText.words.length - 1]?.username} : ${formattedMessage({
-					message: parameter.speechToText.words[parameter.speechToText.words.length - 1]?.message,
+				ccDisplay.textContent = `${parameter.speechToText.words[0]?.username} : ${formattedMessage({
+					message: parameter.speechToText.words[0]?.message,
 				})}`
 			}
 		}
@@ -24246,6 +24238,19 @@ const startSpeechToText = ({ parameter, socket, status }) => {
 	parameter.speechToText.recognition.start()
 }
 
+const changeUsername = ({ id, newUsername, parameter }) => {
+	try {
+		document.getElementById(`ul-username-${id}`).innerHTML = newUsername
+		document.getElementById(`username-${id}`).innerHTML = newUsername
+		let checkData = parameter.allUsers.find((data) => data.socketId === id)
+		if (checkData) {
+			checkData.username = newUsername
+		}
+	} catch (error) {
+		console.log("- Error Updating Username : ", error)
+	}
+}
+
 module.exports = {
 	createMyVideo,
 	createAudio,
@@ -24258,6 +24263,7 @@ module.exports = {
 	changeUserMic,
 	removeUserList,
 	startSpeechToText,
+	changeUsername,
 }
 
 },{}],65:[function(require,module,exports){
@@ -24290,7 +24296,15 @@ const {
 	changeMicCondition,
 	videoDisplayModeScreenSharing,
 } = require("../room/ui/button")
-const { createMyVideo, removeVideoAndAudio, updatingLayout, changeLayout, changeUserMic, removeUserList } = require("../room/ui/video")
+const {
+	createMyVideo,
+	removeVideoAndAudio,
+	updatingLayout,
+	changeLayout,
+	changeUserMic,
+	removeUserList,
+	changeUsername,
+} = require("../room/ui/video")
 
 let isDisconnected = 0
 
@@ -24482,6 +24496,53 @@ socket.on("unmute-all", (data) => {
 		parameter.micCondition.socketId = undefined
 	} catch (error) {
 		console.log("- Error Unlocking Mic Participants Socket On : ", error)
+	}
+})
+
+socket.on("transcribe", ({ id, message }) => {
+	try {
+		const ccDisplay = document.getElementById("text-to-speech-result")
+		let checkSpeakingHistory = parameter.speechToText.words.find((data) => data.socketId == message.socketId)
+		if (!checkSpeakingHistory) {
+			parameter.speechToText.words.push({
+				username: message.username,
+				message: message.message,
+				lastSpeaking: new Date(),
+				socketId: message.socketId,
+			})
+		}
+		let speakingHistory = parameter.speechToText.words.find((data) => data.socketId == message.socketId)
+		speakingHistory.lastSpeaking = new Date()
+		speakingHistory.message = message.message
+
+		const formattedMessage = ({ message }) => {
+			return message.split(" ").slice(-20).join(" ")
+		}
+
+		if (parameter.speechToText.words.length != 0) {
+			parameter.speechToText.words.sort((a, b) => new Date(b.lastSpeaking) - new Date(a.lastSpeaking))
+			if (parameter.speechToText.words.length > 1) {
+				ccDisplay.textContent = `${parameter.speechToText.words[1]?.username} : ${formattedMessage({
+					message: parameter.speechToText.words[1]?.message,
+				})}\n${parameter.speechToText.words[0]?.username} : ${formattedMessage({
+					message: parameter.speechToText.words[0]?.message,
+				})}`
+			} else {
+				ccDisplay.textContent = `${parameter.speechToText.words[0]?.username} : ${formattedMessage({
+					message: parameter.speechToText.words[0]?.message,
+				})}`
+			}
+		}
+	} catch (error) {
+		console.log("- Error CC : ", error)
+	}
+})
+
+socket.on("rename-user", ({ id, content }) => {
+	try {
+		changeUsername({ id: content.socketId, newUsername: content.newUsername, parameter })
+	} catch (error) {
+		console.log("- Error Renaming User : ", error)
 	}
 })
 
@@ -25023,8 +25084,7 @@ let optionButton = document.getElementById("option-button")
 let optionMenu = document.getElementById("option-menu")
 optionButton.addEventListener("click", function (event) {
 	try {
-		event.stopPropagation() // Prevent the click event from propagating to the document
-		// Toggle the option menu
+		event.stopPropagation()
 		if (optionMenu.className === "visible") {
 			hideOptionMenu()
 		} else {
@@ -25056,14 +25116,13 @@ const optionalMenuTrigger = () => {
 }
 optionalButtonTrigger.addEventListener("click", (e) => {
 	try {
-		e.stopPropagation() // Prevent the click event from propagating to the document
+		e.stopPropagation()
 		optionalMenuTrigger()
 	} catch (error) {
 		console.log("- Error At Optional Button Trigger : ", error)
 	}
 })
 
-// Hang Up Button
 const hangUpButton = document.getElementById("user-hang-up-button")
 hangUpButton.addEventListener("click", () => {
 	try {
@@ -25176,42 +25235,6 @@ window.addEventListener("beforeunload", function (event) {
 	} catch (error) {}
 })
 
-socket.on("transcribe", ({ id, message }) => {
-	const ccDisplay = document.getElementById("text-to-speech-result")
-
-	if (
-		parameter.speechToText.words.length != 0 &&
-		parameter.speechToText.words[parameter.speechToText.words.length - 1].socketId == message.socketId
-	) {
-		parameter.speechToText.words[parameter.speechToText.words.length - 1].message = parameter.speechToText.words[
-			parameter.speechToText.words.length - 1
-		].message
-			.split(" ")
-			.concat(message.message.trim().split(" "))
-			.join(" ")
-	} else if (parameter.speechToText.words.length != 0) {
-		parameter.speechToText.words.push(message)
-	}
-
-	const formattedMessage = ({ message }) => {
-		return message.split(" ").slice(-20).join(" ")
-	}
-
-	if (parameter.speechToText.words.length != 0) {
-		if (parameter.speechToText.words.length > 1) {
-			ccDisplay.textContent = `${parameter.speechToText.words[parameter.speechToText.words.length - 1]?.username} : ${formattedMessage({
-				message: parameter.speechToText.words[parameter.speechToText.words.length - 1]?.message,
-			})}\n${parameter.speechToText.words[parameter.speechToText.words.length - 2]?.username} : ${formattedMessage({
-				message: parameter.speechToText.words[parameter.speechToText.words.length - 2]?.message,
-			})}`
-		} else {
-			ccDisplay.textContent = `${parameter.speechToText.words[parameter.speechToText.words.length - 1]?.username} : ${formattedMessage({
-				message: parameter.speechToText.words[parameter.speechToText.words.length - 1]?.message,
-			})}`
-		}
-	}
-})
-
 const displayCCButton = document.getElementById("display-cc")
 const displayCC = document.getElementById("text-to-speech-id")
 displayCCButton.addEventListener("click", () => {
@@ -25221,6 +25244,62 @@ displayCCButton.addEventListener("click", () => {
 	} else {
 		displayCC.className = "text-to-speech-hide"
 		displayCCButton.innerHTML = "Display CC"
+	}
+})
+
+const renameButton = document.getElementById("rename")
+renameButton.addEventListener("click", (event) => {
+	try {
+		event.stopPropagation()
+	} catch (error) {
+		console.log("- Error Renaming : ", error)
+	}
+})
+
+const renameInput = document.getElementById("rename-input")
+renameInput.addEventListener("input", (event) => {
+	event.stopPropagation()
+})
+
+renameInput.addEventListener("keydown", (event) => {
+	if (event.key === " ") {
+		event.stopPropagation()
+	}
+})
+
+renameInput.addEventListener("keyup", (event) => {
+	event.preventDefault()
+})
+
+const submitRenameButton = document.getElementById("submit-rename")
+submitRenameButton.addEventListener("click", () => {
+	try {
+		const newUsername = document.getElementById("rename-input").value
+		changeUsername({ id: socket.id, parameter, newUsername })
+
+		localStorage.setItem("username", newUsername)
+		parameter.allUsers.forEach((data) => {
+			if (data.socketId == socket.id) {
+				console.log(data)
+				changeAppData({ socket, data: { username: newUsername }, remoteProducerId: parameter.audioProducer.id })
+				if (parameter.videoProducerId) {
+					changeAppData({ socket, data: { username: newUsername }, remoteProducerId: parameter.videoProducer.id })
+				}
+			}
+			if (data.socketId != socket.id) {
+				socket.emit("rename-user", {
+					sendTo: data.socketId,
+					id: socket.id,
+					content: {
+						socketId: socket.id,
+						newUsername,
+					},
+				})
+				// changeAppData({socket, })
+			}
+		})
+	} catch (error) {
+		console.log("- Error Submitting New Name : ", error)
 	}
 })
 

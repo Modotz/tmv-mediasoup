@@ -24,6 +24,7 @@ const getMyStream = async (parameter) => {
 
 		let username = localStorage.getItem("username")
 		parameter.username = username
+		document.getElementById("rename-input").value = username
 
 		let stream = await navigator.mediaDevices.getUserMedia(config)
 		let picture = localStorage.getItem("picture") ? localStorage.getItem("picture") : "/assets/pictures/unknown.jpg"

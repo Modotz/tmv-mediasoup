@@ -62,33 +62,52 @@ const newUserNotification = ({ username, picture }) => {
 }
 
 // Create User Online List
-const createUserList = ({ username, socketId, cameraTrigger, picture, micTrigger }) => {
+const createUserList = ({ username, socketId, cameraTrigger, picture, micTrigger, participantType }) => {
 	try {
 		let userList = document.getElementById("user-list")
 		let isExist = document.getElementById("user-" + socketId)
 		let cameraInitSetting = ""
-		if (cameraTrigger) {
-			cameraInitSetting = "fas fa-video"
+		if (participantType == "participant"){
+			if (cameraTrigger) {
+				cameraInitSetting = "fas fa-video"
+			} else {
+				cameraInitSetting = "fas fa-video-slash"
+			}
+			if (!isExist) {
+				let elementUser = document.createElement("div")
+				elementUser.id = "user-" + socketId
+				elementUser.className = "user-list-container"
+				userList.appendChild(elementUser)
+				let myUsername = document.createElement("div")
+				myUsername.innerHTML = `<img src="${picture}" class="mini-picture"/><span id="ul-username-${socketId}">${username}</span>`
+				myUsername.id = "ulu-" + socketId
+				myUsername.className = "profile-list"
+				elementUser.appendChild(myUsername)
+				let icons = document.createElement("div")
+				icons.className = "user-list-icons-container"
+				icons.id = "uli-" + socketId
+				icons.innerHTML = `<section class="user-list-microphone"><img src="/assets/pictures/mic${
+					micTrigger ? "On" : "Off"
+				}.png" id="ulim-${socketId}"/></section><section class="user-list-camera"><i class="${cameraInitSetting}" id="ulic-${socketId}" style="color: #ffffff;"></i></section>`
+				elementUser.appendChild(icons)
+			}
 		} else {
-			cameraInitSetting = "fas fa-video-slash"
-		}
-		if (!isExist) {
-			let elementUser = document.createElement("div")
-			elementUser.id = "user-" + socketId
-			elementUser.className = "user-list-container"
-			userList.appendChild(elementUser)
-			let myUsername = document.createElement("div")
-			myUsername.innerHTML = `<img src="${picture}" class="mini-picture"/><span id="ul-username-${socketId}">${username}</span>`
-			myUsername.id = "ulu-" + socketId
-			myUsername.className = "profile-list"
-			elementUser.appendChild(myUsername)
-			let icons = document.createElement("div")
-			icons.className = "user-list-icons-container"
-			icons.id = "uli-" + socketId
-			icons.innerHTML = `<section class="user-list-microphone"><img src="/assets/pictures/mic${
-				micTrigger ? "On" : "Off"
-			}.png" id="ulim-${socketId}"/></section><section class="user-list-camera"><i class="${cameraInitSetting}" id="ulic-${socketId}" style="color: #ffffff;"></i></section>`
-			elementUser.appendChild(icons)
+			if (!isExist) {
+				let elementUser = document.createElement("div")
+				elementUser.id = "user-" + socketId
+				elementUser.className = "user-list-container"
+				userList.appendChild(elementUser)
+				let myUsername = document.createElement("div")
+				myUsername.innerHTML = `<img src="${picture}" class="mini-picture"/><span id="ul-username-${socketId}">${username}</span>`
+				myUsername.id = "ulu-" + socketId
+				myUsername.className = "profile-list"
+				elementUser.appendChild(myUsername)
+				let icons = document.createElement("div")
+				icons.className = "user-list-icons-container"
+				icons.id = "uli-" + socketId
+				icons.innerHTML = `<span>(Viewer)</span>`
+				elementUser.appendChild(icons)
+			}
 		}
 	} catch (error) {
 		console.log("- Error Creating User List : ", error)

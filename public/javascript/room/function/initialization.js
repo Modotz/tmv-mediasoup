@@ -1,8 +1,9 @@
 const { createUserList } = require(".")
 const { socket } = require("../../socket")
+const { startSpeechToText } = require("../ui/video")
 const { createDevice } = require("./mediasoup")
 
-const getMyStream = async (parameter) => {
+const getMyStream = async ({ parameter, socket }) => {
 	try {
 		let config = {
 			// video: localStorage.getItem("is_video_active") == "true" ? { deviceId: { exact: localStorage.getItem("selectedVideoDevices") }, frameRate: { ideal: 30, max: 35 } } : false,
@@ -33,11 +34,13 @@ const getMyStream = async (parameter) => {
 		let videoCondition
 		parameter.initialVideo = true
 		parameter.initialAudio = true
+		await startSpeechToText({ parameter, socket, status: true })
 		if (localStorage.getItem("is_mic_active") == "false") {
 			document.getElementById("mic-image").src = "/assets/pictures/micOff.png"
 			document.getElementById("user-mic-button").className = "btn button-small-custom-clicked"
 			parameter.initialAudio = false
 			audioCondition = false
+			await startSpeechToText({ parameter, socket, status: false })
 		} else audioCondition = true
 		if (localStorage.getItem("is_video_active") == "false") {
 			document.getElementById("turn-on-off-camera-icons").className = "fas fa-video-slash"
@@ -91,7 +94,14 @@ const getMyStream = async (parameter) => {
 
 		parameter.devices.audio.id = localStorage.getItem("selectedAudioDevices")
 		parameter.devices.video.id = localStorage.getItem("selectedVideoDevices")
-		createUserList({ username: parameter.username, socketId: parameter.socketId, cameraTrigger: videoCondition, picture, micTrigger: audioCondition })
+		createUserList({
+			username: parameter.username,
+			socketId: parameter.socketId,
+			cameraTrigger: videoCondition,
+			picture,
+			micTrigger: audioCondition,
+			participantType: parameter.participantType,
+		})
 	} catch (error) {
 		console.log("- Error Getting My Stream : ", error)
 		let ae = document.getElementById("alert-error")
@@ -103,6 +113,34 @@ const getMyStream = async (parameter) => {
 			ae.innerHTML = ``
 		}, 5000)
 		return
+	}
+}
+
+const joinAsViewer = ({ parameter, socket }) => {
+	try {
+		let username = localStorage.getItem("username")
+		parameter.username = username
+		document.getElementById("rename-input").value = username
+		let picture = localStorage.getItem("picture") ? localStorage.getItem("picture") : "/assets/pictures/unknown.jpg"
+		parameter.initialVideo = true
+		parameter.initialAudio = true
+		parameter.picture = picture
+		let user = {
+			username,
+			socketId: parameter.socketId,
+			picture,
+		}
+		parameter.allUsers = [...parameter.allUsers, user]
+		createUserList({
+			username: parameter.username,
+			socketId: parameter.socketId,
+			cameraTrigger: false,
+			picture,
+			micTrigger: false,
+			participantType: parameter.participantType,
+		})
+	} catch (error) {
+		console.log("- Error Joining as Viewer : ", error)
 	}
 }
 
@@ -119,7 +157,9 @@ const getRoomId = async (parameter) => {
 
 const joinRoom = async ({ parameter, socket }) => {
 	try {
-		parameter.totalUsers++
+		if (parameter.participantType == "participant") {
+			parameter.totalUsers++
+		}
 		parameter.previousVideoLayout = "user-video-container-1"
 		parameter.videoLayout = "user-video-container-1"
 		socket.emit("joinRoom", { roomName: parameter.roomName, username: parameter.username }, (data) => {
@@ -134,4 +174,4 @@ const joinRoom = async ({ parameter, socket }) => {
 	}
 }
 
-module.exports = { getMyStream, getRoomId, joinRoom }
+module.exports = { getMyStream, getRoomId, joinRoom, joinAsViewer }

@@ -1,6 +1,7 @@
 const { params, audioParams } = require("../config/mediasoup")
 
 class Parameters {
+	participantType = ""
 	localStream = null
 	videoParams = { appData: { label: "video", isActive: true } }
 	videoParams = { ...params, appData: { label: "video", isActive: true } }
@@ -65,6 +66,7 @@ class Parameters {
 		words: [],
 		recognition: null,
 		speechRecognitionList: null,
+		maxWords: 15
 	}
 }
 

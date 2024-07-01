@@ -26,7 +26,9 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            flex-direction: column;
             background-color: #111111;
+            overflow: hidden;
         }
 
         .left-bar {
@@ -202,10 +204,19 @@
             object-fit: fill;
         }
 
-        .content-container {
+        .participant-container {
             position: relative;
             width: 50%;
-            height: 50%;
+            height: 70%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .other-user-container {
+            padding: 20px 0;
+            height: 30%;
+            width: 50%;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -213,28 +224,20 @@
 
         .join-form {
             width: 50%;
+            height: 20%;
         }
 
         .edit-background-button {
             background-color: #2B2B2B;
         }
 
-        @media (max-width: 1000px) {
-            .content-container {
-                width: 75%;
-                height: 75%;
-            }
-
-            .user-video-container {
-                height: 50%;
-            }
-        }
-
         .google-button-custom {
             width: 50%;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
+            overflow: hidden;
         }
 
         .join-as-text {
@@ -262,12 +265,12 @@
 <body>
     <div class="full-container">
         <div id="loading-id" class="loading-show">
-            <img src="/assets/pictures/loading.svg" alt="loading-bar"/>
+            <img src="/assets/pictures/loading.svg" alt="loading-bar" />
         </div>
         <span id="alert-username">Enter Your Name!</span>
         <span id="alert-error"></span>
         <img class="icons-meet" src="/assets/pictures/icons-meeting.png" />
-        <section class="content-container">
+        <section class="participant-container">
             <div class=" user-video-container">
                 <video id="local-video" poster="/assets/pictures/ZKZg.gif" preload="auto" autoplay class="user-video"
                     muted></video>
@@ -307,10 +310,14 @@
                         </div>
                     </div>
                 </div>
-                <button type="submit" class="btn btn-primary button-custom" id="submit-button" disabled> Join </button>
+                <button type="submit" class="btn btn-primary button-custom" id="submit-button" disabled>Participate</button>
             </form>
-            <span class="join-as-text">Or Join As</span>
-            <div class="google-button-custom" id="g-button" style="display: none;">
+        </section>
+        <section class="other-user-container">
+            <span class="join-as-text">Join As</span>
+            <button type="button" class="btn btn-primary button-custom" id="viewer" style="width: 50%;"> Viewer </button>
+            <div class="google-button-custom" id="g-button" style="visibility: hidden;">
+                <span class="join-as-text">Or</span>
                 <div id="g_id_onload"
                     data-client_id="623403491943-290gkq7bnqtgeprtfaci3u76vtb39bjl.apps.googleusercontent.com"
                     data-context="signin" data-ux_mode="popup" data-callback="handleCredentialResponse" data-nonce=""
@@ -321,6 +328,7 @@
                     data-text="signin_with" data-size="large" data-logo_alignment="left">
                 </div>
             </div>
+
         </section>
     </div>
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"

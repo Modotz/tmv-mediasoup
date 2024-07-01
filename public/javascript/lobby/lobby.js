@@ -15,6 +15,7 @@ let isReady = { video: false, audio: false }
 let isAudioActive = true
 let isVideoActive = true
 let videoImage = document.getElementById("video-image")
+const viewerButton = document.getElementById("viewer")
 
 const everythingIsReady = () => {
 	try {
@@ -31,6 +32,7 @@ const everythingIsReady = () => {
 		audioButton.removeAttribute("disabled")
 		const submitButton = document.getElementById("submit-button")
 		submitButton.removeAttribute("disabled")
+		viewerButton.removeAttribute("disabled")
 	} catch (error) {
 		console.log(error)
 	}
@@ -60,7 +62,7 @@ const getMyMic = async () => {
 		localStorage.setItem("is_mic_active", true)
 		let audioDevices = (await navigator.mediaDevices.enumerateDevices()).filter((device) => device.kind === "audioinput")
 
-		audioDevices.forEach((audio, index) => {
+		audioDevices?.forEach((audio, index) => {
 			let newElement = document.createElement("p")
 			newElement.className = "dropdown-item dropdown-select-options"
 			newElement.textContent = audio.label
@@ -78,7 +80,7 @@ const getMyMic = async () => {
 		audioIcons.className = "fas fa-microphone"
 
 		localStorage.setItem("audioDevices", audioDevices)
-		localStorage.setItem("selectedAudioDevices", audioDevices[0].deviceId)
+		localStorage.setItem("selectedAudioDevices", audioDevices[0]?.deviceId)
 	} catch (error) {
 		Swal.fire({
 			icon: "error",
@@ -122,9 +124,9 @@ const videoOptions = document.getElementById("camera-options")
 const getMyDevices = async (config) => {
 	try {
 		localStorage.setItem("is_video_active", true)
-		let videoDevices = (await navigator.mediaDevices.enumerateDevices()).filter((device) => device.kind === "videoinput")
+		let videoDevices = (await navigator.mediaDevices.enumerateDevices())?.filter((device) => device.kind === "videoinput")
 
-		videoDevices.forEach((video, index) => {
+		videoDevices?.forEach((video, index) => {
 			let newElement = document.createElement("p")
 			newElement.className = "dropdown-item dropdown-select-options"
 			newElement.textContent = video.label
@@ -191,8 +193,10 @@ usernameForm.addEventListener("input", (e) => {
 	let buttonSubmit = document.getElementById("submit-button")
 	if (!e.target.value) {
 		buttonSubmit.style.backgroundColor = "grey"
+		viewerButton.style.backgroundColor = "grey"
 	} else {
 		buttonSubmit.style.backgroundColor = "#2c99ed"
+		viewerButton.style.backgroundColor = "#2c99ed"
 	}
 	localStorage.setItem("username", e.target.value)
 })
@@ -201,6 +205,7 @@ joinRoom.addEventListener("submit", (e) => {
 	e.preventDefault()
 
 	const userName = document.getElementById("username").value
+	localStorage.setItem("participantType", "participant")
 
 	if (!userName) {
 		Swal.fire({
@@ -211,6 +216,29 @@ joinRoom.addEventListener("submit", (e) => {
 		return
 	}
 
+	const newURL = window.location.origin + "/" + goTo
+
+	loading.className = "loading-show"
+
+	setTimeout(() => {
+		loading.className = "loading-hide"
+		window.location.href = newURL
+	}, 1000)
+})
+
+viewerButton.addEventListener("click", () => {
+
+	const userName = document.getElementById("username").value
+	localStorage.setItem("participantType", "viewer")
+
+	if (!userName) {
+		Swal.fire({
+			icon: "error",
+			title: "Oops...",
+			text: "Your username is empty",
+		})
+		return
+	}
 	const newURL = window.location.origin + "/" + goTo
 
 	loading.className = "loading-show"
@@ -379,7 +407,6 @@ videoButton.addEventListener("click", (e) => {
 let buttonSubmitHover = document.getElementById("submit-button")
 let triggerInput = document.getElementById("username")
 buttonSubmitHover.addEventListener("mouseover", (e) => {
-	console.log(triggerInput.value)
 	if (!triggerInput.value) {
 		buttonSubmitHover.style.backgroundColor = "red"
 	} else {
@@ -391,6 +418,20 @@ buttonSubmitHover.addEventListener("mouseout", (e) => {
 		buttonSubmitHover.style.backgroundColor = "grey"
 	} else {
 		buttonSubmitHover.style.backgroundColor = "#2c99ed"
+	}
+})
+viewerButton.addEventListener("mouseover", (e) => {
+	if (!triggerInput.value) {
+		viewerButton.style.backgroundColor = "red"
+	} else {
+		viewerButton.style.backgroundColor = "green"
+	}
+})
+viewerButton.addEventListener("mouseout", (e) => {
+	if (!triggerInput.value) {
+		viewerButton.style.backgroundColor = "grey"
+	} else {
+		viewerButton.style.backgroundColor = "#2c99ed"
 	}
 })
 init()

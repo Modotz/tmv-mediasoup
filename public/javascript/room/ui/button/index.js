@@ -127,7 +127,7 @@ const changeMicCondition = ({ parameter, socket, status }) => {
 			changeMic({ parameter, status: false, socket })
 			changeUserListMicIcon({ status: true, id: socket.id })
 		} else {
-			if (parameter.micCondition.isLocked) {
+			if (parameter.micCondition.isLocked && parameter.micCondition.socketId != socket.id) {
 				let ae = document.getElementById("alert-error")
 				ae.className = "show"
 				ae.innerHTML = `Mic is Locked By Host`
@@ -873,6 +873,7 @@ const addMuteAllButton = ({ parameter, socket }) => {
 					parameter.micCondition.isLocked = false
 					unlockAllMic({ parameter, socket })
 					newElement.innerHTML = "Mute All Participants"
+					// parameter.micCondition.socketId = undefined
 				} else {
 					let ae = document.getElementById("alert-error")
 					ae.className = "show"

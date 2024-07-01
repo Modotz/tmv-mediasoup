@@ -13,7 +13,7 @@ const {
 	hideVideoOptionsMenu,
 	timerLayout,
 } = require("../room/function")
-const { getMyStream, getRoomId, joinRoom } = require("../room/function/initialization")
+const { getMyStream, getRoomId, joinRoom, joinAsViewer } = require("../room/function/initialization")
 const { signalNewConsumerTransport } = require("../room/function/mediasoup")
 const { Parameters } = require("../room/function/parameter")
 const {
@@ -35,6 +35,7 @@ const {
 	changeUserMic,
 	removeUserList,
 	changeUsername,
+	startSpeechToText,
 } = require("../room/ui/video")
 
 let isDisconnected = 0
@@ -92,16 +93,22 @@ socket.on("connection-success", async ({ socketId }) => {
 			shareLinkButton.style.marginRight = "30px"
 		}
 
+		
 		console.log("- Id : ", socketId)
 		parameter = new Parameters()
+		parameter.participantType = localStorage.getItem("participantType")
 		parameter.username = "Diky"
 		parameter.socketId = socketId
 		parameter.isVideo = true
 		parameter.isAudio = true
 		await getRoomId(parameter)
 		await checkLocalStorage({ parameter })
-		await getMyStream(parameter)
-		await createMyVideo(parameter)
+		if (parameter.participantType == "participant") {
+			await getMyStream({ parameter, socket })
+			await createMyVideo(parameter)
+		} else {
+			await joinAsViewer({ parameter, socket })
+		}
 		await joinRoom({ socket, parameter })
 	} catch (error) {
 		console.log("- Error On Connecting : ", error)
@@ -201,7 +208,7 @@ socket.on("receive-message", ({ message, sender, messageDate }) => {
 })
 
 // Mute All
-socket.on("mute-all", ({ hostSocketId }) => {
+socket.on("mute-all", async ({ hostSocketId }) => {
 	try {
 		let micButton = document.getElementById("user-mic-button")
 		let micImage = document.getElementById("mic-image")
@@ -213,8 +220,9 @@ socket.on("mute-all", ({ hostSocketId }) => {
 		let user = parameter.allUsers.find((data) => data.socketId == socket.id)
 		user.audio.track.enabled = false
 		user.audio.isActive = false
-		changeMic({ parameter, status: false, socket })
-		changeUserListMicIcon({ status: true, id: socket.id })
+		startSpeechToText({ parameter, socket, status: false })
+		await changeMic({ parameter, status: false, socket })
+		await changeUserListMicIcon({ status: true, id: socket.id })
 		micImage.src = "/assets/pictures/micOff.png"
 	} catch (error) {
 		console.log("- Error Muting All Participants : ", error)
@@ -247,11 +255,14 @@ socket.on("transcribe", ({ id, message }) => {
 		speakingHistory.message = message.message
 
 		const formattedMessage = ({ message }) => {
-			return message.split(" ").slice(-20).join(" ")
+			return message.split(" ").slice(-parameter.speechToText.maxWords).join(" ")
 		}
 
 		if (parameter.speechToText.words.length != 0) {
-			parameter.speechToText.words.sort((a, b) => new Date(b.lastSpeaking) - new Date(a.lastSpeaking))
+			if (!(parameter.speechToText.words[0]?.socketId === message.socketId || parameter.speechToText.words[1]?.socketId === message.socketId)) {
+				parameter.speechToText.words.sort((a, b) => new Date(b.lastSpeaking) - new Date(a.lastSpeaking))
+				console.log("- Masuk Kondisi Sorting Client ")
+			}
 			if (parameter.speechToText.words.length > 1) {
 				ccDisplay.textContent = `${parameter.speechToText.words[1]?.username} : ${formattedMessage({
 					message: parameter.speechToText.words[1]?.message,
@@ -264,6 +275,7 @@ socket.on("transcribe", ({ id, message }) => {
 				})}`
 			}
 		}
+		console.log(parameter.speechToText.words)
 	} catch (error) {
 		console.log("- Error CC : ", error)
 	}
@@ -282,6 +294,17 @@ socket.on("rename-user", ({ id, content }) => {
 let micButton = document.getElementById("user-mic-button")
 micButton.addEventListener("click", (e) => {
 	e.stopPropagation()
+	if (parameter.micCondition.isLocked && parameter.micCondition.socketId != socket.id) {
+		let ae = document.getElementById("alert-error")
+		ae.className = "show"
+		ae.innerHTML = `Mic is Locked By Host`
+		// Show Warning
+		setTimeout(() => {
+			ae.className = ae.className.replace("show", "")
+			ae.innerHTML = ``
+		}, 3000)
+		return
+	}
 	if (micButton.className === "btn button-small-custom") {
 		changeMicCondition({ parameter, socket, status: false })
 		micButton.className = "btn button-small-custom-clicked"
@@ -303,7 +326,7 @@ let micOptionsIcon = document.getElementById("audio-button-options")
 micOptionsIcon.addEventListener("click", (e) => {
 	e.stopPropagation()
 	// let micOptionsIcon = document.getElementById("audio-button-options")
-	console.log("Icon Mic Clicked")
+	// console.log("Icon Mic Clicked")
 
 	const micOptionsContainer = document.getElementById("mic-options")
 	if (micOptionsContainer.className == "invisible") {
@@ -475,6 +498,7 @@ shareButton.addEventListener("click", () => {
 let chatButton = document.getElementById("user-chat-button")
 let userListButton = document.getElementById("user-list-button")
 userListButton.addEventListener("click", () => {
+	let ccContainer = document.getElementById("text-to-speech-id")
 	let upperContainer = document.getElementById("upper-container")
 	let isInScreenSharingMode = upperContainer.querySelector("#screen-sharing-container")
 	let videoContainer = document.getElementById("video-container")
@@ -554,6 +578,8 @@ userListButton.addEventListener("click", () => {
 			userListContainer.className = "show-side-bar"
 			userListButton.setAttribute("disabled", true)
 			chatButton.setAttribute("disabled", true)
+			ccContainer.style.width = "60%"
+			ccContainer.style.transform = "translateX(-70%)"
 			scrollToBottom()
 			setTimeout(() => {
 				sideBarContainer.removeAttribute("style")
@@ -568,6 +594,7 @@ userListButton.addEventListener("click", () => {
 			userListButton.setAttribute("disabled", true)
 			chatButton.setAttribute("disabled", true)
 			setTimeout(() => {
+				ccContainer.removeAttribute("style")
 				sideBarContainer.removeAttribute("style")
 				sideBarContainer.style.display = "none"
 				chatButton.removeAttribute("disabled")
@@ -588,6 +615,8 @@ userListButton.addEventListener("click", () => {
 			userListContainer.className = "show-side-bar"
 			userListButton.setAttribute("disabled", true)
 			chatButton.setAttribute("disabled", true)
+			ccContainer.style.width = "60%"
+			ccContainer.style.transform = "translateX(-70%)"
 			scrollToBottom()
 			setTimeout(() => {
 				sideBarContainer.removeAttribute("style")
@@ -605,6 +634,7 @@ userListButton.addEventListener("click", () => {
 			userListButton.setAttribute("disabled", true)
 			chatButton.setAttribute("disabled", true)
 			setTimeout(() => {
+				ccContainer.removeAttribute("style")
 				sideBarContainer.removeAttribute("style")
 				sideBarContainer.style.display = "none"
 				chatButton.removeAttribute("disabled")
@@ -618,6 +648,7 @@ userListButton.addEventListener("click", () => {
 
 chatButton.addEventListener("click", () => {
 	let upperContainer = document.getElementById("upper-container")
+	let ccContainer = document.getElementById("text-to-speech-id")
 	let isInScreenSharingMode = upperContainer.querySelector("#screen-sharing-container")
 	let videoContainer = document.getElementById("video-container")
 	let userListContainer = document.getElementById("user-bar")
@@ -707,6 +738,8 @@ chatButton.addEventListener("click", () => {
 			chatContainer.className = "show-side-bar"
 			userListButton.setAttribute("disabled", true)
 			chatButton.setAttribute("disabled", true)
+			ccContainer.style.width = "60%"
+			ccContainer.style.transform = "translateX(-70%)"
 			iconsNotification.className = "fas fa-envelope notification invisible"
 			setTimeout(() => {
 				sideBarContainer.removeAttribute("style")
@@ -725,6 +758,7 @@ chatButton.addEventListener("click", () => {
 				isLineNewMessageExist.remove()
 			}
 			setTimeout(() => {
+				ccContainer.removeAttribute("style")
 				sideBarContainer.removeAttribute("style")
 				sideBarContainer.style.display = "none"
 				chatButton.removeAttribute("disabled")
@@ -745,6 +779,8 @@ chatButton.addEventListener("click", () => {
 			chatContainer.className = "show-side-bar"
 			userListButton.setAttribute("disabled", true)
 			chatButton.setAttribute("disabled", true)
+			ccContainer.style.width = "60%"
+			ccContainer.style.transform = "translateX(-70%)"
 			iconsNotification.className = "fas fa-envelope notification invisible"
 			setTimeout(() => {
 				sideBarContainer.removeAttribute("style")
@@ -767,6 +803,7 @@ chatButton.addEventListener("click", () => {
 				isLineNewMessageExist.remove()
 			}
 			setTimeout(() => {
+				ccContainer.removeAttribute("style")
 				sideBarContainer.removeAttribute("style")
 				sideBarContainer.style.display = "none"
 				chatButton.removeAttribute("disabled")
@@ -794,6 +831,7 @@ sendMessageButton.addEventListener("submit", (e) => {
 				ae.className = ae.className.replace("show", "")
 				ae.innerHTML = ``
 			}, 3000)
+			return
 		}
 
 		const messageDate = new Date()

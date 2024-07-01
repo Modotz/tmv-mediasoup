@@ -36,7 +36,12 @@ const createDevice = async ({ parameter, socket }) => {
 			routerRtpCapabilities: parameter.rtpCapabilities,
 		})
 		await getEncoding({ parameter })
-		await createSendTransport({ socket, parameter })
+		if (parameter.participantType == "participant") {
+			await createSendTransport({ socket, parameter })
+		} else {
+			await createConsumerTransport({ socket, parameter })
+			await getProducers({ parameter, socket })
+		}
 	} catch (error) {
 		console.log("- Error Creating Device : ", error)
 	}
@@ -91,29 +96,38 @@ const createSendTransport = async ({ socket, parameter }) => {
 				}
 			})
 
-			socket.emit("create-webrtc-transport", { consumer: true, roomName: parameter.roomName }, ({ params }) => {
-				parameter.consumerTransport = parameter.device.createRecvTransport(params)
+			createConsumerTransport({ socket, parameter })
 
-				parameter.consumerTransport.on("connectionstatechange", async (e) => {
-					if (e === "failed") {
-						window.location.reload()
-					}
-					console.log("- Receiver Transport State : ", e)
-				})
-
-				parameter.consumerTransport.on("connect", async ({ dtlsParameters }, callback, errback) => {
-					try {
-						await socket.emit("transport-recv-connect", { dtlsParameters, serverConsumerTransportId: params.id })
-						callback()
-					} catch (error) {
-						errback(error)
-					}
-				})
-			})
 			connectSendTransport({ parameter, socket })
 		})
 	} catch (error) {
 		console.log("- Error Creating Send Transport : ", error)
+	}
+}
+
+const createConsumerTransport = ({ socket, parameter }) => {
+	try {
+		socket.emit("create-webrtc-transport", { consumer: true, roomName: parameter.roomName }, ({ params }) => {
+			parameter.consumerTransport = parameter.device.createRecvTransport(params)
+
+			parameter.consumerTransport.on("connectionstatechange", async (e) => {
+				if (e === "failed") {
+					window.location.reload()
+				}
+				console.log("- Receiver Transport State : ", e)
+			})
+
+			parameter.consumerTransport.on("connect", async ({ dtlsParameters }, callback, errback) => {
+				try {
+					await socket.emit("transport-recv-connect", { dtlsParameters, serverConsumerTransportId: params.id })
+					callback()
+				} catch (error) {
+					errback(error)
+				}
+			})
+		})
+	} catch (error) {
+		console.log("- Error Creating Consumer Transport : ", error)
 	}
 }
 
@@ -129,7 +143,7 @@ const connectSendTransport = async ({ parameter, socket }) => {
 			// console.log("- Producer : ", parameter.videoProducer)
 			myData.video.producerId = parameter.videoProducer.id
 			myData.video.transportId = parameter.producerTransport.id
-			// parameter.videoProducer.setMaxIncomingBitrate(900000)
+			// console.log(parameter.videoProducer)
 			parameter.videoProducer.on("trackended", () => {
 				window.location.reload()
 				console.log("video track ended")
@@ -157,7 +171,7 @@ const connectSendTransport = async ({ parameter, socket }) => {
 			console.log("audio transport ended")
 		})
 
-		await startSpeechToText({ parameter, socket, status: true })
+		// await startSpeechToText({ parameter, socket, status: true })
 	} catch (error) {
 		window.alert(`Error getting your stream\nPlease make sure your camera is working\nThis page will refresh in a few seconds\n`)
 		setTimeout(() => {
@@ -287,6 +301,7 @@ const connectRecvTransport = async ({ parameter, consumerTransport, socket, remo
 							cameraTrigger: params.appData.isVideoActive,
 							picture: params.appData.picture,
 							micTrigger: params.appData.isMicActive,
+							participantType: "participant",
 						})
 					}
 					if (params.kind == "audio" && params.appData.label == "audio") {

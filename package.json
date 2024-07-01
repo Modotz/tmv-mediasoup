@@ -20,7 +20,7 @@
     "google-auth-library": "^9.1.0",
     "httpolyglot": "^0.1.2",
     "mediasoup": "^3.12.13",
-    "mediasoup-client": "^3.6.101",
+    "mediasoup-client": "^3.7.12",
     "recordrtc": "^5.6.2",
     "socket.io": "^4.7.2",
     "socket.io-client": "^4.7.2",
